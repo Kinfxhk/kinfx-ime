@@ -27,6 +27,7 @@ if ([string]::IsNullOrWhiteSpace($OutputZip)) {
 $relative = New-Object System.Collections.Generic.List[string]
 foreach ($rel in @(
     'docs/WINDOWS.md',
+    'schemas/examples/weasel.custom.yaml.example',
     'scripts/install-windows.ps1',
     'scripts/uninstall-windows.ps1',
     'scripts/windows-rime.ps1',
@@ -86,8 +87,9 @@ KINFX 中英混打輸入法 — Windows 11 分享包
    powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\install-windows.ps1
 4. 小狼毫圖示右鍵 → 重新部署。
 5. Win+Space 揀小狼毫，選「KINFX 中英混打輸入法 · 速成」。
+   候選窗係輕量皮膚：圓角、淺陰影、淺色／深色，仍然直列每頁 9。
 
-說明同驗收表：docs/WINDOWS.md
+說明同驗收表：docs/WINDOWS.md（候選窗外觀）
 卸載 KINFX 檔：scripts/uninstall-windows.ps1
 小狼毫本體：設定 → 應用程式，或 winget uninstall Rime.Weasel
 

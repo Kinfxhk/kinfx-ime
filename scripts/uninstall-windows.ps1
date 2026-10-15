@@ -6,7 +6,9 @@
 .DESCRIPTION
   Deletes only the kinfx-owned schema, dictionary, lua, and manifest files.
   Drops kinfx_quick / kinfx_jyutping from default.custom.yaml and leaves every
-  other schema. Does not uninstall Weasel. Does not require elevation.
+  other schema. Drops the kinfx-ime:weasel-skin block from weasel.custom.yaml
+  and leaves unrelated patches. Does not uninstall Weasel. Does not require
+  elevation.
 
   rime.lua is removed only when it is still the KINFX entry this repo wrote.
   If it requires any other module, it is left in place and a warning is printed.
@@ -95,6 +97,19 @@ $manifest = Join-Path $userDir 'kinfx-ime.deployed.txt'
 if (Test-Path -LiteralPath $manifest) {
   Remove-Item -LiteralPath $manifest -Force
   Write-Host '  - kinfx-ime.deployed.txt'
+}
+
+$weaselCustomPath = Join-Path $userDir 'weasel.custom.yaml'
+if (Test-Path -LiteralPath $weaselCustomPath) {
+  $originalSkin = Read-Utf8Text $weaselCustomPath
+  $editedSkin = Remove-KinfxWeaselSkinText $originalSkin
+  if ($editedSkin.Delete) {
+    Remove-Item -LiteralPath $weaselCustomPath -Force
+    Write-Host '  - weasel.custom.yaml (only the KINFX lightweight skin remained)'
+  } elseif ($editedSkin.Text -ne $originalSkin) {
+    Write-Utf8NoBom $weaselCustomPath $editedSkin.Text
+    Write-Host '  weasel.custom.yaml: removed KINFX skin block; other patches kept'
+  }
 }
 
 $customPath = Join-Path $userDir 'default.custom.yaml'

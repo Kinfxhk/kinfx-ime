@@ -54,6 +54,10 @@ function Get-MissingKinfxSources {
       [void]$missing.Add($src)
     }
   }
+  $skinExample = Join-RepoPath $RepoRoot 'schemas/examples/weasel.custom.yaml.example'
+  if (-not (Test-Path -LiteralPath $skinExample)) {
+    [void]$missing.Add($skinExample)
+  }
   Write-Output -NoEnumerate $missing.ToArray()
 }
 
@@ -322,12 +326,15 @@ function Replace-ListRange {
 }
 
 function Assert-PatchMapIsBlock {
-  param($Lines)
+  param(
+    $Lines,
+    [string]$FileLabel = 'default.custom.yaml'
+  )
   if ($null -eq $Lines) { return }
   for ($i = 0; $i -lt $Lines.Count; $i++) {
     # "patch: { ... }" is a one-line map. "patch:" and "patch: # comment" are blocks.
     if ($Lines[$i] -match '^patch:\s+[^#\s]') {
-      throw 'default.custom.yaml has a one-line patch: value. Put patch: on its own line, then re-run. This script will not guess how to merge a one-line patch.'
+      throw ($FileLabel + ' has a one-line patch: value. Put patch: on its own line, then re-run. This script will not guess how to merge a one-line patch.')
     }
   }
 }
@@ -628,4 +635,284 @@ function Write-KinfxDeployManifest {
   }
   $path = Join-Path $UserDir 'kinfx-ime.deployed.txt'
   Write-Utf8NoBom $path (($lines.ToArray() -join "`n") + "`n")
+}
+
+$script:KinfxWeaselSkinBegin = '# kinfx-ime:weasel-skin begin'
+$script:KinfxWeaselSkinEnd = '# kinfx-ime:weasel-skin end'
+$script:KinfxWeaselSkinExampleRel = 'schemas/examples/weasel.custom.yaml.example'
+
+function Get-YamlPatchKey {
+  # Top-level or nested "key": / key: on a line. List items ("- key:") do not match.
+  param([AllowNull()][string]$Line)
+  if ([string]::IsNullOrEmpty($Line)) { return $null }
+  if ($Line -match '^(\s+)"([^"]+)"\s*:') {
+    return [pscustomobject]@{ Indent = $Matches[1].Length; Name = $Matches[2] }
+  }
+  if ($Line -match '^(\s+)([A-Za-z0-9_./+-]+)\s*:') {
+    return [pscustomobject]@{ Indent = $Matches[1].Length; Name = $Matches[2] }
+  }
+  return $null
+}
+
+function Find-WeaselSkinSpan {
+  # Inclusive indexes of the marker comments. $null when the file has neither.
+  param($Lines)
+  $begin = -1
+  $end = -1
+  for ($i = 0; $i -lt $Lines.Count; $i++) {
+    $line = $Lines[$i]
+    if ($line -match '^\s*#\s*kinfx-ime:weasel-skin begin\s*$') {
+      if ($begin -ge 0) {
+        throw 'weasel.custom.yaml has more than one kinfx-ime:weasel-skin begin marker.'
+      }
+      $begin = $i
+    } elseif ($line -match '^\s*#\s*kinfx-ime:weasel-skin end\s*$') {
+      if ($begin -lt 0) {
+        throw 'weasel.custom.yaml has a weasel-skin end marker without a begin marker.'
+      }
+      $end = $i
+      break
+    }
+  }
+  if ($begin -ge 0 -and $end -lt 0) {
+    throw 'weasel.custom.yaml has a weasel-skin begin marker without an end marker.'
+  }
+  if ($begin -lt 0) { return $null }
+  return [pscustomobject]@{ Start = $begin; End = $end }
+}
+
+function Get-KinfxWeaselSkinBlockLines {
+  # The marked block from the example, including begin/end. One source of truth.
+  param([Parameter(Mandatory = $true)][string]$RepoRoot)
+  $path = Join-RepoPath $RepoRoot $script:KinfxWeaselSkinExampleRel
+  if (-not (Test-Path -LiteralPath $path)) {
+    throw ('KINFX Weasel skin example is missing: ' + $path)
+  }
+  $lines = ConvertTo-YamlLineList (Read-Utf8Text $path)
+  $span = Find-WeaselSkinSpan $lines
+  if ($null -eq $span) {
+    throw ('KINFX Weasel skin example has no kinfx-ime:weasel-skin markers: ' + $path)
+  }
+  $block = New-Object System.Collections.Generic.List[string]
+  for ($i = $span.Start; $i -le $span.End; $i++) {
+    [void]$block.Add($lines[$i])
+  }
+  $joined = [string]::Join("`n", $block.ToArray())
+  if ($joined -notmatch '"style/horizontal": false') {
+    throw 'KINFX Weasel skin example must keep style/horizontal false (vertical list).'
+  }
+  if ($joined -notmatch '"style/layout/type": vertical') {
+    throw 'KINFX Weasel skin example must keep style/layout/type vertical.'
+  }
+  if ($joined -notmatch 'kinfx_modern_dark' -or $joined -notmatch '"style/color_scheme": kinfx_modern') {
+    throw 'KINFX Weasel skin example must define kinfx_modern and kinfx_modern_dark.'
+  }
+  if ($joined -match 'horizontal:\s*true' -or $joined -match 'page_size\s*:') {
+    throw 'KINFX Weasel skin example must not switch to a horizontal list or set page_size.'
+  }
+  Write-Output -NoEnumerate $block.ToArray()
+}
+
+function Get-KinfxWeaselSkinOwnedKeys {
+  # Quoted patch paths in the skin block. Nested scheme fields (name, text_color) are not owned.
+  param([string[]]$SkinBlock)
+  $keys = @{}
+  foreach ($line in @($SkinBlock)) {
+    if ($line -match '^\s+"([^"]+)"\s*:') {
+      $keys[$Matches[1]] = $true
+    }
+  }
+  return $keys
+}
+
+function Remove-OwnedKeysOutsideSkinBlock {
+  # Drop flat copies of skin keys outside the marker so the file has one definition.
+  # Keys inside the marker are replaced separately. Nested maps such as style/+ stay;
+  # the skin block is appended last so its flat keys win on the next deploy.
+  param($Lines, $Owned)
+  if ($null -eq $Owned) { return }
+  $spans = New-Object System.Collections.Generic.List[object]
+  $inSkin = $false
+  $i = 0
+  while ($i -lt $Lines.Count) {
+    $line = $Lines[$i]
+    if ($line -match '^\s*#\s*kinfx-ime:weasel-skin begin\s*$') {
+      $inSkin = $true
+      $i++
+      continue
+    }
+    if ($line -match '^\s*#\s*kinfx-ime:weasel-skin end\s*$') {
+      $inSkin = $false
+      $i++
+      continue
+    }
+    if (-not $inSkin) {
+      $key = Get-YamlPatchKey $line
+      if ($null -ne $key -and $Owned.ContainsKey($key.Name)) {
+        $j = $i + 1
+        while ($j -lt $Lines.Count) {
+          $next = $Lines[$j]
+          if ($next -match '^\s*#\s*kinfx-ime:weasel-skin (begin|end)\s*$') { break }
+          if ($next -match '^\s*$' -or $next -match '^\s*#') {
+            $k = $j
+            while ($k -lt $Lines.Count -and ($Lines[$k] -match '^\s*$' -or $Lines[$k] -match '^\s*#')) {
+              if ($Lines[$k] -match '^\s*#\s*kinfx-ime:weasel-skin (begin|end)\s*$') { break }
+              $k++
+            }
+            if ($k -ge $Lines.Count) { break }
+            if ($Lines[$k] -match '^\s*#\s*kinfx-ime:weasel-skin (begin|end)\s*$') { break }
+            $nextIndent = 0
+            if ($Lines[$k] -match '^(\s*)') { $nextIndent = $Matches[1].Length }
+            if ($nextIndent -gt $key.Indent) {
+              $j = $k
+              continue
+            }
+            break
+          }
+          $indent = 0
+          if ($next -match '^(\s*)') { $indent = $Matches[1].Length }
+          if ($indent -gt $key.Indent) {
+            $j++
+            continue
+          }
+          break
+        }
+        [void]$spans.Add([pscustomobject]@{ Start = $i; End = ($j - 1) })
+        $i = $j
+        continue
+      }
+    }
+    $i++
+  }
+  for ($s = $spans.Count - 1; $s -ge 0; $s--) {
+    Remove-ListRange $Lines $spans[$s].Start $spans[$s].End
+  }
+}
+
+function Get-PatchSectionInsertIndex {
+  # Index at the end of the patch: body. Column-0 comments stop the body.
+  param($Lines)
+  $patchIdx = -1
+  for ($i = 0; $i -lt $Lines.Count; $i++) {
+    if ($Lines[$i] -match '^patch:\s*(#.*)?$') { $patchIdx = $i; break }
+  }
+  if ($patchIdx -lt 0) { return -1 }
+  $i = $patchIdx + 1
+  while ($i -lt $Lines.Count) {
+    $line = $Lines[$i]
+    if ($line -match '^\s*$' -or $line -match '^\s+#' -or $line -match '^\s+\S') {
+      $i++
+      continue
+    }
+    break
+  }
+  return $i
+}
+
+function Ensure-PatchKey {
+  param($Lines)
+  for ($i = 0; $i -lt $Lines.Count; $i++) {
+    if ($Lines[$i] -match '^patch:\s*(#.*)?$') { return }
+  }
+  if ($Lines.Count -gt 0 -and $Lines[$Lines.Count - 1] -ne '') {
+    [void]$Lines.Add('')
+  }
+  [void]$Lines.Add('patch:')
+}
+
+function Update-KinfxWeaselSkinText {
+  # Insert or replace the lightweight skin. Unrelated patch keys stay.
+  # Owned skin keys outside the marker are removed. The marker is always
+  # rewritten at the end of patch: so it overrides an earlier style/+ merge.
+  param(
+    [AllowNull()][string]$Text,
+    [Parameter(Mandatory = $true)][string[]]$SkinBlock
+  )
+  if ($null -eq $SkinBlock -or @($SkinBlock).Count -eq 0) {
+    throw 'KINFX Weasel skin block is empty.'
+  }
+  if ([string]::IsNullOrWhiteSpace($Text)) {
+    $Text = "patch:`n"
+  }
+  $lines = ConvertTo-YamlLineList $Text
+  Assert-PatchMapIsBlock $lines 'weasel.custom.yaml'
+  $owned = Get-KinfxWeaselSkinOwnedKeys $SkinBlock
+  Remove-OwnedKeysOutsideSkinBlock $lines $owned
+  $span = Find-WeaselSkinSpan $lines
+  if ($null -ne $span) {
+    Remove-ListRange $lines $span.Start $span.End
+  }
+  Ensure-PatchKey $lines
+  $insertAt = Get-PatchSectionInsertIndex $lines
+  if ($insertAt -lt 0) {
+    throw 'weasel.custom.yaml is missing a patch: block.'
+  }
+  if ($insertAt -gt 0 -and $lines[$insertAt - 1] -match '\S') {
+    $lines.Insert($insertAt, '')
+    $insertAt++
+  }
+  $block = @($SkinBlock)
+  for ($n = $block.Count - 1; $n -ge 0; $n--) {
+    $lines.Insert($insertAt, [string]$block[$n])
+  }
+  return (Join-YamlLines $lines)
+}
+
+function New-KinfxWeaselCustomText {
+  param([Parameter(Mandatory = $true)][string[]]$SkinBlock)
+  $header = @(
+    '# encoding: utf-8',
+    '# KINFX Weasel lightweight candidate skin. Vertical list, light/dark colors.',
+    '# Written by scripts/install-windows.ps1. Removed by scripts/uninstall-windows.ps1.'
+  ) -join "`n"
+  $body = Update-KinfxWeaselSkinText -Text "patch:`n" -SkinBlock $SkinBlock
+  return ($header + "`n" + $body)
+}
+
+function Test-OnlyKinfxWeaselSkinResidue {
+  # True when nothing remains except the header this repo writes for a new file.
+  param($Lines)
+  $allowed = @(
+    '# encoding: utf-8',
+    '# KINFX Weasel lightweight candidate skin. Vertical list, light/dark colors.',
+    '# Written by scripts/install-windows.ps1. Removed by scripts/uninstall-windows.ps1.'
+  )
+  foreach ($line in @($Lines)) {
+    if ([string]::IsNullOrWhiteSpace([string]$line)) { continue }
+    $trim = ([string]$line).Trim()
+    $ok = $false
+    foreach ($item in $allowed) {
+      if ($trim -eq $item) { $ok = $true; break }
+    }
+    if (-not $ok) { return $false }
+  }
+  # Empty residue (skin block only) and the stock header are both disposable.
+  return $true
+}
+
+function Remove-KinfxWeaselSkinText {
+  # Drop the marked skin. Leave every other patch. Delete only a file that
+  # was solely the header plus that skin.
+  param([AllowNull()][string]$Text)
+  $result = [pscustomobject]@{ Text = $Text; Delete = $false }
+  if ([string]::IsNullOrWhiteSpace($Text)) {
+    $result.Text = ''
+    return $result
+  }
+  $lines = ConvertTo-YamlLineList $Text
+  Assert-PatchMapIsBlock $lines 'weasel.custom.yaml'
+  $span = Find-WeaselSkinSpan $lines
+  if ($null -eq $span) {
+    $result.Text = $Text
+    return $result
+  }
+  Remove-ListRange $lines $span.Start $span.End
+  Remove-EmptyPatchKey $lines
+  if (Test-OnlyKinfxWeaselSkinResidue $lines) {
+    $result.Delete = $true
+    $result.Text = ''
+    return $result
+  }
+  $result.Text = Join-YamlLines $lines
+  return $result
 }

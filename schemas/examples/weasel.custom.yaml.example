@@ -1,0 +1,95 @@
+# encoding: utf-8
+# KINFX Weasel candidate window — lightweight modern skin (near macOS).
+# 低延遲／輕量皮膚：只改配色、圓角、淺陰影。冇點陣圖、冇動畫、冇材質模糊、
+# 冇逐鍵重繪。陰影半徑 8，避免候選窗位圖過大。
+# 直列：style/horizontal: false，加上 layout/type: vertical。
+# 每頁 9 留喺方案 menu/page_size；呢份皮膚唔寫頁數、唔改選字鍵、唔改排序。
+#
+# scripts/install-windows.ps1 把下面 begin/end 標記段合併到
+# %APPDATA%\Rime\weasel.custom.yaml（標記放在 patch 最尾，同名項以皮膚為準）。
+# 其他補丁（例如 app_options）留低。再跑安裝會更新標記段。
+# 還原外觀：刪標記段再重新部署；uninstall-windows.ps1 會一併刪呢段。
+# 圓角同陰影要 Weasel 0.15 或更新；更舊會忽略未知鍵。顏色係預設 ABGR（0xBBGGRR）。
+#
+# 標記外面嘅說明唔會寫入用戶檔。安裝只合併 begin/end 之間。
+
+patch:
+  # kinfx-ime:weasel-skin begin
+  # Lightweight static skin. Vertical list. No images, animation, or hover redraw.
+  "style/horizontal": false
+  "style/color_scheme": kinfx_modern
+  "style/color_scheme_dark": kinfx_modern_dark
+  "style/font_face": "Microsoft YaHei UI"
+  "style/label_font_face": "Microsoft YaHei UI"
+  "style/comment_font_face": "Microsoft YaHei UI"
+  "style/font_point": 14
+  "style/label_font_point": 12
+  "style/comment_font_point": 12
+  "style/label_format": "%s"
+  "style/layout/type": vertical
+  "style/layout/border": 1
+  "style/layout/border_width": 1
+  "style/layout/margin_x": 10
+  "style/layout/margin_y": 8
+  "style/layout/spacing": 6
+  "style/layout/candidate_spacing": 6
+  "style/layout/hilite_spacing": 6
+  "style/layout/hilite_padding": 3
+  "style/layout/hilite_padding_x": 8
+  "style/layout/hilite_padding_y": 3
+  "style/layout/corner_radius": 12
+  "style/layout/round_corner": 8
+  "style/layout/shadow_radius": 8
+  "style/layout/shadow_offset_x": 0
+  "style/layout/shadow_offset_y": 2
+  "preset_color_schemes/kinfx_modern":
+    name: "KINFX Modern／淺色"
+    author: KINFX
+    color_format: abgr
+    # RGB #1D1D1F
+    text_color: 0x1F1D1D
+    candidate_text_color: 0x1F1D1D
+    # RGB #FFFFFF
+    back_color: 0xFFFFFF
+    hilited_back_color: 0xFFFFFF
+    # RGB #D2D2D7
+    border_color: 0xD7D2D2
+    # RGB #86868B
+    label_color: 0x8B8686
+    comment_text_color: 0x8B8686
+    hilited_text_color: 0x1F1D1D
+    hilited_candidate_text_color: 0x1F1D1D
+    # RGB #E7F1FF
+    hilited_candidate_back_color: 0xFFF1E7
+    # RGB #0071E3
+    hilited_label_color: 0xE37100
+    # RGB #636366
+    hilited_comment_text_color: 0x666363
+    # ~16% black, static shadow (not a live blur)
+    shadow_color: 0x28000000
+  "preset_color_schemes/kinfx_modern_dark":
+    name: "KINFX Modern Dark／深色"
+    author: KINFX
+    color_format: abgr
+    # RGB #F5F5F7
+    text_color: 0xF7F5F5
+    candidate_text_color: 0xF7F5F5
+    # RGB #2C2C2E
+    back_color: 0x2E2C2C
+    hilited_back_color: 0x2E2C2C
+    # RGB #3A3A3C
+    border_color: 0x3C3A3A
+    # RGB #98989D
+    label_color: 0x9D9898
+    comment_text_color: 0x9D9898
+    hilited_text_color: 0xF7F5F5
+    # RGB #FFFFFF
+    hilited_candidate_text_color: 0xFFFFFF
+    # RGB #424245
+    hilited_candidate_back_color: 0x454242
+    # RGB #0A84FF
+    hilited_label_color: 0xFF840A
+    # RGB #E5E5EA
+    hilited_comment_text_color: 0xEAE5E5
+    shadow_color: 0x50000000
+  # kinfx-ime:weasel-skin end
