@@ -1,0 +1,12 @@
+*.bin
+*.prism
+*.reverse.bin
+user.yaml
+installation.yaml
+*.userdb
+build/
+.DS_Store
+__pycache__/
+*.pyc
+/tmp/
+tests/rime_smoke

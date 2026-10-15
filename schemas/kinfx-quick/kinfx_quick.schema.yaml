@@ -1,0 +1,116 @@
+# encoding: utf-8
+# KINFX IME — 速成（Sucheng / Microsoft Quick–aligned）
+# Based on rime-quick ideas (LGPL-3.0 upstream); this schema file is MIT (project LICENSE).
+# Dictionary data: see kinfx_quick.dict.yaml + NOTICE.
+
+schema:
+  schema_id: kinfx_quick
+  name: KINFX 速成
+  version: "0.1.0"
+  author:
+    - KINFX
+    - 速成規則／碼表源流見 NOTICE（rime-quick / rime-cangjie）
+  description: |
+    港式／Windows 微軟速成對齊：倉頡字根鍵盤＋只取首尾二碼。
+    硬需求：中英混打（ascii_composer / inline_ascii）。
+    佈局變體見 docs/LAYOUTS.md（win_quick = 預設）。
+
+switches:
+  - name: ascii_mode
+    reset: 0
+    states: [ 中文, 西文 ]
+    abbrev: [ 中, Ａ ]
+  - name: full_shape
+    states: [ 半角, 全角 ]
+  - name: simplification
+    states: [ 漢字, 汉字 ]
+  - name: ascii_punct
+    states: [ 。，, ．， ]
+
+engine:
+  processors:
+    - ascii_composer
+    - recognizer
+    - key_binder
+    - speller
+    - punctuator
+    - selector
+    - navigator
+    - express_editor
+  segmentors:
+    - ascii_segmentor
+    - matcher
+    - abc_segmentor
+    - punct_segmentor
+    - fallback_segmentor
+  translators:
+    - punct_translator
+    - table_translator
+    - reverse_lookup_translator
+  filters:
+    - simplifier
+    - uniquifier
+
+# 中英混打（硬驗收 M1–M3）：預設左 Shift = 臨時西文，回車／確認後回中文
+ascii_composer:
+  good_old_caps_lock: true
+  switch_key:
+    Caps_Lock: clear
+    Shift_L: inline_ascii
+    Shift_R: commit_text
+    Control_L: noop
+    Control_R: noop
+
+speller:
+  alphabet: zyxwvutsrqponmlkjihgfedcba
+  delimiter: " ;'"
+  # 碼表已係首尾二碼；max 2 頂字體驗接近 MS Quick
+  max_code_length: 2
+  auto_select: false
+
+translator:
+  dictionary: kinfx_quick
+  enable_completion: true
+  enable_sentence: true
+  enable_user_dict: true
+  encode_commit_history: true
+  max_phrase_length: 5
+  preedit_format:
+    - "xlit|abcdefghijklmnopqrstuvwxyz;'|日月金木水火土竹戈十大中一弓人心手口尸廿山女田難卜符··|"
+  comment_format:
+    - "xlit|abcdefghijklmnopqrstuvwxyz~|日月金木水火土竹戈十大中一弓人心手口尸廿山女田難卜符～|"
+  disable_user_dict_for_patterns:
+    - "^z.*$"
+
+abc_segmentor:
+  extra_tags:
+    - reverse_lookup
+
+reverse_lookup:
+  dictionary: luna_pinyin
+  prism: luna_quanpin
+  prefix: "`"
+  suffix: "'"
+  tips: 〔拼音反查〕
+  preedit_format:
+    - xform/([nl])v/$1ü/
+    - xform/([nl])ue/$1üe/
+    - xform/([jqxy])v/$1u/
+
+punctuator:
+  import_preset: default
+
+key_binder:
+  import_preset: default
+  bindings:
+    # Space：有候選時選第一／翻頁行為交 selector；保留 MS Quick 感——空格選字常見
+    - { when: has_menu, accept: space, send: space }
+    - { when: always, accept: Control+Shift+2, toggle: ascii_mode }
+
+recognizer:
+  import_preset: default
+  patterns:
+    email: "^[A-Za-z][-_.0-9A-Za-z]*@.*$"
+    uppercase: "[A-Z][-_+.'0-9A-Za-z]*$"
+    url: "^(www[.]|https?:|ftp[.:]|mailto:|file:).*$|[a-z]+[.].+$"
+    reverse_lookup: "`[a-z]*'?$"

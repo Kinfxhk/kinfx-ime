@@ -1,0 +1,17 @@
+KINFX IME — notices for third-party components
+
+This project's *original* code and documentation are MIT-licensed (see LICENSE).
+Bundled or dependent schema/dictionary packages keep their own licenses:
+
+- librime — BSD-3-Clause (https://github.com/rime/librime)
+- rime-quick (速成) — LGPL-3.0 (https://github.com/rime/rime-quick)
+- rime-cangjie — LGPL-3.0 (build dependency for quick dict)
+- rime-essay — LGPL-3.0
+- rime-luna-pinyin — LGPL-3.0
+- rime-cantonese / jyutping data — typically CC BY 4.0; maps may be ODbL 1.0
+  (verify each package LICENSE before redistribution)
+- fcitx5-rime — LGPL-2.1-or-later
+- Debian packaged librime-data-jyutping — see package copyright
+
+Do not invent proprietary dictionaries. Ship only open-licensed data and keep
+attribution.

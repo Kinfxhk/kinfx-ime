@@ -1,0 +1,10 @@
+# encoding: utf-8
+# Reference schema_list for KINFX. install-linux.sh patches system default.yaml.
+config_version: "0.1.0"
+
+schema_list:
+  - schema: kinfx_quick
+  - schema: kinfx_jyutping
+
+# Full key_binder / punctuator / recognizer come from system rime-prelude default.yaml
+# after install-linux.sh merge.
