@@ -1,9 +1,8 @@
-# Windows 10 traditional Quick first page (9), ranking reference only.
-# Not a dictionary and not Microsoft's lexicon. One code per line: code<TAB>up to 9 characters.
-# Source reconstruction: https://github.com/philipposkhos/rime-ms-quick (no upstream license;
-# this file keeps only the visible first page so kinfx can break near-ties).
-# Product order is HK frequency + the boost in scripts/gen_quick_dict.py.
-# See docs/WIN_QUICK_RANK.md.
+# Windows Sucheng first page (at most 9). Product default pins this order.
+# Not a dictionary and not Microsoft's lexicon. One code per line: code<TAB>characters.
+# vd is the Win11 24H2 measured page (尾二 網綜), not the older 綑綵 reconstruction.
+# Other rows: public reconstruction https://github.com/philipposkhos/rime-ms-quick
+# (no upstream license; first page only). See docs/WIN_QUICK_RANK.md.
 a	日曰
 aa	昌晶暑間暗曙昍暙闍
 ab	明晞晴閒昺晡暠暪曘
@@ -553,7 +552,7 @@ v	女
 va	娼婚絢緒縉縮織繒繪
 vb	帑娟納婦婿媾絹嫡嫦
 vc	嫌縑縝嬪績縯繽續鑾
-vd	好她妹紆巢媒彙綑綵
+vd	好她妹紆巢媒彙網綜
 ve	奴妓級媛嫂綾綠綴綬
 vf	糸災妳絮絲媽嫖嫘嫣
 vg	壯妞妊娃姪娌紐絰維

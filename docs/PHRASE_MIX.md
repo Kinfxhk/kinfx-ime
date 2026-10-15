@@ -50,4 +50,4 @@ python3 scripts/gen_quick_phrases.py
 
 ## 驗收
 
-`./scripts/smoke-linux.sh`：`ofc`→無錯、`ofca`→無錯且排名不高過 `ofc`、數字鍵上屏係個詞而唔係原碼；`gmai` 第一頁有 Gmail 或 GMAIL；`scriptwriti`→scriptwriting、`voiceove`→voiceover；`me`／`or`／`of` 見唔到對應英詞，`of` 第 1 仍係「係」。空白翻頁／Enter 確認／每頁 9 同 v0.2.0 一齊跑。
+`./scripts/smoke-linux.sh`：`ofc`→無錯、`ofca`→無錯且排名不高過 `ofc`、數字鍵上屏係個詞而唔係原碼；`gmai` 第一頁有 Gmail 或 GMAIL；`scriptwriti`→scriptwriting、`voiceove`→voiceover；`me`／`or`／`of` 見唔到對應英詞。`of` 頭頁跟 Windows：第 1 係「伙」，「係」喺第 3。空白翻頁／Enter 確認／每頁 9 同 v0.2.0 一齊跑。

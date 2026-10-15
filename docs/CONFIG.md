@@ -10,7 +10,7 @@
 | 混打 | **零切換** | 打「今日用 **API** 測試」：大寫拉丁／email／URL 直出，`ascii_mode=0` |
 | Shift_L | `inline_ascii` | 可選臨時西文；**Fcitx5 常搶 LShift**（見下） |
 | 持久西文 | `ascii_mode` 開關 | 預設鍵 `Control+Shift+2`；或 Fcitx5 切 keyboard-us |
-| 排序 | 碼表權重（essay + 粵語 essay×5）＋ Windows 頭頁近頻對齊 | 見 `docs/WIN_QUICK_RANK.md`。`enable_user_dict: true` 會再學頻 |
+| 排序 | 碼表權重把 Windows 頭 9 釘喺第 1 頁 | 見 `docs/WIN_QUICK_RANK.md`。`enable_user_dict` 預設關，免得學頻蓋過頭頁；常用熱門係左鍵環頁 |
 | 候選每頁 | **9**（選字鍵 **1–9**） | 同 Windows 官方速成。`menu/page_size` 寫喺 schema。Flex 可改，產品預設係 9 |
 | 選字 | **直列**；空白翻頁；Enter／1–9 選字；Tab 展開 | 見 `docs/WIN_QUICK_SELECT.md`。無候選窗時空白仍然上屏 |
 | 常用熱門 | **開** | 多頁碼先至有，環頁一頁 9 格。`win_quick/hot_page: false` 可關 |
@@ -34,7 +34,7 @@
 - 混打策略：`recognizer/patterns/uppercase|email|url`
 - Shift／ASCII：`ascii_composer/switch_key/*`、`good_old_caps_lock`
 - 中西文 toggle：`key_binder/bindings`（`toggle: ascii_mode`）
-- 排序／學習：`translator/enable_user_dict`、completion、sentence
+- 排序／學習：`translator/enable_user_dict`（預設關，見 `docs/WIN_QUICK_RANK.md`）、completion、sentence
 - 每頁候選數：`menu/page_size`（**產品預設 9**；例檔把 `5` 註解住，取消註解先至生效）
 - 選字：`win_quick/space_pages`、`hot_page`、`tab_expand`、`style/horizontal`（見下）
 - 粵拼提示／字母表：`translator/spelling_hints`、`speller/alphabet`
@@ -72,5 +72,5 @@ Fcitx5 預設常用 **左 Shift** 做「切輸入法／鍵盤」。此時 rime �
 | 零切換夾英文（預設） | 英詞用大寫；唔切 `ascii_mode` |
 | 臨時西文（可選） | `Shift_L: inline_ascii`（需 Fcitx5 唔搶鍵） |
 | 必須切英文先打 | custom 清空 `uppercase` pattern；用 `ascii_mode`／Fcitx5 |
-| 穩定候選序（測試） | `translator/enable_user_dict: false` + 乾淨 user dir |
+| 學頻（會改頭頁） | `translator/enable_user_dict: true`。預設關；開咗之後常用字可以爬返正常第 1 頁 |
 | 空白選焦點（舊習慣） | `win_quick/space_pages: false` |

@@ -1,7 +1,7 @@
 # KINFX 中英混打輸入法 — STATUS
 
 **顯示名**：KINFX 中英混打輸入法（repo slug 仍係 `kinfx-ime`）  
-**更新**：2026-10-15  
+**更新**：2026-10-15（頭頁改跟 Win 頭 9；呢次唔打 git tag）  
 **版本**：**v0.3.1 已出**（Windows 選字 UX、詞／成語前綴、英詞 extras：scriptwriting／voiceover）。選字鍵仍係 v0.2.0 嗰套。  
 **建議標籤 v0.3.2**：Windows 11 Weasel schema 部署（`docs/WINDOWS.md`、`scripts/install-windows.ps1`、`scripts/uninstall-windows.ps1`）同文件一齊出。呢次變更 **唔打 git tag**；Boss merge 之後先標。Win11 真機驗收未做。
 
@@ -19,7 +19,7 @@ Fcitx 選單：速成「KINFX 中英混打輸入法 · 速成」（`kinfx_quick`
 - [x] `scripts/install-linux.sh`、`gen_quick_dict.py`、`smoke-linux.sh`、`verify-gui-mixed.sh`
 - [x] Headless smoke：速成＋混打 M0＋排序＋過濾＋粵拼聲調
 - [x] 候選預設 **每頁 9**、選字鍵 1–9（速成＋粵拼；install 亦改 `default.yaml`）
-- [x] Windows 頭頁體驗對齊：`夏@me` 第 5、`倉@or` 留喺第一頁；`我`／`時`／`好` 仍第 1。見 `docs/WIN_QUICK_RANK.md`
+- [x] **頭頁跟 Microsoft 速成頭 9**（full-win-top9）：`hi` 第 1 係「凡」（「我」第 7）、`of` 第 1 係「伙」（「係」第 3）、`rr`「唔」第 9、`vd` 尾二「網綜」。唔再把常用字硬抬去第 1。`倉@or` 跟 Win，唔留頭頁。常用熱門只喺第 1 頁按左嘅環頁。見 `docs/WIN_QUICK_RANK.md`
 - [x] **選字對齊 Windows**：直列；空白翻頁；1–9／Enter 選焦點；Tab 展開（當欄 1–9，註釋顯示其餘欄）；多頁碼「常用熱門」環頁。見 `docs/WIN_QUICK_SELECT.md`
 - [x] `install-linux.sh`：`rime_deployer --build USER SHARED` 兩個參數；classicui 直列
 - [x] Headless：K1–K4（空白／Enter／混打／熱門頁／Tab）同 v0.1.1 頭頁順位一齊跑

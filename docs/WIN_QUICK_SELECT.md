@@ -35,7 +35,7 @@ editor:
 | 空白翻頁、左右換頁、Enter 確認 | schema `key_binder` + `editor`（無 Lua 都成立） |
 | 直列 | **前端**。Fcitx5 classicui：`Vertical Candidate List=True`（`install-linux.sh` 寫入）。Squirrel／Weasel／ibus-rime：schema `style/horizontal: false`。librime 嘅 `_vertical` 係直書文字，**唔好**開，否則左右頁向會反。 |
 | Tab 展開 4×9 | Lua。`page_size` 維持 9，數字鍵仍然只標當欄。其餘欄寫喺候選註釋：`【係】 伱 僬 儵`（【】＝而家呢欄）。左右換欄＝翻一頁，註釋跟住移。真正四欄格仔係前端畫；而家 Fcitx5 直列加註釋係最小可用。 |
-| 常用熱門環頁 | Lua filter。正常頁**原序通過**，唔改 v0.1.1 頭頁。 |
+| 常用熱門環頁 | Lua filter。正常頁**原序通過**（碼表頭頁係 Win 頭 9）。 |
 
 依賴：`librime-plugin-lua`（`rime.lua` + `lua/win_quick.lua`）。插件未裝時，空白／Enter 兩行仍然生效；Tab 同熱門頁唔會。
 
@@ -53,7 +53,7 @@ editor:
 
 1. librime user dict（讀到先用；權重高嘅優先）
 2. 今次選過嘅字（`kinfx_win_history.tsv`，選字當下寫低，避免同 table translator 搶開 userdb）
-3. 唔夠就用正常候選由頭填，即係而家嘅熱門／常用序（♥熱）
+3. 唔夠就用正常候選由頭填（♥熱）。未選過字時呢幾格同 Win 頭頁一樣，靠 ♥ 同提示分辨；呢個填補唔會改寫正常第 1 頁
 
 註釋：`♥常` 歷史，`♥熱` 填補。Preedit 尾加 `〔♥常用熱門〕`。未選過字時，熱門頁頭幾個會同第 1 頁一樣，靠 ♥ 同提示分辨；選過第 2 頁嘅字之後，嗰個字會排到熱門頁第 1 格。
 
@@ -66,4 +66,4 @@ editor:
 
 ## Headless
 
-`./scripts/smoke-linux.sh` 斷言：`vd`+空白唔上屏「好」、空白再 Enter 上屏第 2 頁第 1 個（本碼表係「綑」，唔係原始 `vd`）、Enter 上屏「好」、`of` 左右同空白環到熱門頁再返第 1 頁、Tab 後註釋有【】而且 `page_size` 仍係 9、`ix` 唔開熱門頁、選過嘅字以 ♥常 佔熱門頁第 1 格、`vdAPI` 空白同 Enter 都上屏「好API」。
+`./scripts/smoke-linux.sh` 斷言：`vd`+空白唔上屏「好」、空白再 Enter 上屏第 2 頁第 1 個（本碼表係「樂」，唔係原始 `vd`）、Enter 上屏「好」、`of` 第 1 頁係「伙」、左右同空白環到熱門頁再返第 1 頁、Tab 後註釋有【】而且 `page_size` 仍係 9、`ix` 唔開熱門頁、選過嘅字以 ♥常 佔熱門頁第 1 格、`vdAPI` 空白同 Enter 都上屏「好API」。

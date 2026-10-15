@@ -39,7 +39,7 @@ Q手  W田  E水  R口  T廿  Y卜  U山  I戈  O人  P心
 
 本 repo `kinfx_quick` **預設即 `win_quick`**（與 MS Quick 字根一致）。
 
-候選窗同 Windows 官方速成對齊：**直列、每頁 9 個、選字鍵 1–9、空白翻頁、Enter 選焦點**（`menu/page_size: 9`，速成同粵拼一樣；Fcitx5／Squirrel／Weasel 跟 schema 頁數，直列由前端畫）。排序係體驗對齊：香港字頻做底，Windows 頭 9 只喺近頻時調位，並保證 `me`→夏、`or`→倉留喺第一頁。對照表：`docs/WIN_QUICK_RANK.md`。選字鍵同熱門頁：`docs/WIN_QUICK_SELECT.md`。
+候選窗同 Windows 官方速成對齊：**直列、每頁 9 個、選字鍵 1–9、空白翻頁、Enter 選焦點**（`menu/page_size: 9`，速成同粵拼一樣；Fcitx5／Squirrel／Weasel 跟 schema 頁數，直列由前端畫）。頭頁次序跟 Microsoft 速成頭 9（`vd` 尾二係網綜）。常用熱門只喺第 1 頁按左嘅環頁。對照表：`docs/WIN_QUICK_RANK.md`。選字鍵同熱門頁：`docs/WIN_QUICK_SELECT.md`。
 
 ### 1.2 `classic_common`（常用／教材常見）
 

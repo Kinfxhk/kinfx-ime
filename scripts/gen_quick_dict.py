@@ -14,21 +14,9 @@ DENYLIST = frozenset({"丂", "丄", "丅", "丆", "丏", "丒", "丗"})
 # Minimum combined weight to keep (0-weight Extension noise drops out).
 MIN_WEIGHT = 1
 
-# Windows first-page boost. See docs/WIN_QUICK_RANK.md.
-# Near-tie: two characters that both sit on the legacy Windows first page,
-# and whose HK weights are within this ratio, follow Windows order.
-WIN_NEAR_TIE = 1.15
-# Ignore Windows-page glyphs lighter than this (汞／昤 class) so they
-# cannot ride a near-tie onto the page.
-WIN_PRACTICAL_MIN = 8000
-# Frequency champions at or above this stay ahead of an explicit lift.
-WIN_ANCHOR_MIN = 200_000
-# 1-based maximum rank. Legacy Windows puts 倉 at 22; the product still
-# keeps it on the first page of 9. 夏 matches the legacy rank of 5.
-PAGE1_MAX_RANK = {
-    ("me", "夏"): 5,
-    ("or", "倉"): 9,
-}
+# Windows first page is pinned by weight. See docs/WIN_QUICK_RANK.md.
+# No per-keystroke filter: librime sort: by_weight reads these numbers.
+WIN_PAGE_LEN = 9
 
 
 def load_weights(path: Path) -> dict[str, int]:
@@ -70,102 +58,206 @@ def load_win_top9(path: Path) -> dict[str, list[str]]:
         if not line or line.startswith("#"):
             continue
         code, chars = line.split("\t", 1)
-        out[code] = list(chars)
+        page: list[str] = []
+        seen: set[str] = set()
+        for ch in chars:
+            if ch in seen:
+                continue
+            seen.add(ch)
+            page.append(ch)
+            if len(page) == WIN_PAGE_LEN:
+                break
+        out[code] = page
     return out
 
 
-def _boost_code(
-    code: str,
-    entries: list[tuple[str, int]],
-    win_page: list[str],
-) -> list[tuple[str, int]]:
-    """Return (char, weight) in candidate order with weights made strict."""
-    order = [ch for ch, _w in entries]
-    base = {ch: w for ch, w in entries}
-    weight = dict(base)
-    win_index: dict[str, int] = {}
-    for i, ch in enumerate(win_page):
-        if ch in base and ch not in win_index:
-            win_index[ch] = i
-    on_win_page = set(win_page)
-    index = {ch: i for i, ch in enumerate(order)}
+def _alts_index(
+    rows: list[tuple[str, str, int]],
+) -> dict[str, list[tuple[int, int, str]]]:
+    """char -> (weight, code length, code) for the best row of each code."""
+    best: dict[tuple[str, str], int] = {}
+    for ch, code, weight in rows:
+        key = (ch, code)
+        if weight > best.get(key, -1):
+            best[key] = weight
+    alts: dict[str, list[tuple[int, int, str]]] = {}
+    for (ch, code), weight in best.items():
+        alts.setdefault(ch, []).append((weight, len(code), code))
+    return alts
 
-    for ch in win_page:
-        if ch not in base or base[ch] < WIN_PRACTICAL_MIN or ch not in win_index:
-            continue
-        guard = 0
-        while index[ch] > win_index[ch] and guard < 80:
-            guard += 1
-            i = index[ch]
-            prev = order[i - 1]
-            # Only reorder inside the Windows first page, and only when the
-            # frequency gap is a near-tie. Heavier champions stay put.
-            if prev not in on_win_page:
-                break
-            if base[prev] > base[ch] * WIN_NEAR_TIE:
-                break
-            if win_index.get(prev, 10**9) <= win_index[ch]:
-                break
-            order[i - 1], order[i] = order[i], order[i - 1]
-            index[order[i]] = i
-            index[order[i - 1]] = i - 1
 
-    for (t_code, ch), max_rank in PAGE1_MAX_RANK.items():
-        if t_code != code or ch not in index:
-            continue
-        guard = 0
-        while index[ch] > max_rank - 1 and guard < 40:
-            guard += 1
-            i = index[ch]
-            prev = order[i - 1]
-            if base[prev] >= WIN_ANCHOR_MIN and base[ch] < WIN_ANCHOR_MIN:
-                break
-            order[i - 1], order[i] = order[i], order[i - 1]
-            index[order[i]] = i
-            index[order[i - 1]] = i - 1
+def _injectable(ch: str) -> bool:
+    return is_basic_cjk(ch) and ch not in DENYLIST
 
+
+def _page_chars(raw: list[str], entries: dict[str, int]) -> list[str]:
+    """Windows glyphs we can actually place on this code, in Windows order."""
+    page: list[str] = []
+    for ch in raw:
+        if ch in entries or _injectable(ch):
+            page.append(ch)
+    return page
+
+
+def _assign_code(
+    order: list[str],
+    page_len: int,
+    original: dict[str, int],
+) -> dict[str, int]:
+    """Keep frequency weights. Raise a glyph only to sit strictly above the next.
+
+    The tail is already frequency-sorted, so it usually stays put. Windows
+    page glyphs bubble up in front of that tail. Absolute weights stay in the
+    essay range, which keeps phrase-code ties and sentence quality stable.
+    """
+    weights = {ch: max(original.get(ch, 0), 0) for ch in order}
+    if not order:
+        return weights
+    if weights[order[-1]] < 1:
+        weights[order[-1]] = 1
+    if page_len <= 0:
+        return weights
     for i in range(len(order) - 2, -1, -1):
-        above, below = order[i], order[i + 1]
-        if weight[above] <= weight[below]:
-            weight[above] = weight[below] + 1
-    return [(ch, weight[ch]) for ch in order]
+        if weights[order[i]] <= weights[order[i + 1]]:
+            weights[order[i]] = weights[order[i + 1]] + 1
+    return weights
 
 
-def apply_win_page_boost(
+def _fits(weight_of: dict[str, int], order: list[str], ch: str, target: int) -> bool:
+    if target < 1:
+        return False
+    idx = order.index(ch)
+    if idx > 0 and target >= weight_of[order[idx - 1]]:
+        return False
+    if idx + 1 < len(order) and target <= weight_of[order[idx + 1]]:
+        return False
+    return True
+
+
+def _restore_primaries(
+    weight_maps: dict[str, dict[str, int]],
+    orders: dict[str, list[str]],
+    alts: dict[str, list[tuple[int, int, str]]],
+) -> int:
+    """Move weights back when a pin stole a character's best code and order allows it."""
+    old_code = {ch: max(cands)[2] for ch, cands in alts.items()}
+
+    def winner(ch: str) -> tuple[int, int, str] | None:
+        cands = [
+            (wmap[ch], len(code), code)
+            for code, wmap in weight_maps.items()
+            if ch in wmap
+        ]
+        if not cands:
+            return None
+        return max(cands)
+
+    flips = 0
+    for _ in range(4):
+        progress = False
+        for ch, primary in old_code.items():
+            win = winner(ch)
+            if win is None or win[2] == primary:
+                continue
+            new_code = win[2]
+            if primary not in weight_maps or ch not in weight_maps[primary]:
+                continue
+            if new_code not in weight_maps or ch not in weight_maps[new_code]:
+                continue
+            primary_w = weight_maps[primary][ch]
+            new_w = weight_maps[new_code][ch]
+            # Prefer keeping the historical primary: lower the pinned code if
+            # it still sits strictly between its neighbours.
+            if (len(new_code), new_code) < (len(primary), primary):
+                lower_to = primary_w
+            else:
+                lower_to = primary_w - 1
+            if _fits(weight_maps[new_code], orders[new_code], ch, lower_to):
+                weight_maps[new_code][ch] = lower_to
+                progress = True
+                continue
+            if (len(primary), primary) > (len(new_code), new_code):
+                raise_to = new_w
+            else:
+                raise_to = new_w + 1
+            if _fits(weight_maps[primary], orders[primary], ch, raise_to):
+                weight_maps[primary][ch] = raise_to
+                progress = True
+        if not progress:
+            break
+    seen: set[str] = set()
+    for ch, primary in old_code.items():
+        win = winner(ch)
+        if win is not None and win[2] != primary and ch not in seen:
+            seen.add(ch)
+            flips += 1
+    return flips
+
+
+def apply_win_top9_pin(
     rows: list[tuple[str, str, int]],
     win_top9: dict[str, list[str]],
 ) -> list[tuple[str, str, int]]:
-    by_code: dict[str, list[tuple[str, int]]] = {}
-    for ch, code, w in rows:
-        by_code.setdefault(code, []).append((ch, w))
-    out: list[tuple[str, str, int]] = []
+    """Pin each Windows page to ranks 1..n by weight. Tail stays frequency order.
+
+    Common characters are not lifted over that page. 我／係／唔 stay where
+    Windows put them. 倉 is not forced onto page 1.
+    """
+    by_code: dict[str, dict[str, int]] = {}
+    for ch, code, weight in rows:
+        slot = by_code.setdefault(code, {})
+        if weight > slot.get(ch, -1):
+            slot[ch] = weight
+    alts = _alts_index(rows)
+    orders: dict[str, list[str]] = {}
+    weight_maps: dict[str, dict[str, int]] = {}
     for code, entries in by_code.items():
-        entries.sort(key=lambda r: (-r[1], r[0]))
-        for ch, w in _boost_code(code, entries, win_top9.get(code, [])):
-            out.append((ch, code, w))
+        page = _page_chars(win_top9.get(code, []), entries)
+        for ch in page:
+            entries.setdefault(ch, 0)
+        page_set = set(page)
+        rest = sorted(
+            (ch for ch in entries if ch not in page_set),
+            key=lambda ch: (-entries[ch], ch),
+        )
+        order = page + rest
+        orders[code] = order
+        weight_maps[code] = _assign_code(order, len(page), entries)
+    flips = _restore_primaries(weight_maps, orders, alts)
+    out: list[tuple[str, str, int]] = []
+    for code, order in orders.items():
+        wmap = weight_maps[code]
+        for ch in order:
+            out.append((ch, code, wmap[ch]))
     out.sort(key=lambda r: (r[1], -r[2], r[0]))
+    print(f"win top9: pinned {sum(1 for c in orders if win_top9.get(c))} codes; "
+          f"primary-code flips {flips}")
     return out
 
 
-def assert_page1_targets(rows: list[tuple[str, str, int]]) -> None:
+def assert_win_top9(
+    rows: list[tuple[str, str, int]],
+    win_top9: dict[str, list[str]],
+) -> None:
     grouped: dict[str, list[str]] = {}
     for ch, code, _w in rows:
         grouped.setdefault(code, []).append(ch)
-    # rows are sorted by code then weight desc, so order within a code is rank.
     failures: list[str] = []
-    for (code, ch), max_rank in PAGE1_MAX_RANK.items():
+    for code, raw in win_top9.items():
         seq = grouped.get(code, [])
-        rank = seq.index(ch) + 1 if ch in seq else -1
-        if rank < 1 or rank > max_rank:
-            failures.append(f"{ch}@{code} rank {rank} (want ≤{max_rank})")
-    anchors = {"hi": "我", "ai": "時", "vd": "好"}
-    for code, ch in anchors.items():
-        seq = grouped.get(code, [])
-        rank = seq.index(ch) + 1 if ch in seq else -1
-        if rank != 1:
-            failures.append(f"{ch}@{code} rank {rank} (want 1)")
+        present = set(seq)
+        want = [
+            ch
+            for ch in raw
+            if ch in present or _injectable(ch)
+        ]
+        for i, ch in enumerate(want):
+            got = seq[i] if i < len(seq) else "∅"
+            if got != ch:
+                failures.append(f"{code}[{i + 1}] got {got} want {ch}")
+                break
     if failures:
-        raise SystemExit("Win page boost missed targets: " + "; ".join(failures))
+        raise SystemExit("Win top9 pin missed: " + "; ".join(failures[:12]))
 
 
 def load_entries(path: Path) -> list[tuple[str, str]]:
@@ -257,14 +349,14 @@ def main() -> None:
     # Stable: higher weight first within same code helps some RIME builds.
     rows.sort(key=lambda r: (r[1], -r[2], r[0]))
     win_top9 = load_win_top9(args.win_top9)
-    rows = apply_win_page_boost(rows, win_top9)
-    assert_page1_targets(rows)
+    rows = apply_win_top9_pin(rows, win_top9)
+    assert_win_top9(rows, win_top9)
 
     header = """# encoding: utf-8
 # Generated by scripts/gen_quick_dict.py — Sucheng/Quick = Cangjie first+last.
-# Weights: essay.txt + 5× essay-cantonese.txt (HK bias), then a Windows
-# first-page near-tie boost (win_quick_top9.tsv) plus explicit lifts for
-# 夏@me and 倉@or. Filtered: non-BMP, denylist, z-codes.
+# Weights: essay.txt + 5× essay-cantonese.txt (HK bias), then Windows top-9
+# pinned to ranks 1–9 (win_quick_top9.tsv; vd ends 網綜). No hot-char lift.
+# Filtered: non-BMP, denylist, z-codes.
 # Licenses: see NOTICE and third_party/rime-quick/LICENSE (LGPL-3.0 upstream).
 # Ranking notes: docs/WIN_QUICK_RANK.md.
 
