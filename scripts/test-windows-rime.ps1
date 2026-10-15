@@ -47,8 +47,20 @@ Assert-Seq 'new file prepends kinfx and keeps weasel seed' (Ids-OfText $created)
 Assert-True 'new file has marker' ($created -match 'kinfx-ime:schema_list begin')
 Assert-True 'new file does not set global page_size' ($created -notmatch 'page_size')
 
+$fromEmpty = Update-KinfxSchemaListText "patch:`n" @('luna_pinyin', 'bopomofo', 'cangjie5')
+Assert-Seq 'empty schema_list unions weasel seed' (Ids-OfText $fromEmpty) @('kinfx_quick', 'kinfx_jyutping', 'luna_pinyin', 'bopomofo', 'cangjie5')
+
+$kinfxOnly = @"
+patch:
+  schema_list:
+    - schema: kinfx_quick
+    - schema: kinfx_jyutping
+"@
+$fromKinfxOnly = Update-KinfxSchemaListText $kinfxOnly @('luna_pinyin', 'bopomofo', 'cangjie5')
+Assert-Seq 'kinfx-only schema_list still merges weasel seed' (Ids-OfText $fromKinfxOnly) @('kinfx_quick', 'kinfx_jyutping', 'luna_pinyin', 'bopomofo', 'cangjie5')
+
 $again = Update-KinfxSchemaListText $created @('luna_pinyin', 'cangjie5')
-Assert-Seq 'rerun does not duplicate or reorder' (Ids-OfText $again) @('kinfx_quick', 'kinfx_jyutping', 'luna_pinyin', 'bopomofo')
+Assert-Seq 'rerun unions new seed ids without dupes or reorder' (Ids-OfText $again) @('kinfx_quick', 'kinfx_jyutping', 'luna_pinyin', 'bopomofo', 'cangjie5')
 Assert-True 'rerun keeps a single schema_list marker' (([regex]::Matches($again, 'kinfx-ime:schema_list begin')).Count -eq 1)
 
 $withReset = @"
@@ -61,7 +73,7 @@ patch:
   "menu/page_size": 5
 "@
 $merged = Update-KinfxSchemaListText $withReset $seed
-Assert-Seq 'inserts missing jyutping after an existing quick is not required; prepends both when absent' (Ids-OfText $merged) @('kinfx_quick', 'kinfx_jyutping', 'terra_pinyin', 'luna_pinyin_fluency')
+Assert-Seq 'prepends kinfx when absent and unions weasel seed without wiping user schemas' (Ids-OfText $merged) @('kinfx_quick', 'kinfx_jyutping', 'terra_pinyin', 'luna_pinyin_fluency', 'luna_pinyin', 'bopomofo')
 Assert-True 'keeps reset tail' ($merged -match '(?m)^      reset: 1\s*$')
 Assert-True 'keeps user comment' ($merged -match '# keep me')
 Assert-True 'keeps user page_size' ($merged -match '"menu/page_size": 5')
@@ -93,7 +105,7 @@ Assert-True 'uninstall deletes file when remaining list equals weasel default' (
 
 $keepComment = Remove-KinfxSchemaListText $merged @()
 Assert-True 'uninstall keeps file when user keys remain' (-not $keepComment.Delete)
-Assert-Seq 'uninstall drops only kinfx ids' (Ids-OfText $keepComment.Text) @('terra_pinyin', 'luna_pinyin_fluency')
+Assert-Seq 'uninstall drops only kinfx ids' (Ids-OfText $keepComment.Text) @('terra_pinyin', 'luna_pinyin_fluency', 'luna_pinyin', 'bopomofo')
 Assert-True 'uninstall keeps reset and page_size' (($keepComment.Text -match 'reset: 1') -and ($keepComment.Text -match 'menu/page_size'))
 
 $emptyAfter = Remove-KinfxSchemaListText (New-KinfxDefaultCustomText @()) @()

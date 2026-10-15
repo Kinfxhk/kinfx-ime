@@ -49,7 +49,7 @@ powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\install-windows.ps
 
 1. 把 schema／Lua／詞庫複製到 **`%APPDATA%\Rime`**（Weasel 用戶目錄）。可以用 `-RimeUserDir` 或環境變數 `RIME_USER_DIR` 改位置。
 2. 合併 **`default.custom.yaml`** 嘅 `schema_list`，加入 `kinfx_quick` 同 `kinfx_jyutping`。已有嘅其他方案保留；再跑一次唔會重複。
-3. 如果搵到 Weasel 嘅 shared `default.yaml`，第一次寫入時會把嗰張方案表留低，避免自訂 `schema_list` 整張換走小狼毫原本嘅拼音／注音／倉頡。
+3. 如果搵到 Weasel 嘅 shared `default.yaml`，會把嗰張方案表併入 `schema_list`（已有項目留低、唔重複 id）。未裝小狼毫時可以先得 KINFX 兩項；裝完再跑一次會補回拼音／注音／倉頡，唔會清走用戶自己加嘅方案。
 4. 印下一步：重新部署。
 
 **唔會**把本 repo 嘅 `schemas/default.yaml` 複製去用戶目錄。librime 用用戶目錄嘅 `default.yaml` **成個覆蓋** shared data。Weasel 嘅鍵位同標點留喺安裝目錄；我哋只用 `default.custom.yaml` 做補丁。
