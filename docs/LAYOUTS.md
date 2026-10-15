@@ -1,4 +1,4 @@
-# KINFX IME — 鍵盤排列（LAYOUTS）
+# KINFX 中英混打輸入法 — 鍵盤排列（LAYOUTS）
 
 **日期**：2026-10-15（Asia/Taipei）
 

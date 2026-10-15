@@ -1,6 +1,6 @@
 # 驗收：中英混打（硬需求）
 
-主測方案：**KINFX 速成**（`kinfx_quick`）。粵拼音複測。設定 flex：`docs/CONFIG.md`。
+主測方案：**KINFX 中英混打輸入法 · 速成**（`schema_id`：`kinfx_quick`）。粵拼選單係「KINFX 中英混打輸入法 · 粵拼」（`kinfx_jyutping`）。設定 flex：`docs/CONFIG.md`。
 
 | ID | 通過條件 | 最低棒 | 預設實作 |
 | --- | --- | --- | --- |

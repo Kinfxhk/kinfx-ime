@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Install KINFX IME schemas into a RIME user directory (Fcitx5 default).
+# Install KINFX 中英混打輸入法 schemas into a RIME user directory (Fcitx5 default).
 set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 TARGET="${RIME_USER_DIR:-${HOME}/.local/share/fcitx5/rime}"
@@ -120,7 +120,7 @@ p.write_text(text, encoding="utf-8")
 print(f"  classicui: {key}=True ({p})")
 PY
 
-echo "Done. Fcitx5 → 中州韻 → KINFX 速成"
+echo "Done. Fcitx5 → 中州韻 → KINFX 中英混打輸入法 · 速成 (schema_id: kinfx_quick)"
 echo "Mixed input default: uppercase Latin inline (no mode switch). See README."
 echo "Select: vertical list, 9 per page, Space=page, 1-9/Enter=commit, Tab=expand."
 echo "Hot-favorites wrap page is on by default. See docs/WIN_QUICK_SELECT.md."
