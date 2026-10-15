@@ -25,6 +25,10 @@ patch:
   #   - { when: always, accept: Control+Shift+2, toggle: ascii_mode }
 
   # ========== 候選／排序偏好 ==========
+  # 產品預設 menu/page_size = 9（Windows 官方速成；選字鍵 1–9）。
+  # 所有前端跟 schema，唔會自己改成 5。下面只係 Flex 示範：
+  # 取消註解會偏離產品預設，第 6–9 位會睇唔到／選字鍵錯位。
+  # "menu/page_size": 5
   "translator/enable_user_dict": true          # false = 測試／穩定排序（唔學頻）
   "translator/enable_completion": true
   "translator/enable_sentence": true

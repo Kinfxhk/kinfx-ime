@@ -3,6 +3,8 @@
 # 預設：有聲調（nei5／jyut6）；亦可唔打調號。混打同速成（大寫拉丁零切換）。
 
 patch:
+  # 產品預設每頁 9（同速成／Windows）。取消註解先至改走預設：
+  # "menu/page_size": 5
   "recognizer/patterns/uppercase": "[A-Z][-_+.'0-9A-Za-z]*$"
   "ascii_composer/switch_key/Shift_L": inline_ascii   # 或 noop
   "translator/spelling_hints": 5                      # 0 = 唔顯示拼音提示

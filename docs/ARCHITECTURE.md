@@ -68,6 +68,7 @@ Desktop 多數只「切中／英模式」≠ 組字途中夾英文。本專案�
 
 - 定位靠 application IM module 報 caret 座標；Wayland 下需 text-input／kimpanel／client-side popup（見 [Fcitx Wayland wiki](https://fcitx-im.org/wiki/Using_Fcitx_5_on_Wayland)）。
 - Classic UI／主題可調偏移；產品預設文件寫明「below + flip」。
+- **每頁候選數**：schema `menu/page_size: 9`（選字鍵 1–9）。Fcitx5 classicui、Squirrel、Weasel 都係畫 librime 嗰一頁，前端設定冇 page size 可以覆蓋成 5。排序見 `docs/WIN_QUICK_RANK.md`。
 - 驗收：在編輯器中行、底行、頂行各打速成兩碼，候選窗**唔遮** caret 同當行已上屏字。
 
 **macOS（後期殼）**：IMK 候選窗同樣 follow-cursor；預設 below、edge flip；唔採用遮擋輸入行嘅「螢幕中央大窗」做預設。
