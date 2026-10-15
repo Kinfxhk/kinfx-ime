@@ -1,0 +1,10 @@
+# KINFX 粵拼 — 使用者覆寫例
+# 複製到：~/.local/share/fcitx5/rime/kinfx_jyutping.custom.yaml 後 redeploy
+# 預設：有聲調（nei5／jyut6）；亦可唔打調號。混打同速成（大寫拉丁零切換）。
+
+patch:
+  "recognizer/patterns/uppercase": "[A-Z][-_+.'0-9A-Za-z]*$"
+  "ascii_composer/switch_key/Shift_L": inline_ascii   # 或 noop
+  "translator/spelling_hints": 5                      # 0 = 唔顯示拼音提示
+  # 若只要無聲調輸入、唔收 1–6：
+  # "speller/alphabet": "zyxwvutsrqponmlkjihgfedcba"
