@@ -1,0 +1,35 @@
+# KINFX 速成 — 使用者覆寫例
+# 複製到：~/.local/share/fcitx5/rime/kinfx_quick.custom.yaml
+# 然後重新部署（F4 或 rime_deployer）。完整說明：docs/CONFIG.md
+#
+# 預設（schema）：全程零切換混打＝大寫拉丁／email／URL 直出，唔使切英文模式。
+# 以下全部可改；唔改＝沿用 schema 預設。
+
+patch:
+  # ========== 混打策略 ==========
+  # A) 零切換（預設）：大寫開頭英詞直出
+  "recognizer/patterns/uppercase": "[A-Z][-_+.'0-9A-Za-z]*$"
+  "recognizer/patterns/email": "^[A-Za-z][-_.0-9A-Za-z]*@.*$"
+  "recognizer/patterns/url": "^(www[.]|https?:|ftp[.:]|mailto:|file:).*$|[a-z]+[.].+$"
+
+  # B) 臨時西文鍵（可選；Fcitx5 預設 LShift 可能搶走）
+  "ascii_composer/switch_key/Shift_L": inline_ascii   # 或 noop / commit_code / clear
+  "ascii_composer/switch_key/Shift_R": commit_text
+  "ascii_composer/switch_key/Caps_Lock": clear
+  "ascii_composer/good_old_caps_lock": true
+
+  # C) 持久中／西文開關鍵（預設 Control+Shift+2）
+  # 若只要「必須切 ascii_mode 先打英文」，可將 uppercase pattern 清空並靠呢個 toggle：
+  # "recognizer/patterns/uppercase": "^$"
+  # "key_binder/bindings":
+  #   - { when: always, accept: Control+Shift+2, toggle: ascii_mode }
+
+  # ========== 候選／排序偏好 ==========
+  "translator/enable_user_dict": true          # false = 測試／穩定排序（唔學頻）
+  "translator/enable_completion": true
+  "translator/enable_sentence": true
+  "translator/max_phrase_length": 5
+
+  # ========== 方案內其他 ==========
+  # "speller/max_code_length": 2
+  # "speller/auto_select": false
