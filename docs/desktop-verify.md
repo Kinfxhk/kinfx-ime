@@ -28,7 +28,7 @@
 
 Checklist：
 
-- [ ] Fcitx5 → 中州韻 → **KINFX 速成**
+- [ ] Fcitx5 → 中州韻 → **KINFX 中英混打輸入法 · 速成**（`kinfx_quick`）
 - [ ] **零切換**：同一輸入流「今日用 API 測試」（大寫 API；唔按切英文）
 - [ ] 可選：Shift inline_ascii（若 Fcitx5 未搶 LShift）
 - [ ] 粵拼：`nei5`／`ngo5`／`jyut6`

@@ -1,4 +1,4 @@
-# KINFX IME — 設定（Flex）
+# KINFX 中英混打輸入法 — 設定（Flex）
 
 產品目標：**夠 flex**。預設行為固定清楚；唔同模式全部可改。本輪用 **RIME `*.custom.yaml`**（完整 GUI 面板可後續）。
 
@@ -42,9 +42,9 @@
 
 ## 候選每頁 9（硬需求）
 
-Windows 微軟速成預設每頁 **9** 個候選，用數字鍵 **1–9** 選字。KINFX 速成同粵拼 schema 都寫 `menu/page_size: 9`。librime 讀呢個鍵做分頁；`1` 選第一個、`9` 選第九個。
+Windows 微軟速成預設每頁 **9** 個候選，用數字鍵 **1–9** 選字。速成（`kinfx_quick`）同粵拼（`kinfx_jyutping`）schema 都寫 `menu/page_size: 9`。librime 讀呢個鍵做分頁；`1` 選第一個、`9` 選第九個。
 
-Fcitx5 classicui、Squirrel、Weasel 顯示 librime 交嚟嘅一頁，classicui 冇 page size 設定。`scripts/install-linux.sh` 把用戶目錄 `default.yaml` 嘅 `menu/page_size` 設成 9。方案檔本身寫 9：就算 `default.custom.yaml` 把全域頁數設成 5，KINFX 速成／粵拼編譯結果仍然係 9。
+Fcitx5 classicui、Squirrel、Weasel 顯示 librime 交嚟嘅一頁，classicui 冇 page size 設定。`scripts/install-linux.sh` 把用戶目錄 `default.yaml` 嘅 `menu/page_size` 設成 9。方案檔本身寫 9：就算 `default.custom.yaml` 把全域頁數設成 5，速成／粵拼（`kinfx_quick`／`kinfx_jyutping`）編譯結果仍然係 9。
 
 要改 KINFX 頁數：複製 `schemas/examples/kinfx_quick.custom.yaml.example` 做 `kinfx_quick.custom.yaml`，取消 `"menu/page_size": 5` 嘅註解再部署。呢個先至覆蓋方案。例檔預設註解住，複製過去唔會改走產品預設。
 

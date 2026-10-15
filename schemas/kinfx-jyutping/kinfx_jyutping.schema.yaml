@@ -1,14 +1,15 @@
 # encoding: utf-8
-# KINFX IME — 粵拼（Jyutping）with tone digits (rime-cantonese / jyut6ping3)
+# KINFX 中英混打輸入法 — 粵拼（Jyutping）with tone digits (rime-cantonese / jyut6ping3)
 # Dictionary: system `jyut6ping3` (Debian rime-data-jyut6ping3). See NOTICE.
 
 schema:
   schema_id: kinfx_jyutping
-  name: KINFX 粵拼
+  name: KINFX 中英混打輸入法 · 粵拼
   version: "0.2.0"
   author:
     - KINFX
   description: |
+    KINFX 中英混打輸入法（粵拼）。schema_id 係 kinfx_jyutping。
     香港語言學會粵語拼音（有聲調）：例 jyut6、nei5、ngo5；亦可唔打調號。
     混打同速成：預設大寫拉丁零切換；可選 Shift inline_ascii／ascii_mode。
     候選每頁 9 個、選字鍵 1–9、直列。空白＝翻頁；Enter／1–9＝選焦點。同速成。

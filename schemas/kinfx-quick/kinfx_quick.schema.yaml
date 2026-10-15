@@ -1,16 +1,17 @@
 # encoding: utf-8
-# KINFX IME — 速成（Sucheng / Microsoft Quick–aligned）
+# KINFX 中英混打輸入法 — 速成（Sucheng / Microsoft Quick–aligned）
 # Based on rime-quick ideas (LGPL-3.0 upstream); this schema file is MIT (project LICENSE).
 # Dictionary data: see kinfx_quick.dict.yaml + NOTICE.
 
 schema:
   schema_id: kinfx_quick
-  name: KINFX 速成
+  name: KINFX 中英混打輸入法 · 速成
   version: "0.3.0"
   author:
     - KINFX
     - 速成規則／碼表源流見 NOTICE（rime-quick / rime-cangjie）
   description: |
+    KINFX 中英混打輸入法（速成）。schema_id 係 kinfx_quick。
     港式／Windows 微軟速成對齊：倉頡字根鍵盤＋只取首尾二碼。
     候選預設每頁 9 個、選字鍵 1–9、直列。空白＝翻頁；Enter／1–9＝選焦點。
     Tab 展開多欄；多頁碼有「常用熱門」環頁。見 docs/WIN_QUICK_SELECT.md。

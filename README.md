@@ -1,14 +1,27 @@
-# KINFX IME
+# KINFX 中英混打輸入法
 
-開源中文輸入法專案（繁體／香港優先）——以 **librime** 為共用引擎，Linux 先做，macOS 次之，其後 Windows／Android／iOS。
+Desktop 優先的開源中英混打輸入法（繁體／香港）。同一套打法要在全平台都好用；**這一版先把 Desktop 打磨好**：Linux（Fcitx5）已經可用，macOS、Windows 桌面跟住，手機其後。共用引擎係 **librime**。GitHub repo slug 仍然係 `kinfx-ime`。
 
-**方案優先**：**速成（做到最好）→ 粵拼 → 倉頡／注音／拼音**  
-**硬需求**：中英混打（**預設全程零切換**）、候選窗**唔遮游標**、候選**每頁 9 個（選字鍵 1–9，同 Windows 官方速成）**、Windows 慣用字根排列可選。  
-**Flex**：預設清楚；混打／Shift／ASCII／排序等**全部可設定改**（`docs/CONFIG.md`）。
+設計目標：中文同英文夾在同一輸入流，預設唔使切模式。候選窗、選字鍵、詞庫都按 Desktop 打字習慣收斂，再帶到其他平台。
 
-## English (short)
+**方案優先**：**速成（做到最好）→ 粵拼 → 倉頡／注音／拼音**
 
-Open-source Chinese IME on **librime** (BSD). Linux-first (Fcitx5 + fcitx5-rime). Primary: **Sucheng/Quick**, then **Jyutping with tones** (`jyut6`, `nei5`). Default mixed input: **uppercase Latin / email / URL inline without switching** to ASCII mode; Shift/`ascii_mode` remain optional and configurable. Candidate page defaults to **9** (select keys 1–9), same as Windows Quick. Code: MIT; dictionaries keep upstream licenses (`NOTICE`).
+## 功能（v0.3.1）
+
+- **速成優先**：倉頡字根、只取首尾二碼，對齊 Windows 微軟速成。**粵拼有聲調**（`jyut6ping3`，例 `nei5`、`jyut6`）。
+- **中英混打預設零切換**：大寫拉丁、email、URL 直出，唔使切英文模式。
+- **候選（Windows 選字習慣）**：每頁 9 個、直列；空白翻頁；Enter／1–9 選字；Tab 展開；多頁碼有常用熱門環頁。
+- **詞／成語前綴**：例 `ofc`→無錯。**英詞補全**：`gmai`→Gmail；另有 scriptwriting、voiceover。
+- **短碼中文首位**：`me`／`or`／`of` 唔會被英詞搶走。
+- **Flex**：混打、Shift、ASCII、排序、頁數全部可設定（`docs/CONFIG.md`）。
+- **引擎 librime**；**Linux Desktop（Fcitx5）先**。候選窗跟游標、開喺下方、貼邊自動翻（目測需顯示器，見 `docs/ARCHITECTURE.md` §4）。
+
+Fcitx 選單（`schema_id` 冇改）：
+
+| 選單名 | schema_id |
+| --- | --- |
+| KINFX 中英混打輸入法 · 速成 | `kinfx_quick` |
+| KINFX 中英混打輸入法 · 粵拼 | `kinfx_jyutping` |
 
 ## 點解用 RIME
 
@@ -27,7 +40,7 @@ Open-source Chinese IME on **librime** (BSD). Linux-first (Fcitx5 + fcitx5-rime)
 | `tests/` | Headless smoke、混打驗收 |
 | `third_party/rime-quick/` | 上游速成參考（LGPL-3） |
 
-## Linux 安裝（有桌面）
+## Linux Desktop 安裝
 
 ```bash
 # 依賴（Debian/Ubuntu 例）
@@ -37,7 +50,8 @@ sudo apt install fcitx5 fcitx5-rime librime-bin librime-plugin-lua \
 # 安裝本專案 schema
 ./scripts/install-linux.sh
 
-# Fcitx5 設定 → 加入「中州韻」→ 選「KINFX 速成」
+# Fcitx5 設定 → 加入「中州韻」→ 選「KINFX 中英混打輸入法 · 速成」
+# schema_id 係 kinfx_quick（粵拼選單：「KINFX 中英混打輸入法 · 粵拼」／ kinfx_jyutping）
 ```
 
 預設資料目錄：`~/.local/share/fcitx5/rime/`。
@@ -77,15 +91,21 @@ Fcitx5 預設常用 **LShift** 切輸入法／鍵盤，會**搶走** rime `inlin
 # 等同 ./tests/run_smoke.sh
 ```
 
-桌面 checklist（**候選窗視覺需顯示器**）：`docs/desktop-verify.md`、`./scripts/verify-gui-mixed.sh`。
+Smoke 用 **schema_id** `kinfx_quick` 選方案，唔靠選單顯示名。桌面 checklist（**候選窗視覺需顯示器**）：`docs/desktop-verify.md`、`./scripts/verify-gui-mixed.sh`。
 
 ## 候選
 
-每頁 **9** 個、**直列**、選字鍵 **1–9**。**空白翻頁**，**Enter／1–9 選焦點**，**Tab 展開**多欄，多頁碼有「常用熱門」環頁。無候選窗時空白仍然上屏（`好API`）。詳見 `docs/WIN_QUICK_SELECT.md`。頭頁對照：`docs/WIN_QUICK_RANK.md`。視窗預設 **跟游標、開喺下方、貼邊自動翻**。直列同展開格仔嘅目測標 **需顯示器**。見 `docs/ARCHITECTURE.md` §4。Flex：`docs/CONFIG.md`。
+每頁 **9** 個、**直列**、選字鍵 **1–9**。**空白翻頁**，**Enter／1–9 選焦點**，**Tab 展開**多欄，多頁碼有「常用熱門」環頁。無候選窗時空白仍然上屏（`好API`）。詳見 `docs/WIN_QUICK_SELECT.md`。頭頁對照：`docs/WIN_QUICK_RANK.md`。詞／英詞：`docs/PHRASE_MIX.md`。視窗預設 **跟游標、開喺下方、貼邊自動翻**。直列同展開格仔嘅目測標 **需顯示器**。見 `docs/ARCHITECTURE.md` §4。Flex：`docs/CONFIG.md`。
 
 ## 排列
 
 預設 **`win_quick`**。表：`docs/LAYOUTS.md`。
+
+## English (short)
+
+**KINFX 中英混打輸入法** is a Desktop-first mixed Chinese–English IME on **librime**. The repository slug stays `kinfx-ime`. Linux Desktop (Fcitx5) ships first; macOS and Windows desktop follow.
+
+As of v0.3.1: Sucheng/Quick first, tonal Jyutping (`jyut6`, `nei5`). Zero-switch mix (uppercase Latin, email, URL). Nine vertical candidates; Space pages; Enter or 1–9 selects; Tab expands; hot-favorites wrap. Phrase prefix `ofc`→無錯; English completion `gmai`→Gmail, plus scriptwriting and voiceover. Short codes `me` / `or` / `of` stay Chinese-first. Flex settings: `docs/CONFIG.md`. Code: MIT; dictionaries keep upstream licenses (`NOTICE`).
 
 ## 授權
 
@@ -94,4 +114,4 @@ Fcitx5 預設常用 **LShift** 切輸入法／鍵盤，會**搶走** rime `inlin
 
 ## 狀態
 
-見 `docs/STATUS.md`。
+見 `docs/STATUS.md`（v0.3.1 已出）。
