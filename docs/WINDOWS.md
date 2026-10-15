@@ -4,7 +4,7 @@
 
 Windows 11 用 **Weasel（小狼毫）** 做 TSF 宿主。本 repo 只交 schema、詞庫、部署／卸載腳本同文件。唔包含自寫 TSF DLL、純 MSIX TSF 註冊、DLL 注入，亦唔 fork Weasel。
 
-English: On Windows 11, KINFX rides on [Weasel](https://github.com/rime/weasel) (Rime's TSF front-end). This repository deploys schemas into the per-user Rime directory. It does not ship a text service. Suggested tag **v0.3.2**; the tag is not created here.
+English: On Windows 11, KINFX rides on [Weasel](https://github.com/rime/weasel) (Rime's TSF front-end). This repository deploys schemas into the per-user Rime directory. It does not ship a text service. The installer also merges a lightweight rounded light/dark candidate skin; the list stays vertical, nine per page. Suggested tag **v0.3.2**; the tag is not created here.
 
 ## 點解係 Weasel
 
@@ -50,7 +50,8 @@ powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\install-windows.ps
 1. 把 schema／Lua／詞庫複製到 **`%APPDATA%\Rime`**（Weasel 用戶目錄）。可以用 `-RimeUserDir` 或環境變數 `RIME_USER_DIR` 改位置。
 2. 合併 **`default.custom.yaml`** 嘅 `schema_list`，加入 `kinfx_quick` 同 `kinfx_jyutping`。已有嘅其他方案保留；再跑一次唔會重複。
 3. 如果搵到 Weasel 嘅 shared `default.yaml`，會把嗰張方案表併入 `schema_list`（已有項目留低、唔重複 id）。未裝小狼毫時可以先得 KINFX 兩項；裝完再跑一次會補回拼音／注音／倉頡，唔會清走用戶自己加嘅方案。
-4. 印下一步：重新部署。
+4. 合併 **`weasel.custom.yaml`** 嘅輕量候選窗皮膚（圓角、淺陰影、淺色／深色，直列）。其他補丁留低。見下面「候選窗外觀」。
+5. 印下一步：重新部署。
 
 **唔會**把本 repo 嘅 `schemas/default.yaml` 複製去用戶目錄。librime 用用戶目錄嘅 `default.yaml` **成個覆蓋** shared data。Weasel 嘅鍵位同標點留喺安裝目錄；我哋只用 `default.custom.yaml` 做補丁。
 
@@ -67,6 +68,28 @@ powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\install-windows.ps
 | `rime.lua`、`lua/*.lua` | `schemas/` |
 
 詞庫授權見 `lexicon/NOTICE`，唔係 MIT。
+
+## 候選窗外觀
+
+安裝會把一份**輕量**皮膚合併進 **`%APPDATA%\Rime\weasel.custom.yaml`**。例檔係 `schemas/examples/weasel.custom.yaml.example`（分享 zip 都有）。外觀近現代 macOS：圓角、淺陰影、淺色 `kinfx_modern`、深色 `kinfx_modern_dark`（跟 Windows 淺色／深色，用 `color_scheme`／`color_scheme_dark`）。候選仍然**直列**（`style/horizontal: false`、`style/layout/type: vertical`）。每頁 9 仍然寫喺方案 `menu/page_size`。呢份皮膚**唔**改頁數、選字鍵、詞庫或排序。
+
+### 低延遲／輕量皮膚
+
+鍵入到候選窗要保持快，所以呢份皮膚只改配色同佈局數字：
+
+- 冇點陣圖／大圖皮膚，冇動畫，冇材質模糊，冇逐鍵強制重繪嘅選項。
+- 陰影半徑係 **8**（淺、靜態）。唔開 hover 高亮，唔開 `enhanced_position`，避免無謂嘅視窗搬移同重畫。Weasel 議題 [#1869](https://github.com/rime/weasel/issues/1869) 講狀態冇變就唔使再 `ShowWindow`／`SetWindowPos`；呢份設定唔會每按一鍵改狀態。
+- 淺色／深色係兩套靜態配色。系統切換主題先換方案，唔係每按一鍵換一次。
+- 字體用系統「Microsoft YaHei UI」，唔打包外掛字檔。
+- 圓角同陰影要 **Weasel 0.15** 或更新。更舊嘅版本會忽略未知鍵，直列同配色名仍然有效。
+
+標記係 `# kinfx-ime:weasel-skin begin`／`end`。再跑 `install-windows.ps1` 會用 repo 嘅皮膚更新呢段，並收走標記外同名嘅皮膚鍵（例如舊嘅 `style/color_scheme`）。`app_options` 等其他補丁留低。標記會放在 `patch:` 最尾，所以同名項以皮膚為準。
+
+套用：安裝寫入之後要**重新部署**（腳本搵到 `WeaselDeployer.exe` 會自己跑 `/deploy`）。跟住先見到圓角同淺色／深色。
+
+還原外觀、保留 KINFX 方案：打開 `%APPDATA%\Rime\weasel.custom.yaml`，刪由 begin 到 end 嘅整段，再重新部署。下次再跑安裝會寫返皮膚。
+
+`uninstall-windows.ps1` 會一併刪呢段。如果檔入面淨係 KINFX 寫入嘅皮膚，會刪成個 `weasel.custom.yaml`。有其他補丁就留低個檔。
 
 ### 重新部署同揀方案
 
@@ -146,6 +169,7 @@ powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\pack-windows-share
 - `docs/WINDOWS.md`
 - `scripts/install-windows.ps1`、`scripts/uninstall-windows.ps1`、`scripts/windows-rime.ps1`
 - `schemas/kinfx-quick/` 嘅 schema＋碼表、`schemas/kinfx-jyutping/kinfx_jyutping.schema.yaml`
+- `schemas/examples/weasel.custom.yaml.example`（候選窗輕量皮膚）
 - `schemas/rime.lua`、`schemas/lua/*.lua`
 - `lexicon/` 詞庫同 `lexicon/NOTICE`
 - `LICENSE`、`NOTICE`、`licenses/rime-quick-LGPL-3.0.txt`
@@ -162,3 +186,5 @@ powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\pack-windows-share
 | 粵拼部署失敗 | 補 `jyut6ping3`（見上）。速成唔依賴佢。 |
 | 反引號反查冇拼音 | Weasel data 目錄要有 `luna_pinyin`。正常安裝已有。 |
 | Lua 組件缺失 | 改裝最新官方 Weasel。 |
+| 候選窗仍然係舊方框 | 重新部署。確認 `%APPDATA%\Rime\weasel.custom.yaml` 有 `kinfx-ime:weasel-skin`，而且係 Weasel 0.15 或更新。淺色／深色跟系統主題。 |
+| 想拆皮膚但保留方案 | 刪 `weasel.custom.yaml` 入面嘅 begin／end 標記段，再重新部署。唔好淨係靠卸載：`uninstall-windows.ps1` 會連 schema 一齊收走。 |

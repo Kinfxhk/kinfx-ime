@@ -124,6 +124,89 @@ $repo = Split-Path -Parent $PSScriptRoot
 $missingSources = Get-MissingKinfxSources $repo
 Assert-True 'repo sources exist' ($missingSources.Count -eq 0)
 
+$skinBlock = Get-KinfxWeaselSkinBlockLines $repo
+$freshSkin = New-KinfxWeaselCustomText $skinBlock
+Assert-True 'skin names light scheme' ($freshSkin -match '"style/color_scheme": kinfx_modern')
+Assert-True 'skin names dark scheme' ($freshSkin -match 'kinfx_modern_dark')
+Assert-True 'skin keeps vertical' (($freshSkin -match '"style/horizontal": false') -and ($freshSkin -match '"style/layout/type": vertical'))
+Assert-True 'skin has corner and small shadow' (($freshSkin -match '"style/layout/corner_radius": 12') -and ($freshSkin -match '"style/layout/shadow_radius": 8'))
+Assert-True 'skin does not set page_size' ($freshSkin -notmatch 'page_size')
+Assert-True 'skin has no horizontal true' ($freshSkin -notmatch 'horizontal:\s*true')
+Assert-True 'skin has no bitmap or redraw keys' (($freshSkin -notmatch '(?i)\.(png|bmp|jpg|gif|webp)') -and ($freshSkin -notmatch '"style/(hover_type|enhanced_position)"'))
+Assert-True 'skin has one begin marker' (([regex]::Matches($freshSkin, 'kinfx-ime:weasel-skin begin')).Count -eq 1)
+$skinAgain = Update-KinfxWeaselSkinText $freshSkin $skinBlock
+Assert-True 'skin rerun idempotent' ($skinAgain -eq $freshSkin)
+
+$userSkin = @"
+# my weasel notes
+patch:
+  "style/color_scheme": aqua
+  "style/font_point": 22
+  "preset_color_schemes/aqua":
+    name: Aqua
+    text_color: 0x112233
+  app_options:
+    notepad.exe:
+      ascii_mode: true
+  "switcher/hotkeys":
+    - "Control+grave"
+"@
+$mergedSkin = Update-KinfxWeaselSkinText $userSkin $skinBlock
+Assert-True 'skin keeps app_options' ($mergedSkin -match 'notepad.exe')
+Assert-True 'skin keeps hotkey' ($mergedSkin -match 'Control\+grave')
+Assert-True 'skin keeps user note' ($mergedSkin -match 'my weasel notes')
+Assert-True 'skin keeps foreign color scheme body' (($mergedSkin -match 'name: Aqua') -and ($mergedSkin -match '0x112233'))
+Assert-True 'skin drops replaced aqua selection' ($mergedSkin -notmatch '"style/color_scheme": aqua')
+Assert-True 'one light scheme key' (([regex]::Matches($mergedSkin, '"style/color_scheme":')).Count -eq 1)
+Assert-True 'one dark scheme key' (([regex]::Matches($mergedSkin, '"style/color_scheme_dark":')).Count -eq 1)
+Assert-True 'font_point is skin value once' (([regex]::Matches($mergedSkin, '"style/font_point":')).Count -eq 1)
+Assert-True 'font_point not 22' ($mergedSkin -notmatch 'font_point": 22')
+$idxPlusPrep = $mergedSkin.IndexOf('app_options:')
+$idxSkin = $mergedSkin.LastIndexOf('kinfx-ime:weasel-skin begin')
+Assert-True 'skin block follows unrelated keys' (($idxSkin -gt $idxPlusPrep) -and ($idxPlusPrep -ge 0))
+
+$plusSkin = @"
+patch:
+  style/+:
+    horizontal: true
+    font_point: 30
+  app_options:
+    notepad.exe:
+      ascii_mode: true
+"@
+$plusOut = Update-KinfxWeaselSkinText $plusSkin $skinBlock
+$idxPlus = $plusOut.IndexOf('style/+')
+$idxHoriz = $plusOut.LastIndexOf('"style/horizontal": false')
+Assert-True 'skin block follows style/+' (($idxHoriz -gt $idxPlus) -and ($idxPlus -ge 0))
+Assert-True 'style/+ map preserved' ($plusOut -match 'font_point: 30')
+Assert-True 'style/+ does not remove vertical key' ($plusOut -match '"style/layout/type": vertical')
+
+$removedSkin = Remove-KinfxWeaselSkinText $mergedSkin
+Assert-True 'uninstall skin keeps file' (-not $removedSkin.Delete)
+Assert-True 'uninstall skin drops marker' ($removedSkin.Text -notmatch 'weasel-skin begin')
+Assert-True 'uninstall skin keeps app_options' ($removedSkin.Text -match 'notepad.exe')
+Assert-True 'uninstall skin keeps hotkey' ($removedSkin.Text -match 'Control\+grave')
+Assert-True 'uninstall skin keeps note' ($removedSkin.Text -match 'my weasel notes')
+Assert-True 'uninstall skin keeps aqua body' ($removedSkin.Text -match '0x112233')
+Assert-True 'uninstall skin drops kinfx scheme' ($removedSkin.Text -notmatch 'kinfx_modern')
+
+$onlySkin = Remove-KinfxWeaselSkinText $freshSkin
+Assert-True 'uninstall deletes skin-only file' ([bool]$onlySkin.Delete)
+
+$noMarkerSkin = "patch:`n  app_options:`n    notepad.exe:`n      ascii_mode: true`n"
+$untouchedSkin = Remove-KinfxWeaselSkinText $noMarkerSkin
+Assert-True 'no skin marker leaves text' (($untouchedSkin.Text -eq $noMarkerSkin) -and (-not $untouchedSkin.Delete))
+
+$oneLineSkin = 'patch: { "style/color_scheme": aqua }'
+$threwSkin = $false
+try { Update-KinfxWeaselSkinText $oneLineSkin $skinBlock | Out-Null } catch { $threwSkin = $true }
+Assert-True 'weasel one-line patch fails clearly' $threwSkin
+
+$crlfSkin = "patch:`r`n  app_options:`r`n    notepad.exe:`r`n      ascii_mode: true`r`n"
+$fromCrlfSkin = Update-KinfxWeaselSkinText $crlfSkin $skinBlock
+Assert-True 'CRLF weasel file keeps app_options' ($fromCrlfSkin -match 'notepad.exe')
+Assert-True 'CRLF weasel file gains one skin' (([regex]::Matches($fromCrlfSkin, 'kinfx-ime:weasel-skin begin')).Count -eq 1)
+
 $tmp = Join-Path ([System.IO.Path]::GetTempPath()) ('kinfx-win-' + [guid]::NewGuid().ToString('n'))
 New-Item -ItemType Directory -Path $tmp | Out-Null
 try {
@@ -143,6 +226,7 @@ try {
       'lua/melt_eng.lua',
       'lua/lexicon_index.lua',
       'default.custom.yaml',
+      'weasel.custom.yaml',
       'kinfx-ime.deployed.txt'
     )) {
     Assert-True ("installed {0}" -f $rel) (Test-Path -LiteralPath (Join-RepoPath $tmp $rel))
@@ -150,6 +234,8 @@ try {
   Assert-True 'does not write default.yaml' (-not (Test-Path -LiteralPath (Join-Path $tmp 'default.yaml')))
   $custom = Read-Utf8Text (Join-Path $tmp 'default.custom.yaml')
   Assert-Seq 'fresh user dir lists both schemas' (Ids-OfText $custom) @('kinfx_quick', 'kinfx_jyutping')
+  $installedSkin = Read-Utf8Text (Join-Path $tmp 'weasel.custom.yaml')
+  Assert-True 'install writes vertical lightweight skin' (($installedSkin -match '"style/horizontal": false') -and ($installedSkin -match '"style/layout/shadow_radius": 8') -and ($installedSkin -notmatch 'page_size'))
 
   $other = Join-Path $tmp 'luna_pinyin.schema.yaml'
   Set-Content -LiteralPath $other -Value 'schema:' -Encoding ascii
@@ -159,6 +245,7 @@ try {
   & (Join-Path $PSScriptRoot 'install-windows.ps1') -RimeUserDir $tmp -RepoRoot $repo -NoDeploy
   if ($LASTEXITCODE -ne 0) { throw "reinstall exit $LASTEXITCODE" }
   Assert-Seq 'second install stays idempotent' (Ids-OfText (Read-Utf8Text (Join-Path $tmp 'default.custom.yaml'))) @('kinfx_quick', 'kinfx_jyutping')
+  Assert-True 'second install keeps one skin' (([regex]::Matches((Read-Utf8Text (Join-Path $tmp 'weasel.custom.yaml')), 'kinfx-ime:weasel-skin begin')).Count -eq 1)
 
   & (Join-Path $PSScriptRoot 'uninstall-windows.ps1') -RimeUserDir $tmp -RepoRoot $repo
   if ($LASTEXITCODE -ne 0) { throw "uninstall exit $LASTEXITCODE" }
@@ -168,6 +255,7 @@ try {
   Assert-True 'left unrelated schema' (Test-Path -LiteralPath $other)
   Assert-True 'left unrelated lua' (Test-Path -LiteralPath $userLua)
   Assert-True 'removed stock default.custom.yaml' (-not (Test-Path -LiteralPath (Join-Path $tmp 'default.custom.yaml')))
+  Assert-True 'removed stock weasel skin' (-not (Test-Path -LiteralPath (Join-Path $tmp 'weasel.custom.yaml')))
 
   $customOnly = Join-Path $tmp 'default.custom.yaml'
   Write-Utf8NoBom $customOnly @"
@@ -201,6 +289,7 @@ patch:
     Assert-True 'zip has lexicon notice' ($names -contains 'lexicon/NOTICE')
     Assert-True 'zip has quick dict' ($names -contains 'schemas/kinfx-quick/kinfx_quick.dict.yaml')
     Assert-True 'zip has share blurb' ($names -contains 'WINDOWS-SHARE.txt')
+    Assert-True 'zip has weasel skin example' ($names -contains 'schemas/examples/weasel.custom.yaml.example')
     Assert-True 'zip omits third_party' (-not ($names | Where-Object { $_ -like 'third_party/*' }))
     Assert-True 'zip uses forward slashes' (-not ($names | Where-Object { $_ -match '\\' }))
   } finally {
