@@ -90,6 +90,24 @@ class PhraseEncodeTest(unittest.TestCase):
             self.assertEqual(gmail[0][0], "Gmail")
             self.assertEqual(gmail[1][0], "GMAIL")
 
+    def test_long_prefix_prefers_shorter_remainder(self) -> None:
+        """Weight does not beat a shorter tail: scri→script, voic→voice."""
+        rows = [
+            ("script", "script", gen.EN_BASE_WEIGHT),
+            ("scriptwriter", "scriptwriter", gen.EN_BASE_WEIGHT),
+            ("scriptwriting", "scriptwriting", 100000),
+            ("voice", "voice", gen.EN_BASE_WEIGHT),
+            ("voicemail", "voicemail", gen.EN_BASE_WEIGHT),
+            ("voiceover", "voiceover", 100000),
+            ("Gmail", "gmail", 100000),
+            ("GMAIL", "gmail", 90000),
+        ]
+        self.assertEqual(gen.prefix_hits(rows, "scri")[0][0], "script")
+        self.assertEqual(gen.prefix_hits(rows, "voic")[0][0], "voice")
+        self.assertEqual(gen.prefix_hits(rows, "scriptwriti")[0][0], "scriptwriting")
+        self.assertEqual(gen.prefix_hits(rows, "voiceove")[0][0], "voiceover")
+        self.assertEqual(gen.prefix_hits(rows, "gmai")[0][0], "Gmail")
+
     def test_prefix_order_exact_before_tail(self) -> None:
         rows = [
             ("無法", "ofxx", 99999),

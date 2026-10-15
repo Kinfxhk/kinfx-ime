@@ -48,8 +48,9 @@ It is provided "as is" without express or implied warranty.
 Source: http://wordlist.sourceforge.net/
 
 lexicon/en/extras.tsv adds Gmail and GMAIL (completion targets; Gmail is a
-trademark of Google LLC). Those two rows are project data. They do not change
-the SCOWL license of the rest of kinfx_en.dict.yaml.
+trademark of Google LLC) plus scriptwriting and voiceover. Those rows are
+project data. They do not change the SCOWL license of the rest of
+kinfx_en.dict.yaml.
 
 Runtime policy (schemas/lua/melt_eng.lua): prefix completion is raised only
 when the input length is at least 4; a length-3 exact dictionary hit may

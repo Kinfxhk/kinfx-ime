@@ -1,7 +1,7 @@
 # 詞／成語／英詞聯想（phrase-mix）
 
 **基礎**：v0.2.0 選字（每頁 9、直列、空白翻頁、Enter 確認）唔改。  
-**建議標籤**：v0.3.0（本分支未打 tag）。
+**建議標籤**：v0.3.0 詞庫前綴；英詞 extras（scriptwriting／voiceover）建議 **v0.3.1**。
 
 ## 三條通道
 
@@ -32,13 +32,13 @@
 | --- | --- | --- |
 | `lexicon/hk/kinfx_hk_words.dict.yaml` | essay-cantonese 2／3／5 字 | 詞條 CC BY 4.0；速成碼 LGPL-3.0 |
 | `lexicon/hk/kinfx_hk_idioms.dict.yaml` | 四字帶（成語同其他四字詞） | 同上 |
-| `lexicon/en/kinfx_en.dict.yaml` | SCOWL（Debian `wamerican`）+ `extras.tsv` 嘅 Gmail／GMAIL | SCOWL 許可（Kevin Atkinson）；見 NOTICE |
+| `lexicon/en/kinfx_en.dict.yaml` | SCOWL（Debian `wamerican`）+ `extras.tsv` 嘅 Gmail／GMAIL、scriptwriting、voiceover | SCOWL 許可（Kevin Atkinson）；見 NOTICE |
 
 冇打入 GPL-3 rime-ice。`en_spacer` 唔開。大寫拉丁仍然走 recognizer 零切換（M0），`GMAI` 唔會變候選。
 
 ## 英詞
 
-`schemas/lua/melt_eng.lua`。`gmai` 係 `gmail` 嘅前綴（長度 4），所以抬 `Gmail`／`GMAIL`。長度 3 只抬詞典全中，唔做前綴。
+`schemas/lua/melt_eng.lua`。`gmai` 係 `gmail` 嘅前綴（長度 4），所以抬 `Gmail`／`GMAIL`。`scriptwriting`／`voiceover` 唔喺 SCOWL，由 extras 以 Gmail 級權重補上。排序先剩長度、先權重，所以驗收用 `scriptwriti`／`voiceove`（`scri` 會先抬 `script`，`voic` 會先抬 `voice`）。長度 3 只抬詞典全中，唔做前綴。
 
 ## 重新生成
 
@@ -50,4 +50,4 @@ python3 scripts/gen_quick_phrases.py
 
 ## 驗收
 
-`./scripts/smoke-linux.sh`：`ofc`→無錯、`ofca`→無錯且排名不高過 `ofc`、數字鍵上屏係個詞而唔係原碼；`gmai` 第一頁有 Gmail 或 GMAIL；`me`／`or`／`of` 見唔到對應英詞，`of` 第 1 仍係「係」。空白翻頁／Enter 確認／每頁 9 同 v0.2.0 一齊跑。
+`./scripts/smoke-linux.sh`：`ofc`→無錯、`ofca`→無錯且排名不高過 `ofc`、數字鍵上屏係個詞而唔係原碼；`gmai` 第一頁有 Gmail 或 GMAIL；`scriptwriti`→scriptwriting、`voiceove`→voiceover；`me`／`or`／`of` 見唔到對應英詞，`of` 第 1 仍係「係」。空白翻頁／Enter 確認／每頁 9 同 v0.2.0 一齊跑。

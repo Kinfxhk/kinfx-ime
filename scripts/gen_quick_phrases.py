@@ -25,9 +25,10 @@ ROOT = Path(__file__).resolve().parents[1]
 MIN_WEIGHT = {2: 400, 3: 250, 4: 40, 5: 120}
 MIN_CODE_LEN = 4
 MAX_WORD_LEN = 5
-VERSION = "0.3.0"
+VERSION = "0.3.1"
 
-# English completion. SCOWL has no Gmail; extras supply the acceptance forms.
+# English completion. SCOWL has no Gmail, scriptwriting, or voiceover;
+# extras supply those acceptance forms.
 EN_BASE_WEIGHT = 100
 EN_MIN_LEN = 2
 EN_MAX_LEN = 16
@@ -221,7 +222,7 @@ def build_english_rows(
     scowl: dict[str, str],
     extras: list[tuple[str, str, int]],
 ) -> list[tuple[str, str, int]]:
-    """SCOWL forms at a flat weight, then extras (Gmail) at their own weights."""
+    """SCOWL forms at a flat weight, then extras at their own weights."""
     by_key: dict[tuple[str, str], int] = {}
     for code, text in scowl.items():
         by_key[(text, code)] = EN_BASE_WEIGHT
@@ -351,7 +352,8 @@ def main() -> None:
             "English completion. Word list Copyright 2000-2011 Kevin Atkinson (SCOWL). "
             "Permission to use, copy, modify, distribute and sell this word list for any "
             "purpose is granted without fee, provided this copyright notice appears in all "
-            "copies. Gmail/GMAIL are added in lexicon/en/extras.tsv. "
+            "copies. Project extras (Gmail/GMAIL, scriptwriting, voiceover) "
+            "are added in lexicon/en/extras.tsv. "
             f"{len(en_rows)} entries. See lexicon/NOTICE.",
             en_rows,
         )
@@ -359,6 +361,8 @@ def main() -> None:
         print(f"skip english: missing {args.en_words}")
 
     gmai = prefix_hits(en_rows, "gmai")[:5] if en_rows else []
+    scriptwriti = prefix_hits(en_rows, "scriptwriti")[:3] if en_rows else []
+    voiceove = prefix_hits(en_rows, "voiceove")[:3] if en_rows else []
     print(
         f"codes={len(codes)} essay_words={len(words)} "
         f"hk_words={len(hk_words)} idioms={len(hk_idioms)}"
@@ -367,6 +371,8 @@ def main() -> None:
     print("ofc top:", [f"{t}:{c}:{w}" for t, c, w in prefix_hits(combined, "ofc")[:8]])
     print("ofca top:", [f"{t}:{c}:{w}" for t, c, w in prefix_hits(combined, "ofca")[:5]])
     print("gmai top:", [f"{t}:{c}:{w}" for t, c, w in gmai])
+    print("scriptwriti top:", [f"{t}:{c}:{w}" for t, c, w in scriptwriti])
+    print("voiceove top:", [f"{t}:{c}:{w}" for t, c, w in voiceove])
     print(f"wrote {args.words_out.name}, {args.idioms_out.name}, {args.phrase_out.name}")
 
 
