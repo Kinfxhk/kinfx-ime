@@ -29,7 +29,8 @@ patch:
   # 所有前端跟 schema，唔會自己改成 5。下面只係 Flex 示範：
   # 取消註解會偏離產品預設，第 6–9 位會睇唔到／選字鍵錯位。
   # "menu/page_size": 5
-  "translator/enable_user_dict": true          # false = 測試／穩定排序（唔學頻）
+  # 預設關。開咗會學頻，常用字可能爬返正常頭頁；常用熱門係左鍵環頁。
+  # "translator/enable_user_dict": true
   "translator/enable_completion": true
   "translator/enable_sentence": true
   "translator/max_phrase_length": 5

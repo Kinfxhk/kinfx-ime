@@ -15,7 +15,7 @@
 ./scripts/smoke-linux.sh
 ```
 
-預期：速成 `me→夏`（第 5 位以內）、`vd→好`（第 1）、`or→倉`（第 9 以內）；`hi` 第一頁 **9** 個候選；選字鍵 `1` 上屏「好」；`vd`+空白唔上屏「好」、再 Enter 上屏第 2 頁第 1 個；`vd`+Enter 上屏「好」；零切換混打 `vd`+`API`→`好API`（空白同 Enter，`ascii_mode=0`）；`of` 熱門環頁同 Tab 展開；`ofc`／`ofca`→無錯、`gmai`→Gmail，而 `me`／`or`／`of` 頭頁仍然係中文；粵拼有聲調而且每頁同樣 9（若系統有 `rime-data-jyut6ping3`）。
+預期：速成頭頁跟 Windows（`vd→好` 第 1、`hi→凡` 第 1、`我` 第 7、`me→夏` 第 5、`of→伙` 第 1、`係` 第 3；`or` 頭頁冇「倉」）；`hi` 第一頁 **9** 個候選；選字鍵 `1` 上屏「好」；`vd`+空白唔上屏「好」、再 Enter 上屏第 2 頁第 1 個（「樂」）；`vd`+Enter 上屏「好」；零切換混打 `vd`+`API`→`好API`（空白同 Enter，`ascii_mode=0`）；`of` 第 1 頁按左入常用熱門，再空白返第 1 頁「伙」；`ofc`／`ofca`→無錯、`gmai`→Gmail，而 `me`／`or`／`of` 頭頁仍然係中文；粵拼有聲調而且每頁同樣 9（若系統有 `rime-data-jyut6ping3`）。
 
 ## GUI（需顯示器）
 
@@ -32,7 +32,7 @@ Checklist：
 - [ ] **零切換**：同一輸入流「今日用 API 測試」（大寫 API；唔按切英文）
 - [ ] 可選：Shift inline_ascii（若 Fcitx5 未搶 LShift）
 - [ ] 粵拼：`nei5`／`ngo5`／`jyut6`
-- [ ] **候選每頁 9**、選字鍵 1–9（`me` 見「夏」、`or` 見「倉」，唔使翻頁）
+- [ ] **候選每頁 9**、選字鍵 1–9（`hi` 第 1 係「凡」、`me` 第 5 係「夏」；「倉」唔喺 `or` 頭頁）
 - [ ] **候選窗視覺**（需顯示器）：編輯器頂／中／底行各打兩碼，核對 below＋edge flip
 - [ ] **直列**（需顯示器）：9 個候選打直。Fcitx5 `Vertical Candidate List=True`
 - [ ] **空白翻頁**、**Enter／1–9 選字**（`vd`：空白唔上屏「好」；Enter 上屏「好」）
