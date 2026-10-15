@@ -74,7 +74,7 @@ winget install Rime.Weasel
 powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\install-windows.ps1
 ```
 
-重新部署（小狼毫右鍵 → **重新部署**）之後，**Win+Space** 揀小狼毫，選單選 **KINFX 中英混打輸入法 · 速成**（`kinfx_quick`）。粵拼選單係 **KINFX 中英混打輸入法 · 粵拼**（`kinfx_jyutping`）。UX 同 v0.3.1：每頁 9、直列、空白翻頁、1–9／Enter 選字、Tab 展開。
+重新部署（小狼毫右鍵 → **重新部署**）之後，**Win+Space** 揀小狼毫，選單選 **KINFX 中英混打輸入法 · 速成**（`kinfx_quick`）。粵拼選單係 **KINFX 中英混打輸入法 · 粵拼**（`kinfx_jyutping`）。UX 同 v0.3.1：每頁 9、直列、空白翻頁、1–9／Enter 選字、Tab 展開。安裝會一併寫入輕量候選窗皮膚（圓角、淺陰影、淺色／深色，仍然直列 9）。見 `docs/WINDOWS.md`「候選窗外觀」。
 
 分享 zip：`.\scripts\pack-windows-share.ps1` → `dist/kinfx-ime-windows-share.zip`。
 
@@ -123,7 +123,7 @@ Smoke 用 **schema_id** `kinfx_quick` 選方案，唔靠選單顯示名。桌面
 
 **KINFX 中英混打輸入法** is a Desktop-first mixed Chinese–English IME on **librime**. The repository slug stays `kinfx-ime`. Linux Desktop (Fcitx5) is the headless/CI path. Windows 11 uses Weasel (小狼毫) as the TSF host; this repo ships schemas plus `scripts/install-windows.ps1` (`docs/WINDOWS.md`). macOS follows. Suggested tag for the Windows docs and scripts: **v0.3.2** (not tagged in-repo).
 
-As of v0.3.1: Sucheng/Quick first, tonal Jyutping (`jyut6`, `nei5`). Zero-switch mix (uppercase Latin, email, URL). Nine vertical candidates; Space pages; Enter or 1–9 selects; Tab expands; hot-favorites wrap. Phrase prefix `ofc`→無錯; English completion `gmai`→Gmail, plus scriptwriting and voiceover. Short codes `me` / `or` / `of` stay Chinese-first. Flex settings: `docs/CONFIG.md`. Code: MIT; dictionaries keep upstream licenses (`NOTICE`).
+As of v0.3.1: Sucheng/Quick first, tonal Jyutping (`jyut6`, `nei5`). Zero-switch mix (uppercase Latin, email, URL). Nine vertical candidates; Space pages; Enter or 1–9 selects; Tab expands; hot-favorites wrap. Phrase prefix `ofc`→無錯; English completion `gmai`→Gmail, plus scriptwriting and voiceover. Short codes `me` / `or` / `of` stay Chinese-first. On Windows, `install-windows.ps1` also merges a lightweight rounded light/dark Weasel skin (still nine vertical candidates). Flex settings: `docs/CONFIG.md`. Code: MIT; dictionaries keep upstream licenses (`NOTICE`).
 
 ## 授權
 

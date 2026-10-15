@@ -6,9 +6,12 @@
 .DESCRIPTION
   Idempotent. Copies schema, lua, and lexicon files to %APPDATA%\Rime and
   merges kinfx_quick / kinfx_jyutping into default.custom.yaml without
-  removing other schemas. Does not copy a full default.yaml: Weasel's shared
-  data must stay in charge, and *.custom.yaml is the patch. Does not install
-  Weasel, register a TSF profile, or require elevation for the file copy.
+  removing other schemas. Merges the lightweight vertical candidate skin
+  (schemas/examples/weasel.custom.yaml.example) into weasel.custom.yaml
+  without removing unrelated patches. Does not copy a full default.yaml:
+  Weasel's shared data must stay in charge, and *.custom.yaml is the patch.
+  Does not install Weasel, register a TSF profile, or require elevation for
+  the file copy. Does not change page size or candidate order.
 
   Suggested release tag: v0.3.2 (docs + these scripts). This script does not
   create a git tag.
@@ -94,6 +97,18 @@ if (-not $existed) {
   Write-Host '  merged default.custom.yaml (existing schemas kept; missing KINFX and Weasel schemas added)'
 }
 
+$skinBlock = Get-KinfxWeaselSkinBlockLines $RepoRoot
+$weaselCustomPath = Join-Path $userDir 'weasel.custom.yaml'
+$weaselExisted = Test-Path -LiteralPath $weaselCustomPath
+if ($weaselExisted) {
+  $weaselText = Update-KinfxWeaselSkinText (Read-Utf8Text $weaselCustomPath) $skinBlock
+  Write-Host '  merged weasel.custom.yaml (lightweight kinfx_modern skin; other patches kept)'
+} else {
+  $weaselText = New-KinfxWeaselCustomText $skinBlock
+  Write-Host '  created weasel.custom.yaml (kinfx_modern / kinfx_modern_dark, vertical, lightweight)'
+}
+Write-Utf8NoBom $weaselCustomPath $weaselText
+
 $searchDirs = @($userDir)
 if (-not [string]::IsNullOrWhiteSpace($weasel.SharedData)) { $searchDirs += $weasel.SharedData }
 if (-not (Test-DataFilePresent $searchDirs 'jyut6ping3.dict.yaml') -and -not (Test-DataFilePresent $searchDirs 'jyut6ping3.schema.yaml')) {
@@ -112,6 +127,7 @@ Write-Host '  2. Win+Space, choose 小狼毫 / RIME.'
 Write-Host '  3. Select schema: KINFX 中英混打輸入法 · 速成  (schema_id kinfx_quick).'
 Write-Host '     Jyutping: KINFX 中英混打輸入法 · 粵拼  (schema_id kinfx_jyutping).'
 Write-Host 'UX stays v0.3.1: page_size 9, vertical, Space pages, 1-9/Enter select, Tab expands.'
+Write-Host 'Candidate skin: rounded corners, soft shadow, light/dark. Static colors only (no images or animation). See docs/WINDOWS.md.'
 Write-Host 'Smoke: ofc -> 無錯, gmai -> Gmail, me/or/of stay Chinese-first. See docs/WINDOWS.md.'
 
 $deployed = $false
