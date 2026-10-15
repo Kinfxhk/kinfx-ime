@@ -34,6 +34,15 @@ patch:
   "translator/enable_sentence": true
   "translator/max_phrase_length": 5
 
+  # ========== 選字（預設＝Windows；取消註解即偏離）==========
+  # 空白改回「選焦點候選」（v0.1.1 習慣；有候選窗時通常即第 1 個）。
+  # 無候選窗（好API）空白仍然上屏。唔使改 key_binder 索引。
+  # "win_quick/space_pages": false
+  # "win_quick/hot_page": false          # 關掉常用熱門環頁
+  # "win_quick/tab_expand": false        # Tab 唔再展開
+  # "style/horizontal": true             # 打橫。Fcitx5 另設 classicui「Vertical Candidate List=False」
+  # "editor/bindings/Return": commit_raw_input   # 還原 Enter 原樣上屏（會出 vd）
+
   # ========== 方案內其他 ==========
   # "speller/max_code_length": 2
   # "speller/auto_select": false

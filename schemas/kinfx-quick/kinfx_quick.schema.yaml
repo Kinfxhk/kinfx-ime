@@ -6,13 +6,14 @@
 schema:
   schema_id: kinfx_quick
   name: KINFX 速成
-  version: "0.1.1"
+  version: "0.2.0"
   author:
     - KINFX
     - 速成規則／碼表源流見 NOTICE（rime-quick / rime-cangjie）
   description: |
     港式／Windows 微軟速成對齊：倉頡字根鍵盤＋只取首尾二碼。
-    候選預設每頁 9 個、選字鍵 1–9（同 Windows 官方速成；唔好改成 5）。
+    候選預設每頁 9 個、選字鍵 1–9、直列。空白＝翻頁；Enter／1–9＝選焦點。
+    Tab 展開多欄；多頁碼有「常用熱門」環頁。見 docs/WIN_QUICK_SELECT.md。
     硬需求：中英混打預設＝全程零切換（大寫拉丁／email／URL 直出）。
     可選：Shift inline_ascii 或 ascii_mode（見 docs／custom 例）。
     佈局變體見 docs/LAYOUTS.md（win_quick = 預設）。排序見 docs/WIN_QUICK_RANK.md。
@@ -33,6 +34,8 @@ engine:
   processors:
     - ascii_composer
     - recognizer
+    # 喺 key_binder 之前：Tab 展開；Page_Up/Down 先處理熱門環頁，其餘交返 selector。
+    - lua_processor@win_quick_keys
     - key_binder
     - speller
     - punctuator
@@ -52,6 +55,8 @@ engine:
   filters:
     - simplifier
     - uniquifier
+    # 正常頁原序通過（唔打亂 v0.1.1 頭頁）。熱門頁／Tab 展開先至改顯示。
+    - lua_filter@win_quick_menu
 
 # 混打預設：唔靠切 ascii_mode。
 # - 大寫拉丁／email／URL → recognizer 直出（零切換；例「今日用 API 測試」）
@@ -107,15 +112,44 @@ reverse_lookup:
 # 使用者要改先用 kinfx_quick.custom.yaml 的 menu/page_size（見 examples）。
 menu:
   page_size: 9
+  # 環頁由熱門頁負責，唔好開 native cycle（會跳過常用熱門直返第 1 頁）。
+  page_down_cycle: false
 
 punctuator:
   import_preset: default
 
+# 有候選窗：空白／右＝下一頁，左＝上一頁。無候選窗唔命中，空白仍係確認上屏
+# （混打 preedit「好API」按空白會 commit）。Flex 關翻頁：win_quick/space_pages: false。
 key_binder:
   import_preset: default
   bindings:
-    - { when: has_menu, accept: space, send: space }
+    - { when: has_menu, accept: space, send: Page_Down }
+    - { when: has_menu, accept: Right, send: Page_Down }
+    - { when: has_menu, accept: KP_Right, send: Page_Down }
+    - { when: has_menu, accept: Left, send: Page_Up }
+    - { when: has_menu, accept: KP_Left, send: Page_Up }
     - { when: always, accept: Control+Shift+2, toggle: ascii_mode }
+
+# express_editor 預設 Return = commit_raw_input（會上屏「vd」）。
+# confirm = 揀焦點候選；無候選窗時退回 Commit()，混打 Enter 仍上屏成文。
+editor:
+  bindings:
+    Return: confirm
+    KP_Enter: confirm
+
+# 直列。Fcitx5 classicui 唔讀 style；install-linux.sh 寫 Vertical Candidate List。
+# Squirrel／Weasel／ibus-rime 讀 horizontal: false。
+style:
+  horizontal: false
+  inline_preedit: true
+
+# 選字 UX。改預設見 schemas/examples/kinfx_quick.custom.yaml.example。
+win_quick:
+  space_pages: true
+  hot_page: true
+  tab_expand: true
+  expand_columns: 4
+  vertical: true
 
 recognizer:
   import_preset: default

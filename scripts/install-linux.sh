@@ -67,17 +67,53 @@ PY
 cp -a "$ROOT/schemas/kinfx-quick/kinfx_quick.schema.yaml" "$TARGET/"
 cp -a "$ROOT/schemas/kinfx-quick/kinfx_quick.dict.yaml" "$TARGET/"
 cp -a "$ROOT/schemas/kinfx-jyutping/kinfx_jyutping.schema.yaml" "$TARGET/"
-echo "  + kinfx_quick + kinfx_jyutping"
+mkdir -p "$TARGET/lua"
+cp -a "$ROOT/schemas/rime.lua" "$TARGET/rime.lua"
+cp -a "$ROOT/schemas/lua/win_quick.lua" "$TARGET/lua/win_quick.lua"
+echo "  + kinfx_quick + kinfx_jyutping + lua/win_quick.lua"
 
-if command -v rime_deployer >/dev/null; then
-  echo "Deploying with rime_deployer…"
-  rime_deployer --build "$TARGET" 2>&1 || true
-else
-  echo "rime_deployer not found; install librime-bin"
+# One-arg `rime_deployer --build "$TARGET"` reuses the user dir as shared data
+# and silently fails to load punctuation/key_bindings. Always pass shared data.
+if [[ ! -d "$SYS" ]]; then
+  echo "ERROR: shared rime data dir not found: $SYS" >&2
+  exit 1
 fi
+if command -v rime_deployer >/dev/null; then
+  echo "Deploying with rime_deployer --build $TARGET $SYS"
+  rime_deployer --build "$TARGET" "$SYS"
+else
+  echo "ERROR: rime_deployer not found; install librime-bin" >&2
+  exit 1
+fi
+
+# Vertical candidate list is a Fcitx5 classicui setting, not a librime page.
+# Squirrel/Weasel read schema style/horizontal: false instead.
+CONF_DIR="${XDG_CONFIG_HOME:-$HOME/.config}/fcitx5/conf"
+mkdir -p "$CONF_DIR"
+python3 - << PY
+from pathlib import Path
+import re
+p = Path("$CONF_DIR") / "classicui.conf"
+text = p.read_text(encoding="utf-8") if p.exists() else ""
+key = "Vertical Candidate List"
+line = key + "=True"
+note = (
+    "# KINFX default: vertical candidates (Windows Quick).\n"
+    "# Flex: set False for a horizontal list. See docs/CONFIG.md.\n"
+)
+if not text.strip():
+    text = note + line + "\n"
+elif re.search(rf"(?m)^{re.escape(key)}=.*$", text):
+    text = re.sub(rf"(?m)^{re.escape(key)}=.*$", line, text, count=1)
+else:
+    text = text.rstrip() + "\n" + line + "\n"
+p.write_text(text, encoding="utf-8")
+print(f"  classicui: {key}=True ({p})")
+PY
 
 echo "Done. Fcitx5 → 中州韻 → KINFX 速成"
 echo "Mixed input default: uppercase Latin inline (no mode switch). See README."
-echo "Candidates: 9 per page, select keys 1–9 (schema menu/page_size; not 5)."
+echo "Select: vertical list, 9 per page, Space=page, 1-9/Enter=commit, Tab=expand."
+echo "Hot-favorites wrap page is on by default. See docs/WIN_QUICK_SELECT.md."
 echo "Fcitx5 classicui does not override page size; it shows the librime page."
 echo "Candidate UX: below caret (docs/ARCHITECTURE.md §4; visual check needs display)."
