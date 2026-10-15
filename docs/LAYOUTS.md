@@ -37,8 +37,9 @@ Q手  W田  E水  R口  T廿  Y卜  U山  I戈  O人  P心
 | 倉 | 人戈日口（OIAR） | 人口 | `OR` |
 | 日 | 日（A） | 日 | `A` |
 
-本 repo `kinfx_quick` **預設即 `win_quick`**（與 MS Quick 字根一致）。  
-候選排序無法 1:1 複製微軟專有演算法——只做**體驗對齊**。
+本 repo `kinfx_quick` **預設即 `win_quick`**（與 MS Quick 字根一致）。
+
+候選窗同 Windows 官方速成對齊：**每頁 9 個、選字鍵 1–9**（`menu/page_size: 9`，速成同粵拼一樣；Fcitx5／Squirrel／Weasel 跟 schema，唔另設頁數）。排序係體驗對齊：香港字頻做底，Windows 頭 9 只喺近頻時調位，並保證 `me`→夏、`or`→倉留喺第一頁。對照表：`docs/WIN_QUICK_RANK.md`。
 
 ### 1.2 `classic_common`（常用／教材常見）
 
@@ -85,6 +86,8 @@ Q手  W田  E水  R口  T廿  Y卜  U山  I戈  O人  P心
 
 ```yaml
 # 概念配置（前端／custom patch）
+menu:
+  page_size: 9               # 產品預設；選字鍵 1–9。Flex 先至改
 kinfx:
   layout: win_quick          # win_quick | classic_common | …
   candidate:
@@ -97,4 +100,4 @@ kinfx:
 
 ## English
 
-Default **Windows Quick** radical map (A=日 … M=一). Sucheng = first+last Cangjie codes. Candidate UI: **never cover the caret**; below-first with edge flip.
+Default **Windows Quick** radical map (A=日 … M=一). Sucheng = first+last Cangjie codes. Candidate page: **9**, select keys **1–9**. Candidate UI: **never cover the caret**; below-first with edge flip. Ranking: `docs/WIN_QUICK_RANK.md`.

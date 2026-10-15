@@ -52,8 +52,16 @@ text2, n = re.subn(
 )
 if n == 0:
     text2 = new_list + "\n" + text
-p.write_text(text2, encoding="utf-8")
-print("  patched default.yaml schema_list")
+text3, n_page = re.subn(
+    r"(?m)^menu:\n  page_size:.*\n",
+    "menu:\n  page_size: 9\n",
+    text2,
+    count=1,
+)
+if n_page == 0:
+    text3 = text2.rstrip() + "\n\nmenu:\n  page_size: 9\n"
+p.write_text(text3, encoding="utf-8")
+print("  patched default.yaml schema_list + menu/page_size: 9")
 PY
 
 cp -a "$ROOT/schemas/kinfx-quick/kinfx_quick.schema.yaml" "$TARGET/"
@@ -70,4 +78,6 @@ fi
 
 echo "Done. Fcitx5 → 中州韻 → KINFX 速成"
 echo "Mixed input default: uppercase Latin inline (no mode switch). See README."
+echo "Candidates: 9 per page, select keys 1–9 (schema menu/page_size; not 5)."
+echo "Fcitx5 classicui does not override page size; it shows the librime page."
 echo "Candidate UX: below caret (docs/ARCHITECTURE.md §4; visual check needs display)."
