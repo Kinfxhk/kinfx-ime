@@ -198,26 +198,27 @@ function New-SchemaEntry {
 }
 
 function Merge-KinfxSchemaEntries {
+  # Union $SeedSchemaIds into $ExistingEntries on every call. A first run
+  # without Weasel writes only kinfx_*; a later re-run must still append the
+  # Weasel seed. Existing ids (and their tails) stay in place. No wipe, no dupes.
   param(
     $ExistingEntries,
-    [AllowNull()][string[]]$SeedIfEmpty
+    [AllowNull()][string[]]$SeedSchemaIds
   )
   $have = New-Object System.Collections.Generic.List[object]
   $seen = @{}
   $source = New-Object System.Collections.Generic.List[object]
-  $hasExisting = $false
   if ($null -ne $ExistingEntries) {
     for ($n = 0; $n -lt $ExistingEntries.Count; $n++) {
       $entry = $ExistingEntries[$n]
       if ($null -eq $entry) { continue }
       if ([string]::IsNullOrEmpty($entry.Id)) { continue }
-      $hasExisting = $true
       [void]$source.Add($entry)
     }
   }
-  if (-not $hasExisting -and $null -ne $SeedIfEmpty) {
-    for ($n = 0; $n -lt $SeedIfEmpty.Count; $n++) {
-      $id = [string]$SeedIfEmpty[$n]
+  if ($null -ne $SeedSchemaIds) {
+    for ($n = 0; $n -lt $SeedSchemaIds.Count; $n++) {
+      $id = [string]$SeedSchemaIds[$n]
       if (-not [string]::IsNullOrWhiteSpace($id)) {
         [void]$source.Add((New-SchemaEntry $id))
       }

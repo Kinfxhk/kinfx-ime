@@ -91,7 +91,7 @@ Write-Host ("default.custom.yaml schema_list: {0}" -f ($writtenIds -join ', '))
 if (-not $existed) {
   Write-Host '  created default.custom.yaml (other Weasel schemas kept when Weasel shared data was readable)'
 } else {
-  Write-Host '  merged default.custom.yaml (existing schemas kept; missing KINFX schemas added)'
+  Write-Host '  merged default.custom.yaml (existing schemas kept; missing KINFX and Weasel schemas added)'
 }
 
 $searchDirs = @($userDir)
