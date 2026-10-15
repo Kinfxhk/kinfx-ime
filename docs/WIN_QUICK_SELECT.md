@@ -62,7 +62,7 @@ editor:
 ## 唔做呢輪
 
 - 上屏之後嘅 Windows「關聯詞」窗（Shift+數字揀熟／雅）
-- M5 小寫英文 melt_eng
+- M5 小寫英文而家喺詞庫通道做（`docs/PHRASE_MIX.md`）；選字鍵唔改
 
 ## Headless
 

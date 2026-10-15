@@ -18,10 +18,11 @@ Open-source Chinese IME on **librime** (BSD). Linux-first (Fcitx5 + fcitx5-rime)
 
 | 路徑 | 說明 |
 | --- | --- |
-| `schemas/kinfx-quick/` | P0 速成 schema + 碼表（字頻權重／罕用字過濾） |
+| `schemas/kinfx-quick/` | P0 速成 schema + 單字碼表（字頻權重／罕用字過濾） |
+| `lexicon/` | 詞／四字帶／英詞（各自授權，見 `lexicon/NOTICE`，唔係 MIT） |
 | `schemas/kinfx-jyutping/` | P1 粵拼（`jyut6ping3` 有聲調） |
 | `schemas/examples/` | `*.custom.yaml.example`（Flex 設定） |
-| `docs/` | ARCHITECTURE／LAYOUTS／STATUS／**CONFIG**／**WIN_QUICK_RANK**／**desktop-verify** |
+| `docs/` | ARCHITECTURE／LAYOUTS／STATUS／**CONFIG**／**WIN_QUICK_RANK**／**WIN_QUICK_SELECT**／**PHRASE_MIX**／**desktop-verify** |
 | `scripts/` | 安裝、smoke、GUI checklist、重新生成碼表 |
 | `tests/` | Headless smoke、混打驗收 |
 | `third_party/rime-quick/` | 上游速成參考（LGPL-3） |
@@ -89,7 +90,7 @@ Fcitx5 預設常用 **LShift** 切輸入法／鍵盤，會**搶走** rime `inlin
 ## 授權
 
 - 本專案原創程式／文件：**MIT**（`LICENSE`）
-- 詞庫／上游：見 `NOTICE`（LGPL／CC BY／ODbL 等）
+- 詞庫／上游：見 `NOTICE` 同 `lexicon/NOTICE`（LGPL／CC BY／SCOWL 等）。`lexicon/` 唔係 MIT
 
 ## 狀態
 
