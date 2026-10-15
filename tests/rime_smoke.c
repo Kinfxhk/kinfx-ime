@@ -501,7 +501,7 @@ static int assert_top_keeps_char(RimeApi* api, RimeSessionId sid) {
   return ok;
 }
 
-/* ofc/ofca phrases, gmai English, and short-code Chinese priority. */
+/* ofc/ofca phrases, gmai plus long-prefix extras, and short-code Chinese priority. */
 static int assert_phrase_mix(RimeApi* api, RimeSessionId sid) {
   int ok_top = assert_top_keeps_char(api, sid);
   int r_ofc = first_page_rank(api, sid, "ofc", "無錯");
@@ -521,6 +521,15 @@ static int assert_phrase_mix(RimeApi* api, RimeSessionId sid) {
   ok = ok && r_en > 0 && r_en <= 9;
   ok = ok && commit_at_rank(api, sid, "gmai", r_en, en_text);
 
+  /* melt_eng sorts by shorter remainder before weight, so scri→script and
+   * voic→voice. These prefixes leave the extra as the unique short tail. */
+  int r_sw = first_page_rank(api, sid, "scriptwriti", "scriptwriting");
+  int r_vo = first_page_rank(api, sid, "voiceove", "voiceover");
+  printf("extras scriptwriti:%d voiceove:%d\n", r_sw, r_vo);
+  ok = ok && r_sw == 1 && r_vo == 1;
+  ok = ok && commit_at_rank(api, sid, "scriptwriti", r_sw, "scriptwriting");
+  ok = ok && commit_at_rank(api, sid, "voiceove", r_vo, "voiceover");
+
   /* Short codes: English must not appear, and 係 stays first on of. */
   ok = ok && assert_absent(api, sid, "me", "me");
   ok = ok && assert_absent(api, sid, "or", "or");
@@ -528,8 +537,8 @@ static int assert_phrase_mix(RimeApi* api, RimeSessionId sid) {
   ok = ok && assert_absent(api, sid, "of", "offer");
   ok = ok && assert_absent(api, sid, "me", "Gmail");
   ok = ok && rank_first_page(api, sid, "of", "係", 1);
-  printf("phrase-mix ofc:%d ofca:%d gmai:%d top:%d\n", r_ofc, r_ofca, r_en,
-         ok_top);
+  printf("phrase-mix ofc:%d ofca:%d gmai:%d scriptwriti:%d voiceove:%d top:%d\n",
+         r_ofc, r_ofca, r_en, r_sw, r_vo, ok_top);
   return ok && ok_top;
 }
 

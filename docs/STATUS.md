@@ -1,6 +1,6 @@
 # KINFX IME — STATUS
 
-**更新**：2026-10-15（詞庫前綴 + 英詞 completion；選字鍵仍係 v0.2.0）
+**更新**：2026-10-15（英詞 extras：scriptwriting／voiceover；選字鍵仍係 v0.2.0）
 
 ## Done
 
@@ -20,10 +20,10 @@
 - [x] Headless：K1–K4（空白／Enter／混打／熱門頁／Tab）同 v0.1.1 頭頁順位一齊跑
 - [x] **詞庫驅動前綴**：`ofc`→無錯、`ofca`→無錯（全碼排名不高過前綴）。`gen_quick_phrases.py` 每字只取一個速成碼，唔笛卡爾爆。見 `docs/PHRASE_MIX.md`
 - [x] **HK 詞／四字帶** 獨立 `lexicon/hk/`（essay-cantonese CC BY 4.0 + 速成碼 LGPL-3.0）
-- [x] **英詞 M5**：`lexicon/en`（SCOWL，唔係 rime-ice）。`gmai`→Gmail；`len≥4` 或長度 3 全中先抬；`me`／`or`／`of` 唔出英詞
+- [x] **英詞 M5**：`lexicon/en`（SCOWL，唔係 rime-ice）。`gmai`→Gmail；`scriptwriti`→scriptwriting、`voiceove`→voiceover（extras，權重跟 Gmail）；`len≥4` 或長度 3 全中先抬；`me`／`or`／`of` 唔出英詞
 - [x] 選字鍵維持 v0.2.0：每頁 9、直列、空白翻頁、Enter 確認
 
-v0.2.0 已標（空白翻頁／Enter 確認）。本分支建議標籤 **v0.3.0**。未打 tag、未合併。
+v0.2.0 已標（空白翻頁／Enter 確認）。v0.3.0 係詞庫前綴。本分支建議標籤 **v0.3.1**（英詞 extras：scriptwriting／voiceover）。
 
 ## Next
 
