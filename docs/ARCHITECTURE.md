@@ -1,4 +1,4 @@
-# KINFX IME — 架構（ARCHITECTURE）
+# KINFX 中英混打輸入法 — 架構（ARCHITECTURE）
 
 **日期**：2026-10-15（Asia/Taipei）  
 **對齊**：`/workspace/notes/open-source/2026-10-15/open-source-ime-feasibility.md`
@@ -78,7 +78,7 @@ Desktop 多數只「切中／英模式」≠ 組字途中夾英文。本專案�
 
 1. 系統：`librime` + `fcitx5` + `fcitx5-rime` + 詞庫依賴（cangjie 源流／jyutping／essay／luna）。  
 2. 本 repo：`scripts/install-linux.sh` → 複製 schema 到 `~/.local/share/fcitx5/rime/`（或 `~/.config/ibus/rime`）。  
-3. `rime_deployer` 編譯；Fcitx5 加「中州韻」後選 **KINFX 速成**。  
+3. `rime_deployer` 編譯；Fcitx5 加「中州韻」後選 **KINFX 中英混打輸入法 · 速成**（`schema_id`：`kinfx_quick`）。  
 4. Headless box：用 `tests/rime_smoke` 驗證候選（無 GUI）。
 
 ## 6. macOS／其他

@@ -4,7 +4,7 @@
 set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 
-echo "=== KINFX IME GUI verify (mixed + caret) ==="
+echo "=== KINFX 中英混打輸入法 GUI verify (mixed + caret) ==="
 echo "Repo scripts:"
 echo "  headless smoke: $ROOT/scripts/smoke-linux.sh  (→ tests/run_smoke.sh)"
 echo "  install:        $ROOT/scripts/install-linux.sh"
@@ -18,7 +18,7 @@ if [[ -z "${DISPLAY:-}${WAYLAND_DISPLAY:-}" ]]; then
 fi
 
 echo "Manual checklist (docs/desktop-verify.md):"
-echo "  [ ] Fcitx5 → 中州韻 → KINFX 速成"
+echo "  [ ] Fcitx5 → 中州韻 → KINFX 中英混打輸入法 · 速成 (schema_id: kinfx_quick)"
 echo "  [ ] Zero-switch mix: type 今日用 API 測試 (ASCII uppercase, no mode toggle)"
 echo "  [ ] Optional: Shift inline_ascii (if Fcitx5 does not steal LShift)"
 echo "  [ ] Candidate popup below caret; edge flip — NEEDS DISPLAY"
