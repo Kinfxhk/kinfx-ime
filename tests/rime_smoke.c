@@ -79,11 +79,47 @@ static int rank_first_page(RimeApi* api, RimeSessionId sid, const char* seq,
   RIME_STRUCT(RimeContext, ctx);
   if (!api->get_context(sid, &ctx)) return 0;
   int r = menu_rank(&ctx, expect);
-  printf("rank '%s'→'%s' = %d (want ≤%d)\n", seq, expect, r, max_rank);
+  printf("rank '%s'→'%s' = %d (want ≤%d) page_size=%d num=%d\n", seq, expect, r,
+         max_rank, ctx.menu.page_size, ctx.menu.num_candidates);
   print_menu(&ctx);
   api->free_context(&ctx);
   api->clear_composition(sid);
   return r > 0 && r <= max_rank;
+}
+
+/* Product default: 9 candidates, select keys 1–9. A full page must be 9. */
+static int assert_page_size(RimeApi* api, RimeSessionId sid, const char* seq,
+                            int want) {
+  api->clear_composition(sid);
+  if (!api->simulate_key_sequence(sid, seq)) return 0;
+  RIME_STRUCT(RimeContext, ctx);
+  if (!api->get_context(sid, &ctx)) return 0;
+  int ps = ctx.menu.page_size;
+  int n = ctx.menu.num_candidates;
+  const char* keys = ctx.menu.select_keys ? ctx.menu.select_keys : "";
+  printf("page '%s' page_size=%d num=%d select_keys='%s' (want %d)\n", seq, ps,
+         n, keys, want);
+  int ok = ps == want && n == want;
+  api->free_context(&ctx);
+  api->clear_composition(sid);
+  return ok;
+}
+
+/* Digit 1 selects rank 1 (page_size 9 → keys 1–9). */
+static int assert_select_key_1(RimeApi* api, RimeSessionId sid, const char* seq,
+                               const char* expect) {
+  api->clear_composition(sid);
+  char keys[16];
+  snprintf(keys, sizeof(keys), "%s1", seq);
+  if (!api->simulate_key_sequence(sid, keys)) return 0;
+  RIME_STRUCT(RimeCommit, c);
+  const char* got = NULL;
+  if (api->get_commit(sid, &c)) got = c.text;
+  printf("select1 '%s' commit=%s expect=%s\n", keys, got ? got : "", expect);
+  int ok = got && strstr(got, expect);
+  if (got) api->free_commit(&c);
+  api->clear_composition(sid);
+  return ok;
 }
 
 static int assert_absent(RimeApi* api, RimeSessionId sid, const char* seq,
@@ -161,10 +197,12 @@ static int try_jyutping_tone(RimeApi* api, RimeSessionId sid) {
   int ok6 = try_code(api, sid, "jyut6", "粵");
   /* toneless still ok */
   int ok0 = try_code(api, sid, "ngo", "我");
+  int ok_page = assert_page_size(api, sid, "aa", 9);
   api->select_schema(sid, "kinfx_quick");
-  printf("jyutping tones nei5→你:%s jyut6→粵:%s ngo→我:%s\n",
-         ok5 ? "PASS" : "FAIL", ok6 ? "PASS" : "FAIL", ok0 ? "PASS" : "FAIL");
-  return ok5 && ok6 && ok0;
+  printf("jyutping tones nei5→你:%s jyut6→粵:%s ngo→我:%s page9:%s\n",
+         ok5 ? "PASS" : "FAIL", ok6 ? "PASS" : "FAIL", ok0 ? "PASS" : "FAIL",
+         ok_page ? "PASS" : "FAIL");
+  return ok5 && ok6 && ok0 && ok_page;
 }
 
 int main(int argc, char** argv) {
@@ -216,11 +254,17 @@ int main(int argc, char** argv) {
     api->free_status(&st);
   }
 
+  int ok_page = assert_page_size(api, sid, "hi", 9);
+  int ok_sel = assert_select_key_1(api, sid, "vd", "好");
   int ok_me = try_code(api, sid, "me", "夏");
   int ok_vd = try_code(api, sid, "vd", "好");
   int ok_or = try_code(api, sid, "or", "倉");
   int ok_rank_wo = rank_first_page(api, sid, "hi", "我", 1);
   int ok_rank_si = rank_first_page(api, sid, "ai", "時", 1);
+  int ok_rank_ho = rank_first_page(api, sid, "vd", "好", 1);
+  int ok_rank_xia = rank_first_page(api, sid, "me", "夏", 5);
+  int ok_rank_cang = rank_first_page(api, sid, "or", "倉", 9);
+  int ok_rank_tin = rank_first_page(api, sid, "mk", "天", 9);
   int ok_no_qiao = assert_absent(api, sid, "ms", "丂");
   int ok_mix = try_mixed_zero_switch(api, sid);
   int ok_jyut = try_jyutping_tone(api, sid);
@@ -228,13 +272,19 @@ int main(int argc, char** argv) {
   api->destroy_session(sid);
   api->finalize();
 
-  printf("\nRESULT me:%s vd:%s or:%s 我@hi≤1:%s 時@ai≤1:%s no丂:%s mix0switch:%s jyut:%s\n",
-         ok_me ? "PASS" : "FAIL", ok_vd ? "PASS" : "FAIL",
-         ok_or ? "PASS" : "FAIL", ok_rank_wo ? "PASS" : "FAIL",
-         ok_rank_si ? "PASS" : "FAIL", ok_no_qiao ? "PASS" : "FAIL",
-         ok_mix ? "PASS" : "FAIL", ok_jyut ? "PASS" : "FAIL");
-  return (ok_me && ok_vd && ok_or && ok_rank_wo && ok_rank_si && ok_no_qiao &&
-          ok_mix && ok_jyut)
+  printf(
+      "\nRESULT page9:%s sel1:%s me:%s vd:%s or:%s 我@hi≤1:%s 時@ai≤1:%s "
+      "好@vd≤1:%s 夏@me≤5:%s 倉@or≤9:%s 天@mk≤9:%s no丂:%s mix0switch:%s jyut:%s\n",
+      ok_page ? "PASS" : "FAIL", ok_sel ? "PASS" : "FAIL",
+      ok_me ? "PASS" : "FAIL", ok_vd ? "PASS" : "FAIL", ok_or ? "PASS" : "FAIL",
+      ok_rank_wo ? "PASS" : "FAIL", ok_rank_si ? "PASS" : "FAIL",
+      ok_rank_ho ? "PASS" : "FAIL", ok_rank_xia ? "PASS" : "FAIL",
+      ok_rank_cang ? "PASS" : "FAIL", ok_rank_tin ? "PASS" : "FAIL",
+      ok_no_qiao ? "PASS" : "FAIL", ok_mix ? "PASS" : "FAIL",
+      ok_jyut ? "PASS" : "FAIL");
+  return (ok_page && ok_sel && ok_me && ok_vd && ok_or && ok_rank_wo &&
+          ok_rank_si && ok_rank_ho && ok_rank_xia && ok_rank_cang &&
+          ok_rank_tin && ok_no_qiao && ok_mix && ok_jyut)
              ? 0
              : 1;
 }

@@ -3,12 +3,12 @@
 開源中文輸入法專案（繁體／香港優先）——以 **librime** 為共用引擎，Linux 先做，macOS 次之，其後 Windows／Android／iOS。
 
 **方案優先**：**速成（做到最好）→ 粵拼 → 倉頡／注音／拼音**  
-**硬需求**：中英混打（**預設全程零切換**）、候選窗**唔遮游標**、Windows 慣用字根排列可選。  
+**硬需求**：中英混打（**預設全程零切換**）、候選窗**唔遮游標**、候選**每頁 9 個（選字鍵 1–9，同 Windows 官方速成）**、Windows 慣用字根排列可選。  
 **Flex**：預設清楚；混打／Shift／ASCII／排序等**全部可設定改**（`docs/CONFIG.md`）。
 
 ## English (short)
 
-Open-source Chinese IME on **librime** (BSD). Linux-first (Fcitx5 + fcitx5-rime). Primary: **Sucheng/Quick**, then **Jyutping with tones** (`jyut6`, `nei5`). Default mixed input: **uppercase Latin / email / URL inline without switching** to ASCII mode; Shift/`ascii_mode` remain optional and configurable. Code: MIT; dictionaries keep upstream licenses (`NOTICE`).
+Open-source Chinese IME on **librime** (BSD). Linux-first (Fcitx5 + fcitx5-rime). Primary: **Sucheng/Quick**, then **Jyutping with tones** (`jyut6`, `nei5`). Default mixed input: **uppercase Latin / email / URL inline without switching** to ASCII mode; Shift/`ascii_mode` remain optional and configurable. Candidate page defaults to **9** (select keys 1–9), same as Windows Quick. Code: MIT; dictionaries keep upstream licenses (`NOTICE`).
 
 ## 點解用 RIME
 
@@ -21,7 +21,7 @@ Open-source Chinese IME on **librime** (BSD). Linux-first (Fcitx5 + fcitx5-rime)
 | `schemas/kinfx-quick/` | P0 速成 schema + 碼表（字頻權重／罕用字過濾） |
 | `schemas/kinfx-jyutping/` | P1 粵拼（`jyut6ping3` 有聲調） |
 | `schemas/examples/` | `*.custom.yaml.example`（Flex 設定） |
-| `docs/` | ARCHITECTURE／LAYOUTS／STATUS／**CONFIG**／**desktop-verify** |
+| `docs/` | ARCHITECTURE／LAYOUTS／STATUS／**CONFIG**／**WIN_QUICK_RANK**／**desktop-verify** |
 | `scripts/` | 安裝、smoke、GUI checklist、重新生成碼表 |
 | `tests/` | Headless smoke、混打驗收 |
 | `third_party/rime-quick/` | 上游速成參考（LGPL-3） |
@@ -78,9 +78,9 @@ Fcitx5 預設常用 **LShift** 切輸入法／鍵盤，會**搶走** rime `inlin
 
 桌面 checklist（**候選窗視覺需顯示器**）：`docs/desktop-verify.md`、`./scripts/verify-gui-mixed.sh`。
 
-## 候選窗
+## 候選
 
-預設 **跟游標、開喺下方、貼邊自動翻**。視覺驗收標 **需顯示器**。見 `docs/ARCHITECTURE.md` §4。
+每頁 **9** 個，選字鍵 **1–9**（`menu/page_size`；速成同粵拼一樣）。對照 Windows 頭 9：`docs/WIN_QUICK_RANK.md`。視窗預設 **跟游標、開喺下方、貼邊自動翻**。視覺驗收標 **需顯示器**。見 `docs/ARCHITECTURE.md` §4。Flex 先至可以改頁數（例檔入面 `5` 係註解）。
 
 ## 排列
 

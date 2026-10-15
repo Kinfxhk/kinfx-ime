@@ -1,10 +1,17 @@
 # encoding: utf-8
-# Reference schema_list for KINFX. install-linux.sh patches system default.yaml.
-config_version: "0.1.0"
+# Reference schema_list for KINFX. install-linux.sh patches system default.yaml
+# (schema_list + menu/page_size). Schemas also set page_size themselves so a
+# global default of 5 cannot shrink the product page.
+config_version: "0.1.1"
 
 schema_list:
   - schema: kinfx_quick
   - schema: kinfx_jyutping
+
+# Product default. Windows Quick is 9; do not ship 5.
+# Select keys are 1–9 (librime digit select). Flex: *.custom.yaml.
+menu:
+  page_size: 9
 
 # Full key_binder / punctuator / recognizer come from system rime-prelude default.yaml
 # after install-linux.sh merge.
