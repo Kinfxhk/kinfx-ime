@@ -15,7 +15,7 @@
 ./scripts/smoke-linux.sh
 ```
 
-預期：速成 `me→夏`（第 5 位以內）、`vd→好`（第 1）、`or→倉`（第 9 以內）；`hi` 第一頁 **9** 個候選；選字鍵 `1` 上屏「好」；`vd`+空白唔上屏「好」、再 Enter 上屏第 2 頁第 1 個；`vd`+Enter 上屏「好」；零切換混打 `vd`+`API`→`好API`（空白同 Enter，`ascii_mode=0`）；`of` 熱門環頁同 Tab 展開；粵拼有聲調而且每頁同樣 9（若系統有 `rime-data-jyut6ping3`）。
+預期：速成 `me→夏`（第 5 位以內）、`vd→好`（第 1）、`or→倉`（第 9 以內）；`hi` 第一頁 **9** 個候選；選字鍵 `1` 上屏「好」；`vd`+空白唔上屏「好」、再 Enter 上屏第 2 頁第 1 個；`vd`+Enter 上屏「好」；零切換混打 `vd`+`API`→`好API`（空白同 Enter，`ascii_mode=0`）；`of` 熱門環頁同 Tab 展開；`ofc`／`ofca`→無錯、`gmai`→Gmail，而 `me`／`or`／`of` 頭頁仍然係中文；粵拼有聲調而且每頁同樣 9（若系統有 `rime-data-jyut6ping3`）。
 
 ## GUI（需顯示器）
 

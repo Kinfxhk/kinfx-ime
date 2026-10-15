@@ -6,7 +6,7 @@
 schema:
   schema_id: kinfx_quick
   name: KINFX 速成
-  version: "0.2.0"
+  version: "0.3.0"
   author:
     - KINFX
     - 速成規則／碼表源流見 NOTICE（rime-quick / rime-cangjie）
@@ -17,6 +17,8 @@ schema:
     硬需求：中英混打預設＝全程零切換（大寫拉丁／email／URL 直出）。
     可選：Shift inline_ascii 或 ascii_mode（見 docs／custom 例）。
     佈局變體見 docs/LAYOUTS.md（win_quick = 預設）。排序見 docs/WIN_QUICK_RANK.md。
+    詞庫前綴：ofc→無錯、ofca→無錯（全碼更高）。小寫英詞 len≥4 先抬（gmai→Gmail）。
+    短碼 me/or/of 中文絕對優先。見 docs/PHRASE_MIX.md。選字鍵唔改（空白翻頁、Enter 確認）。
 
 switches:
   - name: ascii_mode
@@ -37,6 +39,8 @@ engine:
     # 喺 key_binder 之前：Tab 展開；Page_Up/Down 先處理熱門環頁，其餘交返 selector。
     - lua_processor@win_quick_keys
     - key_binder
+    # 第三個字母若續到詞庫／英詞，唔好頂走兩碼嘅第 1 候選（of+c 先至見得到無錯）。
+    - lua_processor@phrase_mix_keys
     - speller
     - punctuator
     - selector
@@ -51,6 +55,8 @@ engine:
   translators:
     - punct_translator
     - table_translator
+    - lua_translator@phrase_mix_tr
+    - lua_translator@melt_eng_tr
     - reverse_lookup_translator
   filters:
     - simplifier
@@ -91,6 +97,20 @@ translator:
     - "xlit|abcdefghijklmnopqrstuvwxyz~|日月金木水火土竹戈十大中一弓人心手口尸廿山女田難卜符～|"
   disable_user_dict_for_patterns:
     - "^z.*$"
+
+# 詞庫驅動前綴。只喺長度 ≥ min_length 出詞，所以兩碼頭頁唔變。
+# 全碼 quality 高過末碼前綴。見 docs/PHRASE_MIX.md。
+phrase_mix:
+  enable: true
+  top_k: 12
+  min_length: 3
+
+# M5 英詞（lexicon/en，SCOWL，唔係 rime-ice）。prefix_length≥4 先做前綴補全。
+# me/or/of 喺 Lua 寫死唔出。quality 低過中文詞帶。
+melt_eng:
+  enable: true
+  prefix_length: 4
+  top_k: 4
 
 abc_segmentor:
   extra_tags:

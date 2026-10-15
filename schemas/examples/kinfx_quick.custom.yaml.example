@@ -43,6 +43,12 @@ patch:
   # "style/horizontal": true             # 打橫。Fcitx5 另設 classicui「Vertical Candidate List=False」
   # "editor/bindings/Return": commit_raw_input   # 還原 Enter 原樣上屏（會出 vd）
 
+  # ========== 詞前綴／英詞（預設開；見 docs/PHRASE_MIX.md）==========
+  # "phrase_mix/enable": false       # 關掉 ofc→無錯
+  # "phrase_mix/min_length": 3       # 細過 3 會打進兩碼頭頁，唔好改細
+  # "melt_eng/enable": false         # 關掉 gmai→Gmail
+  # "melt_eng/prefix_length": 4      # 英詞前綴至少幾多個字母先抬
+
   # ========== 方案內其他 ==========
   # "speller/max_code_length": 2
   # "speller/auto_select": false

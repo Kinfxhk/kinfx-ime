@@ -439,6 +439,100 @@ static int assert_hot_history(RimeApi* api, RimeSessionId sid) {
   return ok;
 }
 
+/* Rank on the first page. -1 if missing or if page_size drifted from 9. */
+static int first_page_rank(RimeApi* api, RimeSessionId sid, const char* seq,
+                           const char* expect) {
+  api->clear_composition(sid);
+  if (!api->simulate_key_sequence(sid, seq)) return -1;
+  RIME_STRUCT(RimeContext, ctx);
+  if (!api->get_context(sid, &ctx)) return -1;
+  int r = menu_rank(&ctx, expect);
+  int ps = ctx.menu.page_size;
+  printf("mix '%s'→'%s' rank=%d page_size=%d num=%d\n", seq, expect, r, ps,
+         ctx.menu.num_candidates);
+  print_menu(&ctx);
+  api->free_context(&ctx);
+  api->clear_composition(sid);
+  if (ps != 9) return -1;
+  return r;
+}
+
+/* Digit select commits the phrase/English text, not the raw code. */
+static int commit_at_rank(RimeApi* api, RimeSessionId sid, const char* seq,
+                          int rank, const char* expect) {
+  if (rank < 1 || rank > 9) return 0;
+  api->clear_composition(sid);
+  drain_commit(api, sid);
+  char keys[32];
+  snprintf(keys, sizeof keys, "%s%d", seq, rank);
+  if (!api->simulate_key_sequence(sid, keys)) return 0;
+  char commit[128];
+  int committed = take_commit(api, sid, commit, sizeof commit);
+  printf("mix-commit '%s' → '%s' want '%s'\n", keys, committed ? commit : "",
+         expect);
+  int ok = committed && strcmp(commit, expect) == 0 && strcmp(commit, seq) != 0;
+  api->clear_composition(sid);
+  drain_commit(api, sid);
+  return ok;
+}
+
+/* A third letter that is not a lexicon prefix still 頂字 (vdz → 好 + z). */
+static int assert_top_keeps_char(RimeApi* api, RimeSessionId sid) {
+  api->clear_composition(sid);
+  drain_commit(api, sid);
+  if (!api->simulate_key_sequence(sid, "vdz")) return 0;
+  RIME_STRUCT(RimeContext, ctx);
+  if (!api->get_context(sid, &ctx)) return 0;
+  const char* pre = ctx.composition.preedit ? ctx.composition.preedit : "";
+  const char* first = "";
+  if (ctx.menu.num_candidates > 0 && ctx.menu.candidates[0].text)
+    first = ctx.menu.candidates[0].text;
+  printf("topchar vdz preedit=%s first=%s num=%d\n", pre, first,
+         ctx.menu.num_candidates);
+  int page_ok = ctx.menu.page_size == 9;
+  api->free_context(&ctx);
+  /* 頂字 commits 好 before the remainder menu; preedit is then only z. */
+  char commit[128];
+  int committed = take_commit(api, sid, commit, sizeof commit);
+  printf("topchar vdz commit='%s'\n", committed ? commit : "");
+  int ok = page_ok && committed && strstr(commit, "好") != NULL;
+  api->clear_composition(sid);
+  drain_commit(api, sid);
+  return ok;
+}
+
+/* ofc/ofca phrases, gmai English, and short-code Chinese priority. */
+static int assert_phrase_mix(RimeApi* api, RimeSessionId sid) {
+  int ok_top = assert_top_keeps_char(api, sid);
+  int r_ofc = first_page_rank(api, sid, "ofc", "無錯");
+  int r_ofca = first_page_rank(api, sid, "ofca", "無錯");
+  /* ofca is the full code, so it ranks at least as high as the ofc prefix. */
+  int ok = r_ofc > 0 && r_ofc <= 9 && r_ofca > 0 && r_ofca <= r_ofc;
+  ok = ok && commit_at_rank(api, sid, "ofc", r_ofc, "無錯");
+  ok = ok && commit_at_rank(api, sid, "ofca", r_ofca, "無錯");
+
+  int r_gmail = first_page_rank(api, sid, "gmai", "Gmail");
+  int r_gmail_up = first_page_rank(api, sid, "gmai", "GMAIL");
+  int r_en = -1;
+  if (r_gmail > 0 && (r_gmail_up < 1 || r_gmail <= r_gmail_up)) r_en = r_gmail;
+  else if (r_gmail_up > 0) r_en = r_gmail_up;
+  const char* en_text = (r_en == r_gmail) ? "Gmail" : "GMAIL";
+  printf("gmai best rank=%d text=%s\n", r_en, r_en > 0 ? en_text : "");
+  ok = ok && r_en > 0 && r_en <= 9;
+  ok = ok && commit_at_rank(api, sid, "gmai", r_en, en_text);
+
+  /* Short codes: English must not appear, and 係 stays first on of. */
+  ok = ok && assert_absent(api, sid, "me", "me");
+  ok = ok && assert_absent(api, sid, "or", "or");
+  ok = ok && assert_absent(api, sid, "of", "of");
+  ok = ok && assert_absent(api, sid, "of", "offer");
+  ok = ok && assert_absent(api, sid, "me", "Gmail");
+  ok = ok && rank_first_page(api, sid, "of", "係", 1);
+  printf("phrase-mix ofc:%d ofca:%d gmai:%d top:%d\n", r_ofc, r_ofca, r_en,
+         ok_top);
+  return ok && ok_top;
+}
+
 static int try_jyutping_tone(RimeApi* api, RimeSessionId sid) {
   if (!api->select_schema(sid, "kinfx_jyutping")) {
     printf("jyutping: select_schema failed (skip)\n");
@@ -497,7 +591,7 @@ int main(int argc, char** argv) {
   traits.user_data_dir = user_dir;
   traits.distribution_name = "KINFX-IME-Smoke";
   traits.distribution_code_name = "kinfx-ime";
-  traits.distribution_version = "0.2.0";
+  traits.distribution_version = "0.3.0";
   traits.app_name = "rime.kinfx-ime-smoke";
   traits.min_log_level = 2;
   traits.log_dir = "";
@@ -543,6 +637,7 @@ int main(int argc, char** argv) {
   int ok_rank_tin = rank_first_page(api, sid, "mk", "天", 9);
   int ok_no_qiao = assert_absent(api, sid, "ms", "丂");
   int ok_mix = try_mixed_zero_switch(api, sid);
+  int ok_phrase = assert_phrase_mix(api, sid);
   int ok_keys = assert_space_enter(api, sid);
   int ok_hot = assert_hot_cycle(api, sid);
   int ok_tab = assert_tab_expand(api, sid);
@@ -556,19 +651,21 @@ int main(int argc, char** argv) {
   printf(
       "\nRESULT page9:%s sel1:%s me:%s vd:%s or:%s 我@hi≤1:%s 時@ai≤1:%s "
       "好@vd≤1:%s 夏@me≤5:%s 倉@or≤9:%s 天@mk≤9:%s no丂:%s mix0switch:%s "
-      "space/enter:%s hot:%s tab:%s single:%s hist:%s jyut:%s\n",
+      "phrase:%s space/enter:%s hot:%s tab:%s single:%s hist:%s jyut:%s\n",
       ok_page ? "PASS" : "FAIL", ok_sel ? "PASS" : "FAIL",
       ok_me ? "PASS" : "FAIL", ok_vd ? "PASS" : "FAIL", ok_or ? "PASS" : "FAIL",
       ok_rank_wo ? "PASS" : "FAIL", ok_rank_si ? "PASS" : "FAIL",
       ok_rank_ho ? "PASS" : "FAIL", ok_rank_xia ? "PASS" : "FAIL",
       ok_rank_cang ? "PASS" : "FAIL", ok_rank_tin ? "PASS" : "FAIL",
       ok_no_qiao ? "PASS" : "FAIL", ok_mix ? "PASS" : "FAIL",
+      ok_phrase ? "PASS" : "FAIL",
       ok_keys ? "PASS" : "FAIL", ok_hot ? "PASS" : "FAIL",
       ok_tab ? "PASS" : "FAIL", ok_one ? "PASS" : "FAIL",
       ok_hist ? "PASS" : "FAIL", ok_jyut ? "PASS" : "FAIL");
   return (ok_page && ok_sel && ok_me && ok_vd && ok_or && ok_rank_wo &&
           ok_rank_si && ok_rank_ho && ok_rank_xia && ok_rank_cang &&
-          ok_rank_tin && ok_no_qiao && ok_mix && ok_keys && ok_hot && ok_tab &&
+          ok_rank_tin && ok_no_qiao && ok_mix && ok_phrase && ok_keys && ok_hot &&
+          ok_tab &&
           ok_one && ok_hist && ok_jyut)
              ? 0
              : 1;
