@@ -24,7 +24,7 @@ jobs:
           set -euo pipefail
           sudo apt-get update -qq
           sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq \
-            build-essential librime-dev librime-bin \
+            build-essential librime-dev librime-bin librime-plugin-lua \
             rime-data-cangjie5 rime-data-jyut6ping3 rime-essay rime-prelude \
             rime-data-luna-pinyin
 

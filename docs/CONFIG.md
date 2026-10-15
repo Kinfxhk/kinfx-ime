@@ -12,6 +12,8 @@
 | 持久西文 | `ascii_mode` 開關 | 預設鍵 `Control+Shift+2`；或 Fcitx5 切 keyboard-us |
 | 排序 | 碼表權重（essay + 粵語 essay×5）＋ Windows 頭頁近頻對齊 | 見 `docs/WIN_QUICK_RANK.md`。`enable_user_dict: true` 會再學頻 |
 | 候選每頁 | **9**（選字鍵 **1–9**） | 同 Windows 官方速成。`menu/page_size` 寫喺 schema。Flex 可改，產品預設係 9 |
+| 選字 | **直列**；空白翻頁；Enter／1–9 選字；Tab 展開 | 見 `docs/WIN_QUICK_SELECT.md`。無候選窗時空白仍然上屏 |
+| 常用熱門 | **開** | 多頁碼先至有，環頁一頁 9 格。`win_quick/hot_page: false` 可關 |
 | 粵拼 | `jyut6ping3` 有聲調 | 例 `nei5`、`ngo5`、`jyut6`；亦可唔打調。每頁同樣 9 |
 
 ## 點改（配置層）
@@ -21,7 +23,9 @@
      → `~/.local/share/fcitx5/rime/kinfx_quick.custom.yaml`
    - 粵拼同上（`kinfx_jyutping.custom.yaml`）
 2. 改 `patch:` 底下鍵（見例檔註解）
-3. 重新部署：候選列 **F4** 或 `rime_deployer --build ~/.local/share/fcitx5/rime`
+3. 重新部署：候選列 **F4**，或
+   `rime_deployer --build ~/.local/share/fcitx5/rime /usr/share/rime-data`
+   （兩個路徑。只傳 user dir 時 Linux 會把 user dir 當成 shared，部署靜默失敗。）
 
 可改項目（本輪已開）：
 
@@ -30,6 +34,7 @@
 - 中西文 toggle：`key_binder/bindings`（`toggle: ascii_mode`）
 - 排序／學習：`translator/enable_user_dict`、completion、sentence
 - 每頁候選數：`menu/page_size`（**產品預設 9**；例檔把 `5` 註解住，取消註解先至生效）
+- 選字：`win_quick/space_pages`、`hot_page`、`tab_expand`、`style/horizontal`（見下）
 - 粵拼提示／字母表：`translator/spelling_hints`、`speller/alphabet`
 
 ## 候選每頁 9（硬需求）
@@ -39,6 +44,19 @@ Windows 微軟速成預設每頁 **9** 個候選，用數字鍵 **1–9** 選字
 Fcitx5 classicui、Squirrel、Weasel 顯示 librime 交嚟嘅一頁，classicui 冇 page size 設定。`scripts/install-linux.sh` 把用戶目錄 `default.yaml` 嘅 `menu/page_size` 設成 9。方案檔本身寫 9：就算 `default.custom.yaml` 把全域頁數設成 5，KINFX 速成／粵拼編譯結果仍然係 9。
 
 要改 KINFX 頁數：複製 `schemas/examples/kinfx_quick.custom.yaml.example` 做 `kinfx_quick.custom.yaml`，取消 `"menu/page_size": 5` 嘅註解再部署。呢個先至覆蓋方案。例檔預設註解住，複製過去唔會改走產品預設。
+
+## 選字 Flex（偏離 Windows 先至改）
+
+預設見 `docs/WIN_QUICK_SELECT.md`。例檔入面對應鍵都註解住。
+
+| 想改 | custom patch |
+| --- | --- |
+| 空白改回「選焦點」（v0.1.1 習慣，通常即係第 1 個） | `"win_quick/space_pages": false` |
+| 關掉常用熱門環頁 | `"win_quick/hot_page": false` |
+| Tab 唔再展開 | `"win_quick/tab_expand": false` |
+| 候選改打橫 | `"style/horizontal": true`，再將 Fcitx5 `~/.config/fcitx5/conf/classicui.conf` 嘅 `Vertical Candidate List` 設 `False` |
+
+`space_pages: false` 由 Lua 喺有候選窗時直接確認焦點，唔使改 `key_binder` 索引。無候選窗（`好API`）空白仍然上屏。若連 Enter 都要還原「原樣上屏 `vd`」：`"editor/bindings/Return": commit_raw_input`。產品預設唔係咁。
 
 ## Fcitx5 與 LShift
 
@@ -52,3 +70,4 @@ Fcitx5 預設常用 **左 Shift** 做「切輸入法／鍵盤」。此時 rime �
 | 臨時西文（可選） | `Shift_L: inline_ascii`（需 Fcitx5 唔搶鍵） |
 | 必須切英文先打 | custom 清空 `uppercase` pattern；用 `ascii_mode`／Fcitx5 |
 | 穩定候選序（測試） | `translator/enable_user_dict: false` + 乾淨 user dir |
+| 空白選焦點（舊習慣） | `win_quick/space_pages: false` |

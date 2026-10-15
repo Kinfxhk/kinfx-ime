@@ -30,7 +30,7 @@ Open-source Chinese IME on **librime** (BSD). Linux-first (Fcitx5 + fcitx5-rime)
 
 ```bash
 # 依賴（Debian/Ubuntu 例）
-sudo apt install fcitx5 fcitx5-rime librime-bin \
+sudo apt install fcitx5 fcitx5-rime librime-bin librime-plugin-lua \
   rime-data-cangjie5 rime-data-jyut6ping3 rime-essay rime-prelude rime-data-luna-pinyin
 
 # 安裝本專案 schema
@@ -80,7 +80,7 @@ Fcitx5 預設常用 **LShift** 切輸入法／鍵盤，會**搶走** rime `inlin
 
 ## 候選
 
-每頁 **9** 個，選字鍵 **1–9**（`menu/page_size`；速成同粵拼一樣）。對照 Windows 頭 9：`docs/WIN_QUICK_RANK.md`。視窗預設 **跟游標、開喺下方、貼邊自動翻**。視覺驗收標 **需顯示器**。見 `docs/ARCHITECTURE.md` §4。Flex 先至可以改頁數（例檔入面 `5` 係註解）。
+每頁 **9** 個、**直列**、選字鍵 **1–9**。**空白翻頁**，**Enter／1–9 選焦點**，**Tab 展開**多欄，多頁碼有「常用熱門」環頁。無候選窗時空白仍然上屏（`好API`）。詳見 `docs/WIN_QUICK_SELECT.md`。頭頁對照：`docs/WIN_QUICK_RANK.md`。視窗預設 **跟游標、開喺下方、貼邊自動翻**。直列同展開格仔嘅目測標 **需顯示器**。見 `docs/ARCHITECTURE.md` §4。Flex：`docs/CONFIG.md`。
 
 ## 排列
 

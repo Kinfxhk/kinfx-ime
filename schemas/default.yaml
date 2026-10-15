@@ -2,7 +2,7 @@
 # Reference schema_list for KINFX. install-linux.sh patches system default.yaml
 # (schema_list + menu/page_size). Schemas also set page_size themselves so a
 # global default of 5 cannot shrink the product page.
-config_version: "0.1.1"
+config_version: "0.2.0"
 
 schema_list:
   - schema: kinfx_quick
