@@ -15,6 +15,8 @@
 | 選字 | **直列**；空白翻頁；Enter／1–9 選字；Tab 展開 | 見 `docs/WIN_QUICK_SELECT.md`。無候選窗時空白仍然上屏 |
 | 常用熱門 | **開** | 多頁碼先至有，環頁一頁 9 格。`win_quick/hot_page: false` 可關 |
 | 粵拼 | `jyut6ping3` 有聲調 | 例 `nei5`、`ngo5`、`jyut6`；亦可唔打調。每頁同樣 9 |
+| 詞前綴 | 開，長度 ≥ 3 | `ofc`→無錯。兩碼唔出詞。見 `docs/PHRASE_MIX.md` |
+| 英詞 | 開，前綴長度 ≥ 4 | `gmai`→Gmail。`me`／`or`／`of` 唔出英詞 |
 
 ## 點改（配置層）
 
@@ -36,6 +38,7 @@
 - 每頁候選數：`menu/page_size`（**產品預設 9**；例檔把 `5` 註解住，取消註解先至生效）
 - 選字：`win_quick/space_pages`、`hot_page`、`tab_expand`、`style/horizontal`（見下）
 - 粵拼提示／字母表：`translator/spelling_hints`、`speller/alphabet`
+- 詞前綴／英詞：`phrase_mix/enable`、`phrase_mix/min_length`、`melt_eng/enable`、`melt_eng/prefix_length`（見 `docs/PHRASE_MIX.md`）
 
 ## 候選每頁 9（硬需求）
 

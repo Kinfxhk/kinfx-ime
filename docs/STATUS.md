@@ -1,6 +1,6 @@
 # KINFX IME — STATUS
 
-**更新**：2026-10-15（Windows 選字：空白翻頁、Enter 確認、直列、Tab 展開、常用熱門環頁）
+**更新**：2026-10-15（詞庫前綴 + 英詞 completion；選字鍵仍係 v0.2.0）
 
 ## Done
 
@@ -18,8 +18,12 @@
 - [x] **選字對齊 Windows**：直列；空白翻頁；1–9／Enter 選焦點；Tab 展開（當欄 1–9，註釋顯示其餘欄）；多頁碼「常用熱門」環頁。見 `docs/WIN_QUICK_SELECT.md`
 - [x] `install-linux.sh`：`rime_deployer --build USER SHARED` 兩個參數；classicui 直列
 - [x] Headless：K1–K4（空白／Enter／混打／熱門頁／Tab）同 v0.1.1 頭頁順位一齊跑
+- [x] **詞庫驅動前綴**：`ofc`→無錯、`ofca`→無錯（全碼排名不高過前綴）。`gen_quick_phrases.py` 每字只取一個速成碼，唔笛卡爾爆。見 `docs/PHRASE_MIX.md`
+- [x] **HK 詞／四字帶** 獨立 `lexicon/hk/`（essay-cantonese CC BY 4.0 + 速成碼 LGPL-3.0）
+- [x] **英詞 M5**：`lexicon/en`（SCOWL，唔係 rime-ice）。`gmai`→Gmail；`len≥4` 或長度 3 全中先抬；`me`／`or`／`of` 唔出英詞
+- [x] 選字鍵維持 v0.2.0：每頁 9、直列、空白翻頁、Enter 確認
 
-建議標籤 **v0.2.0**（空白同 Enter 嘅預設相對 v0.1.1 係破壞性變更，再加展開同熱門頁）。未打 tag。
+v0.2.0 已標（空白翻頁／Enter 確認）。本分支建議標籤 **v0.3.0**。未打 tag、未合併。
 
 ## Next
 
@@ -27,8 +31,8 @@
 2. GUI 設定面板（配置層已開）
 3. macOS Squirrel
 4. P2 倉頡／注音／拼音
-5. **M5 小寫混打（延後）**：路線 A melt_eng 次翻譯器。未入場原因：librime 候選 quality = `exp(weight) + initial_quality`，英文詞表未同速成權重量度過之前會搶 `me`／`or` 頭頁。下一版先做獨立詞表目錄＋原授權 NOTICE（唔併 GPL-3 rime-ice）、中文默認首位、唔開 `en_spacer`。
-6. **關聯詞**（上屏後 Windows 嗰個 Shift+數字詞窗）未做。
+5. **關聯詞**（上屏後 Windows 嗰個 Shift+數字詞窗）未做。
+6. 真四欄候選格（而家仍然係 Tab 註釋）未做。
 
 ## Blockers
 

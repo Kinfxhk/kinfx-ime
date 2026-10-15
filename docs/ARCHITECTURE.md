@@ -47,7 +47,7 @@ Desktop 多數只「切中／英模式」≠ 組字途中夾英文。本專案�
 | **預設** | `recognizer` **uppercase**／email／url → 零切換夾拉丁 | **M0**／M2／M4 |
 | 可選 | `ascii_composer`；`Shift_L: inline_ascii`；`ascii_mode` toggle | M1／M3（可關） |
 | Flex | `*.custom.yaml` 改策略／鍵位／排序（`docs/CONFIG.md`） | 設定可改 |
-| 後期 | 自動判語（小寫英文） | M5 加分 |
+| 小寫英詞 | `melt_eng`：`len≥4` 前綴先抬；`me`／`or`／`of` 唔出英詞 | **M5** |
 
 **速成特別風險**：首尾兩碼空間極密，小寫英文字母易撞碼——預設用**大寫拉丁**做零切換；**主測必須用速成**。
 

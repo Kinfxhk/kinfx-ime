@@ -9,6 +9,9 @@ mkdir -p "$USER_DIR"
 export RIME_USER_DIR="$USER_DIR"
 "$ROOT/scripts/install-linux.sh"
 
+# Lexicon generator: one code per word, no cartesian product.
+python3 "$ROOT/tests/test_gen_quick_phrases.py"
+
 # Also ensure build can see jyutping if selected — primary smoke is quick
 cc -O2 -o "$ROOT/tests/rime_smoke" "$ROOT/tests/rime_smoke.c" -lrime
 echo "Running headless smoke against $USER_DIR"

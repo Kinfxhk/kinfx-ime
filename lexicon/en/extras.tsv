@@ -1,0 +1,5 @@
+# Display form, lowercase code, weight.
+# Gmail is not in SCOWL. Both casings are acceptance targets.
+# Gmail is a trademark of Google LLC, used here as a completion label.
+Gmail	gmail	100000
+GMAIL	gmail	90000
