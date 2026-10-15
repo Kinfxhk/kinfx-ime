@@ -341,12 +341,16 @@ end
 
 -- Digit / Enter select runs after this processor. The select notifier does not
 -- still hold the candidate, and table user dict is off so it cannot learn it.
--- Record the visible slot here. One lookup, only on a select key.
+-- Record the visible slot here. One lookup, and only when this key is 1–9 or Enter.
 local function note_select_key(env, ctx, repr)
+  local digit = repr:match("^([1-9])$") or repr:match("^KP_([1-9])$")
+  local is_return = repr == "Return" or repr == "KP_Enter"
+  if not digit and not is_return then
+    return
+  end
   if not ctx:has_menu() then
     return
   end
-  local digit = repr:match("^([1-9])$") or repr:match("^KP_([1-9])$")
   local code = ctx.input or ""
   if code == "" then
     code = pending_code
@@ -367,9 +371,6 @@ local function note_select_key(env, ctx, repr)
     if text then
       note_history(code, text)
     end
-    return
-  end
-  if not digit and repr ~= "Return" and repr ~= "KP_Enter" then
     return
   end
   local seg = segment_of(ctx)
@@ -399,6 +400,30 @@ end
 
 local function processor_fini(_env)
 end
+
+-- Composition letters must not enter the history path. Ranking stays in the dict.
+local SELECT_REPR = {
+  ["1"] = true,
+  ["2"] = true,
+  ["3"] = true,
+  ["4"] = true,
+  ["5"] = true,
+  ["6"] = true,
+  ["7"] = true,
+  ["8"] = true,
+  ["9"] = true,
+  KP_1 = true,
+  KP_2 = true,
+  KP_3 = true,
+  KP_4 = true,
+  KP_5 = true,
+  KP_6 = true,
+  KP_7 = true,
+  KP_8 = true,
+  KP_9 = true,
+  Return = true,
+  KP_Enter = true,
+}
 
 local NEXT_KEY = {
   Page_Down = true,
@@ -442,7 +467,9 @@ local function processor_func(key, env)
   if PREV_KEY[repr] then
     return handle_page(env, ctx, -1)
   end
-  note_select_key(env, ctx, repr)
+  if SELECT_REPR[repr] then
+    note_select_key(env, ctx, repr)
+  end
   return kNoop
 end
 

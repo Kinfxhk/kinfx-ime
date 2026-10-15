@@ -23,6 +23,8 @@
 
 `scripts/gen_quick_dict.py` 底權重仍然係 `essay.txt + 5× essay-cantonese.txt`。有 Windows 頭頁嘅碼，再把 `schemas/kinfx-quick/win_quick_top9.tsv` 嗰幾個字（最多 9 個）按表嘅次序放喺第 1 頁前面；其餘字跟字頻排後面。權重只喺生成碼表時改，打字時 `win_quick.lua` 正常頁原序通過。
 
+頭頁次序唔喺每次按鍵計。冇新 filter、冇掃成張碼表、冇逐鍵重排 Lua。`win_quick.lua` 仍然只喺左鍵環頁同 Tab 展開先改顯示；歷史只喺選字鍵（1–9／Enter）記一格，字母鍵唔入呢條路。
+
 唔再做舊規則：近頻 1.15、冷門字下限、以及硬抬 `我@hi`／`係@of`／`唔@rr`／`時@ai` 去第 1。Windows 排第幾就第幾。
 
 `vd` 跟 Win11 24H2 實測（2026-10-15），尾二係 **網綜**，唔係較早公開重構嘅 **綑綵**。TSV 同碼表用同一行。
