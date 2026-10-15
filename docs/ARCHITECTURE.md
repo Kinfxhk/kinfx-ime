@@ -85,7 +85,7 @@ Desktop 多數只「切中／英模式」≠ 組字途中夾英文。本專案�
 
 - 短期：Squirrel 載入同一套 schema 驗證。  
 - 產品：自研／MIT 殼鏈 librime（避 GPL 前端鎖死）。  
-- Windows／移動：後期；Weasel GPL 慎用。
+- **Windows 11**：Weasel（小狼毫）做 TSF 宿主；本 repo 只部署 schema（`docs/WINDOWS.md`）。唔嵌入 Weasel 源碼（上游 GPL）、唔做自寫 TSF DLL。移動仍係後期。
 
 ## 7. 授權分層
 

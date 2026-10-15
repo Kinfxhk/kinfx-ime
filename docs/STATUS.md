@@ -2,7 +2,8 @@
 
 **顯示名**：KINFX 中英混打輸入法（repo slug 仍係 `kinfx-ime`）  
 **更新**：2026-10-15  
-**版本**：**v0.3.1 已出**（Windows 選字 UX、詞／成語前綴、英詞 extras：scriptwriting／voiceover）。選字鍵仍係 v0.2.0 嗰套。
+**版本**：**v0.3.1 已出**（Windows 選字 UX、詞／成語前綴、英詞 extras：scriptwriting／voiceover）。選字鍵仍係 v0.2.0 嗰套。  
+**建議標籤 v0.3.2**：Windows 11 Weasel schema 部署（`docs/WINDOWS.md`、`scripts/install-windows.ps1`、`scripts/uninstall-windows.ps1`）同文件一齊出。呢次變更 **唔打 git tag**；Boss merge 之後先標。Win11 真機驗收未做。
 
 Fcitx 選單：速成「KINFX 中英混打輸入法 · 速成」（`kinfx_quick`）、粵拼「KINFX 中英混打輸入法 · 粵拼」（`kinfx_jyutping`）。`schema_id` 冇改。
 
@@ -26,21 +27,24 @@ Fcitx 選單：速成「KINFX 中英混打輸入法 · 速成」（`kinfx_quick`
 - [x] **HK 詞／四字帶** 獨立 `lexicon/hk/`（essay-cantonese CC BY 4.0 + 速成碼 LGPL-3.0）
 - [x] **英詞 M5**：`lexicon/en`（SCOWL，唔係 rime-ice）。`gmai`→Gmail；`scriptwriti`→scriptwriting、`voiceove`→voiceover（extras，權重跟 Gmail）；`len≥4` 或長度 3 全中先抬；`me`／`or`／`of` 唔出英詞
 - [x] 選字鍵維持 v0.2.0：每頁 9、直列、空白翻頁、Enter 確認
+- [x] **Windows 11 MVP（建議標籤 v0.3.2）**：Weasel（小狼毫）做 TSF 宿主；本 repo 交 schema 部署包（`docs/WINDOWS.md`、`scripts/install-windows.ps1`、`scripts/uninstall-windows.ps1`、`scripts/pack-windows-share.ps1`）。`schema_id` 仍然係 `kinfx_quick`／`kinfx_jyutping`。唔包含自寫 TSF DLL、純 MSIX TSF 註冊、DLL 注入、Weasel fork。**真機驗收未做。** 本 PR 唔打 tag。
 
-v0.2.0 已標（空白翻頁／Enter 確認）。v0.3.0 已標（詞庫前綴）。**v0.3.1 已出**（英詞 extras：scriptwriting／voiceover；已併入 main）。
+v0.2.0 已標（空白翻頁／Enter 確認）。v0.3.0 已標（詞庫前綴）。**v0.3.1 已出**（英詞 extras：scriptwriting／voiceover；已併入 main）。**v0.3.2 建議標**（文件＋Windows 安裝腳本；等 Boss merge 後先打 tag）。
 
 ## Next
 
-1. 插螢幕 → 候選窗視覺驗收（desktop-verify）；核對每頁 9 粒
-2. GUI 設定面板（配置層已開）
-3. macOS Squirrel
-4. P2 倉頡／注音／拼音
-5. **關聯詞**（上屏後 Windows 嗰個 Shift+數字詞窗）未做。
-6. 真四欄候選格（而家仍然係 Tab 註釋）未做。
+1. **Windows 11 真機驗收**（Weasel 重新部署後）：`ofc`→無錯、`gmai`→Gmail、`me`／`or`／`of` 中文首位、空白翻頁、Enter 確認。見 `docs/WINDOWS.md` 驗收表。腳本同文件已出；未喺 Win11 跑過。
+2. 插螢幕 → 候選窗視覺驗收（desktop-verify）；核對每頁 9 粒
+3. GUI 設定面板（配置層已開）
+4. macOS Squirrel
+5. P2 倉頡／注音／拼音
+6. **關聯詞**（上屏後 Windows 嗰個 Shift+數字詞窗）未做。
+7. 真四欄候選格（而家仍然係 Tab 註釋）未做。
 
 ## Blockers
 
 - 候選窗視覺需顯示器
+- Windows 11 真機驗收未做（Weasel + schema 包已寫；要 Win11 手動對 `docs/WINDOWS.md`）
 - 發佈前粵拼 CC BY／ODbL 署名包要齊
 
 ## How to test
@@ -49,4 +53,7 @@ v0.2.0 已標（空白翻頁／Enter 確認）。v0.3.0 已標（詞庫前綴）
 ./scripts/smoke-linux.sh
 ./scripts/install-linux.sh    # desktop
 # docs/desktop-verify.md
+pwsh -NoProfile -File scripts/test-windows-rime.ps1   # schema-list merge; no Weasel binary
 ```
+
+Windows 11 手動：`docs/WINDOWS.md`（`install-windows.ps1` → 重新部署 → Win+Space）。

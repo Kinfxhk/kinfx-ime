@@ -11,3 +11,4 @@ __pycache__/
 /tmp/
 tests/rime_smoke
 kinfx_win_history.tsv
+/dist/
