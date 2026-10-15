@@ -11,6 +11,7 @@ export RIME_USER_DIR="$USER_DIR"
 
 # Lexicon generator: one code per word, no cartesian product.
 python3 "$ROOT/tests/test_gen_quick_phrases.py"
+python3 "$ROOT/tests/test_gen_quick_dict.py"
 
 # Also ensure build can see jyutping if selected — primary smoke is quick
 cc -O2 -o "$ROOT/tests/rime_smoke" "$ROOT/tests/rime_smoke.c" -lrime

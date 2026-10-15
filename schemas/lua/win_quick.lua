@@ -10,7 +10,8 @@
 --     page 1 + Left → hot
 -- Space with no menu is not touched, so mixed preedit 「好API」 still commits.
 --
--- The filter does not reorder normal pages (v0.1.1 first-page ranking stays).
+-- The filter does not reorder normal pages (dict order is the Windows top 9).
+-- Favorites stay on the Left wrap page only.
 
 local kAccepted = 1
 local kNoop = 2
@@ -30,6 +31,9 @@ local history_seq = 0
 local history_loaded = false
 local history_path = nil
 local pending_code = ""
+-- Texts the hot-page filter last showed. Select keys read this because the
+-- select notifier no longer has the candidate, and table user dict is off.
+local hot_slots = {}
 
 local function config_bool(config, path, default)
   local v = config:get_bool(path)
@@ -335,26 +339,65 @@ local function handle_page(env, ctx, dir)
   return kAccepted
 end
 
-local function processor_init(env)
-  read_opts(env)
-  local ctx = env.engine.context
-  env.sel_conn = ctx.select_notifier:connect(function(c)
-    local code = c.input or ""
-    if code == "" then
-      code = pending_code
+-- Digit / Enter select runs after this processor. The select notifier does not
+-- still hold the candidate, and table user dict is off so it cannot learn it.
+-- Record the visible slot here. One lookup, only on a select key.
+local function note_select_key(env, ctx, repr)
+  if not ctx:has_menu() then
+    return
+  end
+  local digit = repr:match("^([1-9])$") or repr:match("^KP_([1-9])$")
+  local code = ctx.input or ""
+  if code == "" then
+    code = pending_code
+  end
+  if hot_active(ctx) then
+    local n = nil
+    if digit then
+      n = tonumber(digit)
+    elseif repr == "Return" or repr == "KP_Enter" then
+      local seg = segment_of(ctx)
+      local idx = seg and seg.selected_index or 0
+      if idx < 0 then
+        idx = 0
+      end
+      n = (idx % page_size_of(env)) + 1
     end
-    local cand = c:get_selected_candidate()
-    if cand and cand.text then
-      note_history(code, cand.text)
+    local text = n and hot_slots[n] or nil
+    if text then
+      note_history(code, text)
     end
-  end)
+    return
+  end
+  if not digit and repr ~= "Return" and repr ~= "KP_Enter" then
+    return
+  end
+  local seg = segment_of(ctx)
+  if not seg then
+    return
+  end
+  local ps = page_size_of(env)
+  local start = page_start_of(seg, ps)
+  local index = start
+  if digit then
+    index = start + tonumber(digit) - 1
+  else
+    index = seg.selected_index or start
+    if index < start then
+      index = start
+    end
+  end
+  local cand = seg:get_candidate_at(index)
+  if cand and cand.text then
+    note_history(code, cand.text)
+  end
 end
 
-local function processor_fini(env)
-  if env.sel_conn then
-    env.sel_conn:disconnect()
-    env.sel_conn = nil
-  end
+local function processor_init(env)
+  read_opts(env)
+end
+
+local function processor_fini(_env)
 end
 
 local NEXT_KEY = {
@@ -380,6 +423,7 @@ local function processor_func(key, env)
   -- Flex: win_quick/space_pages: false restores space = confirm focused candidate.
   -- Default stays kNoop so key_binder can turn space into Page_Down.
   if repr == "space" and ctx:has_menu() and env.space_pages == false then
+    note_select_key(env, ctx, "Return")
     ctx:confirm_current_selection()
     return kAccepted
   end
@@ -398,6 +442,7 @@ local function processor_func(key, env)
   if PREV_KEY[repr] then
     return handle_page(env, ctx, -1)
   end
+  note_select_key(env, ctx, repr)
   return kNoop
 end
 
@@ -489,7 +534,9 @@ local function yield_hot(env, ctx, list)
   if seg then
     seg.prompt = HOT_PROMPT
   end
+  hot_slots = {}
   for _, slot in ipairs(slots) do
+    hot_slots[#hot_slots + 1] = slot.text
     if slot.orig then
       yield(ShadowCandidate(slot.orig, "win_hot", slot.text, slot.comment))
     else

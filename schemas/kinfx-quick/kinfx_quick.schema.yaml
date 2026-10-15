@@ -62,7 +62,7 @@ engine:
   filters:
     - simplifier
     - uniquifier
-    # 正常頁原序通過（唔打亂 v0.1.1 頭頁）。熱門頁／Tab 展開先至改顯示。
+    # 正常頁原序通過（碼表已釘 Win 頭 9）。熱門頁／Tab 展開先至改顯示。
     - lua_filter@win_quick_menu
 
 # 混打預設：唔靠切 ascii_mode。
@@ -89,8 +89,9 @@ translator:
   dictionary: kinfx_quick
   enable_completion: true
   enable_sentence: true
-  enable_user_dict: true
-  encode_commit_history: true
+  # 學頻會把常用字插返正常頭頁。頭頁跟 Win 權重；常用熱門只走左鍵環頁。
+  enable_user_dict: false
+  encode_commit_history: false
   max_phrase_length: 5
   preedit_format:
     - "xlit|abcdefghijklmnopqrstuvwxyz;'|日月金木水火土竹戈十大中一弓人心手口尸廿山女田難卜符··|"

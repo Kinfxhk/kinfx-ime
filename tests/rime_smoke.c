@@ -90,6 +90,51 @@ static int rank_first_page(RimeApi* api, RimeSessionId sid, const char* seq,
   return r > 0 && r <= max_rank;
 }
 
+/* Exact Windows slot, not a "at most N" frequency ceiling. */
+static int rank_exact(RimeApi* api, RimeSessionId sid, const char* seq,
+                      const char* expect, int want) {
+  api->clear_composition(sid);
+  if (!api->simulate_key_sequence(sid, seq)) return 0;
+  RIME_STRUCT(RimeContext, ctx);
+  if (!api->get_context(sid, &ctx)) return 0;
+  int r = menu_rank(&ctx, expect);
+  printf("exact '%s'→'%s' = %d (want %d) page_size=%d\n", seq, expect, r, want,
+         ctx.menu.page_size);
+  int ok = r == want && ctx.menu.page_size == 9;
+  api->free_context(&ctx);
+  api->clear_composition(sid);
+  return ok;
+}
+
+/* First-page texts must equal the Windows top-9 list (shorter lists fill the page). */
+static int assert_win_prefix(RimeApi* api, RimeSessionId sid, const char* seq,
+                             const char* const* expect, int n) {
+  api->clear_composition(sid);
+  if (!api->simulate_key_sequence(sid, seq)) return 0;
+  RIME_STRUCT(RimeContext, ctx);
+  if (!api->get_context(sid, &ctx)) return 0;
+  int ok = ctx.menu.page_size == 9 && ctx.menu.num_candidates >= n;
+  printf("win '%s' page_size=%d num=%d\n", seq, ctx.menu.page_size,
+         ctx.menu.num_candidates);
+  for (int i = 0; i < n; ++i) {
+    const char* got = "";
+    if (i < ctx.menu.num_candidates && ctx.menu.candidates[i].text)
+      got = ctx.menu.candidates[i].text;
+    if (strcmp(got, expect[i]) != 0) {
+      printf("  [%d] got '%s' want '%s'\n", i + 1, got, expect[i]);
+      ok = 0;
+    }
+  }
+  if (ok) {
+    printf("  ");
+    for (int i = 0; i < n; ++i) printf("%s", expect[i]);
+    printf("\n");
+  }
+  api->free_context(&ctx);
+  api->clear_composition(sid);
+  return ok;
+}
+
 /* Product default: 9 candidates, select keys 1–9. A full page must be 9. */
 static int assert_page_size(RimeApi* api, RimeSessionId sid, const char* seq,
                             int want) {
@@ -320,8 +365,10 @@ static int assert_hot_cycle(RimeApi* api, RimeSessionId sid) {
   if (!snap_menu(api, sid, &b)) return 0;
   printf("hot-left page1 '%s' → hot num=%d ps=%d hot=%d preedit=%s comment=%s\n",
          a.text, b.num, b.page_size, b.hot, b.preedit, b.comment);
+  /* Page 1 stays the Windows glyph (伙). Left only opens the hot wrap. */
   int ok = commit[0] == 0 && b.composing && b.hot && b.num == 9 &&
-           b.page_size == 9 && b.page_size == a.page_size;
+           b.page_size == 9 && b.page_size == a.page_size &&
+           strcmp(a.text, "伙") == 0;
   api->process_key(sid, XK_SPACE, 0);
   if (!snap_menu(api, sid, &c)) return 0;
   printf("hot-next '%s' hot=%d (want page1 '%s')\n", c.text, c.hot, a.text);
@@ -530,13 +577,14 @@ static int assert_phrase_mix(RimeApi* api, RimeSessionId sid) {
   ok = ok && commit_at_rank(api, sid, "scriptwriti", r_sw, "scriptwriting");
   ok = ok && commit_at_rank(api, sid, "voiceove", r_vo, "voiceover");
 
-  /* Short codes: English must not appear, and 係 stays first on of. */
+  /* Short codes: English must not appear. 係 is Windows slot 3, not rank 1. */
   ok = ok && assert_absent(api, sid, "me", "me");
   ok = ok && assert_absent(api, sid, "or", "or");
   ok = ok && assert_absent(api, sid, "of", "of");
   ok = ok && assert_absent(api, sid, "of", "offer");
   ok = ok && assert_absent(api, sid, "me", "Gmail");
-  ok = ok && rank_first_page(api, sid, "of", "係", 1);
+  ok = ok && rank_exact(api, sid, "of", "伙", 1);
+  ok = ok && rank_exact(api, sid, "of", "係", 3);
   printf("phrase-mix ofc:%d ofca:%d gmai:%d scriptwriti:%d voiceove:%d top:%d\n",
          r_ofc, r_ofca, r_en, r_sw, r_vo, ok_top);
   return ok && ok_top;
@@ -582,6 +630,57 @@ static int try_jyutping_tone(RimeApi* api, RimeSessionId sid) {
          ok5 ? "PASS" : "FAIL", ok6 ? "PASS" : "FAIL", ok0 ? "PASS" : "FAIL",
          ok_page ? "PASS" : "FAIL", ok_keys ? "PASS" : "FAIL");
   return ok5 && ok6 && ok0 && ok_page && ok_keys;
+}
+
+/* Documented Windows first page. an has 8 glyphs in the table; the code has no 9th. */
+static int assert_win_table(RimeApi* api, RimeSessionId sid) {
+  const char* vd[] = {"好", "她", "妹", "紆", "巢", "媒", "彙", "網", "綜"};
+  const char* hi[] = {"凡", "么", "丟", "夙", "舟", "卵", "我", "私", "的"};
+  const char* me[] = {"汞", "歿", "泵", "玻", "夏", "破", "球", "豉", "瑕"};
+  const char* orc[] = {"合", "何", "估", "佑", "伽", "伺", "佔", "佝", "含"};
+  const char* ai[] = {"昤", "時", "閎", "閩", "閥", "曇", "旳", "昡", "戥"};
+  const char* mk[] = {"天", "攻", "更", "玟", "玫", "政", "殃", "致", "敔"};
+  const char* of[] = {"伙", "你", "係", "偽", "氮", "焦", "無", "絛", "僚"};
+  const char* rr[] = {"呂", "呵", "咖", "咕", "品", "哈", "咯", "唁", "唔"};
+  const char* yr[] = {"占", "吝", "言", "迦", "迢", "迥", "迨", "站", "迴"};
+  const char* go[] = {"坎", "走", "垓", "堤", "款", "塚", "壕", "垗", "欯"};
+  const char* an[] = {"門", "剔", "旯", "昑", "昲", "閌", "閅", "闁"};
+  const char* ni[] = {"夕", "弘", "多", "兔", "弦", "虱", "附", "強", "蛋"};
+  const char* wm[] = {"國", "置", "疊", "畇", "罡", "罝", "罭", "黚", "翾"};
+  int ok = 1;
+  ok = assert_win_prefix(api, sid, "vd", vd, 9) && ok;
+  ok = assert_win_prefix(api, sid, "hi", hi, 9) && ok;
+  ok = assert_win_prefix(api, sid, "me", me, 9) && ok;
+  ok = assert_win_prefix(api, sid, "or", orc, 9) && ok;
+  ok = assert_win_prefix(api, sid, "ai", ai, 9) && ok;
+  ok = assert_win_prefix(api, sid, "mk", mk, 9) && ok;
+  ok = assert_win_prefix(api, sid, "of", of, 9) && ok;
+  ok = assert_win_prefix(api, sid, "rr", rr, 9) && ok;
+  ok = assert_win_prefix(api, sid, "yr", yr, 9) && ok;
+  ok = assert_win_prefix(api, sid, "go", go, 9) && ok;
+  ok = assert_win_prefix(api, sid, "an", an, 8) && ok;
+  ok = assert_win_prefix(api, sid, "ni", ni, 9) && ok;
+  ok = assert_win_prefix(api, sid, "wm", wm, 9) && ok;
+  /* 倉 is outside the Windows nine; it must not be lifted onto page 1. */
+  ok = rank_exact(api, sid, "hi", "凡", 1) && ok;
+  ok = rank_exact(api, sid, "hi", "我", 7) && ok;
+  ok = rank_exact(api, sid, "rr", "呂", 1) && ok;
+  ok = rank_exact(api, sid, "rr", "唔", 9) && ok;
+  ok = rank_exact(api, sid, "me", "夏", 5) && ok;
+  {
+    api->clear_composition(sid);
+    api->simulate_key_sequence(sid, "or");
+    RIME_STRUCT(RimeContext, ctx);
+    int on_page = 0;
+    if (api->get_context(sid, &ctx)) {
+      on_page = menu_rank(&ctx, "倉");
+      printf("倉@or first-page rank=%d (want absent)\n", on_page);
+      api->free_context(&ctx);
+    }
+    api->clear_composition(sid);
+    ok = ok && on_page < 0;
+  }
+  return ok;
 }
 
 int main(int argc, char** argv) {
@@ -638,12 +737,7 @@ int main(int argc, char** argv) {
   int ok_me = try_code(api, sid, "me", "夏");
   int ok_vd = try_code(api, sid, "vd", "好");
   int ok_or = try_code(api, sid, "or", "倉");
-  int ok_rank_wo = rank_first_page(api, sid, "hi", "我", 1);
-  int ok_rank_si = rank_first_page(api, sid, "ai", "時", 1);
-  int ok_rank_ho = rank_first_page(api, sid, "vd", "好", 1);
-  int ok_rank_xia = rank_first_page(api, sid, "me", "夏", 5);
-  int ok_rank_cang = rank_first_page(api, sid, "or", "倉", 9);
-  int ok_rank_tin = rank_first_page(api, sid, "mk", "天", 9);
+  int ok_win = assert_win_table(api, sid);
   int ok_no_qiao = assert_absent(api, sid, "ms", "丂");
   int ok_mix = try_mixed_zero_switch(api, sid);
   int ok_phrase = assert_phrase_mix(api, sid);
@@ -658,23 +752,18 @@ int main(int argc, char** argv) {
   api->finalize();
 
   printf(
-      "\nRESULT page9:%s sel1:%s me:%s vd:%s or:%s 我@hi≤1:%s 時@ai≤1:%s "
-      "好@vd≤1:%s 夏@me≤5:%s 倉@or≤9:%s 天@mk≤9:%s no丂:%s mix0switch:%s "
-      "phrase:%s space/enter:%s hot:%s tab:%s single:%s hist:%s jyut:%s\n",
+      "\nRESULT page9:%s sel1:%s me:%s vd:%s or:%s win-top9:%s no丂:%s "
+      "mix0switch:%s phrase:%s space/enter:%s hot:%s tab:%s single:%s hist:%s "
+      "jyut:%s\n",
       ok_page ? "PASS" : "FAIL", ok_sel ? "PASS" : "FAIL",
       ok_me ? "PASS" : "FAIL", ok_vd ? "PASS" : "FAIL", ok_or ? "PASS" : "FAIL",
-      ok_rank_wo ? "PASS" : "FAIL", ok_rank_si ? "PASS" : "FAIL",
-      ok_rank_ho ? "PASS" : "FAIL", ok_rank_xia ? "PASS" : "FAIL",
-      ok_rank_cang ? "PASS" : "FAIL", ok_rank_tin ? "PASS" : "FAIL",
-      ok_no_qiao ? "PASS" : "FAIL", ok_mix ? "PASS" : "FAIL",
-      ok_phrase ? "PASS" : "FAIL",
+      ok_win ? "PASS" : "FAIL", ok_no_qiao ? "PASS" : "FAIL",
+      ok_mix ? "PASS" : "FAIL", ok_phrase ? "PASS" : "FAIL",
       ok_keys ? "PASS" : "FAIL", ok_hot ? "PASS" : "FAIL",
       ok_tab ? "PASS" : "FAIL", ok_one ? "PASS" : "FAIL",
       ok_hist ? "PASS" : "FAIL", ok_jyut ? "PASS" : "FAIL");
-  return (ok_page && ok_sel && ok_me && ok_vd && ok_or && ok_rank_wo &&
-          ok_rank_si && ok_rank_ho && ok_rank_xia && ok_rank_cang &&
-          ok_rank_tin && ok_no_qiao && ok_mix && ok_phrase && ok_keys && ok_hot &&
-          ok_tab &&
+  return (ok_page && ok_sel && ok_me && ok_vd && ok_or && ok_win &&
+          ok_no_qiao && ok_mix && ok_phrase && ok_keys && ok_hot && ok_tab &&
           ok_one && ok_hist && ok_jyut)
              ? 0
              : 1;
