@@ -1,17 +1,16 @@
 # encoding: utf-8
-# KINFX IME — 粵拼（Jyutping）overlay with hard mixed-input defaults
-# Dictionary: uses packaged `jyutping` (Debian librime-data-jyutping / rime-cantonese lineage).
-# See NOTICE for CC BY / ODbL attribution requirements.
+# KINFX IME — 粵拼（Jyutping）with tone digits (rime-cantonese / jyut6ping3)
+# Dictionary: system `jyut6ping3` (Debian rime-data-jyut6ping3). See NOTICE.
 
 schema:
   schema_id: kinfx_jyutping
   name: KINFX 粵拼
-  version: "0.1.0"
+  version: "0.1.1"
   author:
     - KINFX
   description: |
-    香港語言學會粵語拼音；P1 方案。
-    中英混打同速成一致（ascii_composer / inline_ascii）。
+    香港語言學會粵語拼音（有聲調）：例 jyut6、nei5、ngo5；亦可唔打調號。
+    混打同速成：預設大寫拉丁零切換；可選 Shift inline_ascii／ascii_mode。
   dependencies:
     - luna_pinyin
 
@@ -59,12 +58,14 @@ ascii_composer:
     Control_R: noop
 
 speller:
-  alphabet: zyxwvutsrqponmlkjihgfedcba
+  # Digits 1–6 = tone marks (jyut6 / nei5); derive strips tones for optional input
+  alphabet: zyxwvutsrqponmlkjihgfedcba123456
   delimiter: " '"
   algebra:
+    - derive/\d//
     - derive/^jy?([aeiou])/y$1/
     - derive/^jyu/ju/
-    - derive/yu/y/
+    - derive/yu(?!ng|k)/y/
     - derive/eoi$/oey/
     - derive/eoi$/eoy/
     - derive/eo/oe/
@@ -77,15 +78,18 @@ speller:
     - abbrev/^(ts).+$/$1/
 
 translator:
-  dictionary: jyutping
+  dictionary: jyut6ping3
   prism: kinfx_jyutping
   spelling_hints: 5
+  vocabulary: essay-cantonese
 
 punctuator:
   import_preset: default
 
 key_binder:
   import_preset: default
+  bindings:
+    - { when: always, accept: Control+Shift+2, toggle: ascii_mode }
 
 recognizer:
   import_preset: default

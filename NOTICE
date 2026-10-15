@@ -11,7 +11,8 @@ Bundled or dependent schema/dictionary packages keep their own licenses:
 - rime-cantonese / jyutping data — typically CC BY 4.0; maps may be ODbL 1.0
   (verify each package LICENSE before redistribution)
 - fcitx5-rime — LGPL-2.1-or-later
-- Debian packaged librime-data-jyutping — see package copyright
+- Debian packaged rime-data-jyut6ping3 / librime-data-jyutping — see package copyright
+- essay-cantonese.txt (with rime-cantonese) — see package copyright
 
 Do not invent proprietary dictionaries. Ship only open-licensed data and keep
 attribution.

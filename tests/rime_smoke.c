@@ -1,6 +1,4 @@
-/* Headless librime smoke: Sucheng candidates for ME / VD.
- * Build: see run_smoke.sh
- */
+/* Headless librime smoke: Sucheng + zero-switch mixed + optional Jyutping tones. */
 #include <rime_api.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -27,6 +25,15 @@ static int menu_has(RimeContext* ctx, const char* needle) {
     if (t && strstr(t, needle)) return 1;
   }
   return 0;
+}
+
+static int menu_rank(RimeContext* ctx, const char* needle) {
+  if (!ctx || !ctx->menu.candidates) return -1;
+  for (int i = 0; i < ctx->menu.num_candidates; ++i) {
+    const char* t = ctx->menu.candidates[i].text;
+    if (t && strcmp(t, needle) == 0) return i + 1;
+  }
+  return -1;
 }
 
 static void print_menu(RimeContext* ctx) {
@@ -59,11 +66,105 @@ static int try_code(RimeApi* api, RimeSessionId sid, const char* seq,
     int last = ctx.menu.is_last_page;
     api->free_context(&ctx);
     if (ok || last) break;
-    /* Page_Down */
     api->process_key(sid, 0xff56, 0);
   }
   api->clear_composition(sid);
   return ok;
+}
+
+static int rank_first_page(RimeApi* api, RimeSessionId sid, const char* seq,
+                           const char* expect, int max_rank) {
+  api->clear_composition(sid);
+  if (!api->simulate_key_sequence(sid, seq)) return 0;
+  RIME_STRUCT(RimeContext, ctx);
+  if (!api->get_context(sid, &ctx)) return 0;
+  int r = menu_rank(&ctx, expect);
+  printf("rank '%s'→'%s' = %d (want ≤%d)\n", seq, expect, r, max_rank);
+  print_menu(&ctx);
+  api->free_context(&ctx);
+  api->clear_composition(sid);
+  return r > 0 && r <= max_rank;
+}
+
+static int assert_absent(RimeApi* api, RimeSessionId sid, const char* seq,
+                         const char* bad) {
+  api->clear_composition(sid);
+  if (!api->simulate_key_sequence(sid, seq)) return 0;
+  int found = 0;
+  for (int page = 0; page < 20; ++page) {
+    RIME_STRUCT(RimeContext, ctx);
+    if (!api->get_context(sid, &ctx)) break;
+    if (menu_has(&ctx, bad)) found = 1;
+    int last = ctx.menu.is_last_page;
+    api->free_context(&ctx);
+    if (found || last) break;
+    api->process_key(sid, 0xff56, 0);
+  }
+  api->clear_composition(sid);
+  printf("absent '%s' in '%s': %s\n", bad, seq, found ? "FAIL" : "PASS");
+  return !found;
+}
+
+/* Zero-switch mixed: Chinese + uppercase Latin, ascii_mode stays 0. */
+static int try_mixed_zero_switch(RimeApi* api, RimeSessionId sid) {
+  api->clear_composition(sid);
+  api->set_option(sid, "ascii_mode", False);
+  /* vd + API → preedit 好API → space commits */
+  api->simulate_key_sequence(sid, "vdAPI ");
+  RIME_STRUCT(RimeCommit, c);
+  const char* got = NULL;
+  if (api->get_commit(sid, &c)) {
+    got = c.text;
+    printf("mixed commit=%s\n", got ? got : "");
+  }
+  int ok_commit = got && strstr(got, "好") && strstr(got, "API");
+  if (got) api->free_commit(&c);
+
+  RIME_STRUCT(RimeStatus, st);
+  int ascii = 1;
+  if (api->get_status(sid, &st)) {
+    ascii = st.is_ascii_mode;
+    api->free_status(&st);
+  }
+  printf("mixed ascii_mode=%d (want 0)\n", ascii);
+
+  /* continuous: 好 + API + 好 */
+  api->simulate_key_sequence(sid, "vd ");
+  if (api->get_commit(sid, &c)) api->free_commit(&c);
+  api->simulate_key_sequence(sid, "API ");
+  if (api->get_commit(sid, &c)) {
+    printf("mixed2 API commit=%s\n", c.text ? c.text : "");
+    ok_commit = ok_commit && c.text && strstr(c.text, "API");
+    api->free_commit(&c);
+  }
+  api->simulate_key_sequence(sid, "vd ");
+  if (api->get_commit(sid, &c)) {
+    printf("mixed3 好 commit=%s\n", c.text ? c.text : "");
+    api->free_commit(&c);
+  }
+  if (api->get_status(sid, &st)) {
+    ascii = st.is_ascii_mode;
+    api->free_status(&st);
+  }
+  printf("mixed final ascii_mode=%d\n", ascii);
+  return ok_commit && ascii == 0;
+}
+
+static int try_jyutping_tone(RimeApi* api, RimeSessionId sid) {
+  if (!api->select_schema(sid, "kinfx_jyutping")) {
+    printf("jyutping: select_schema failed (skip)\n");
+    return 1; /* optional if dict missing */
+  }
+  api->clear_composition(sid);
+  /* tonal */
+  int ok5 = try_code(api, sid, "nei5", "你");
+  int ok6 = try_code(api, sid, "jyut6", "粵");
+  /* toneless still ok */
+  int ok0 = try_code(api, sid, "ngo", "我");
+  api->select_schema(sid, "kinfx_quick");
+  printf("jyutping tones nei5→你:%s jyut6→粵:%s ngo→我:%s\n",
+         ok5 ? "PASS" : "FAIL", ok6 ? "PASS" : "FAIL", ok0 ? "PASS" : "FAIL");
+  return ok5 && ok6 && ok0;
 }
 
 int main(int argc, char** argv) {
@@ -82,7 +183,7 @@ int main(int argc, char** argv) {
   traits.user_data_dir = user_dir;
   traits.distribution_name = "KINFX-IME-Smoke";
   traits.distribution_code_name = "kinfx-ime";
-  traits.distribution_version = "0.1.0";
+  traits.distribution_version = "0.1.1";
   traits.app_name = "rime.kinfx-ime-smoke";
   traits.min_log_level = 2;
   traits.log_dir = "";
@@ -94,7 +195,6 @@ int main(int argc, char** argv) {
   if (api->start_maintenance(True)) {
     api->join_maintenance_thread();
   }
-  /* give deploy notify a moment */
   for (int i = 0; i < 50 && g_deploy_ok == 0; ++i) usleep(20000);
 
   RimeSessionId sid = api->create_session();
@@ -105,8 +205,7 @@ int main(int argc, char** argv) {
   }
 
   if (!api->select_schema(sid, "kinfx_quick")) {
-    fprintf(stderr, "select_schema kinfx_quick failed (is schema deployed?)\n");
-    /* still try */
+    fprintf(stderr, "select_schema kinfx_quick failed\n");
   }
 
   RIME_STRUCT(RimeStatus, st);
@@ -120,22 +219,22 @@ int main(int argc, char** argv) {
   int ok_me = try_code(api, sid, "me", "夏");
   int ok_vd = try_code(api, sid, "vd", "好");
   int ok_or = try_code(api, sid, "or", "倉");
-
-  /* ascii mode toggle smoke: set option and type latin */
-  api->set_option(sid, "ascii_mode", True);
-  api->simulate_key_sequence(sid, "API");
-  RIME_STRUCT(RimeContext, ctx);
-  api->get_context(sid, &ctx);
-  printf("ascii_mode typing 'API': preedit/commit path num=%d\n",
-         ctx.menu.num_candidates);
-  api->free_context(&ctx);
-  api->set_option(sid, "ascii_mode", False);
+  int ok_rank_wo = rank_first_page(api, sid, "hi", "我", 1);
+  int ok_rank_si = rank_first_page(api, sid, "ai", "時", 1);
+  int ok_no_qiao = assert_absent(api, sid, "ms", "丂");
+  int ok_mix = try_mixed_zero_switch(api, sid);
+  int ok_jyut = try_jyutping_tone(api, sid);
 
   api->destroy_session(sid);
   api->finalize();
 
-  printf("\nRESULT me→夏:%s vd→好:%s or→倉:%s\n",
+  printf("\nRESULT me:%s vd:%s or:%s 我@hi≤1:%s 時@ai≤1:%s no丂:%s mix0switch:%s jyut:%s\n",
          ok_me ? "PASS" : "FAIL", ok_vd ? "PASS" : "FAIL",
-         ok_or ? "PASS" : "FAIL");
-  return (ok_me && ok_vd && ok_or) ? 0 : 1;
+         ok_or ? "PASS" : "FAIL", ok_rank_wo ? "PASS" : "FAIL",
+         ok_rank_si ? "PASS" : "FAIL", ok_no_qiao ? "PASS" : "FAIL",
+         ok_mix ? "PASS" : "FAIL", ok_jyut ? "PASS" : "FAIL");
+  return (ok_me && ok_vd && ok_or && ok_rank_wo && ok_rank_si && ok_no_qiao &&
+          ok_mix && ok_jyut)
+             ? 0
+             : 1;
 }

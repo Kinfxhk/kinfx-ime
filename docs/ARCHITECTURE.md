@@ -44,11 +44,12 @@ Desktop 多數只「切中／英模式」≠ 組字途中夾英文。本專案�
 
 | 層 | 做法 | 驗收 |
 | --- | --- | --- |
-| 現成（配置） | `ascii_composer` + `ascii_segmentor`；`Shift_L: inline_ascii` | M1–M3 |
-| 輔助 | `recognizer` email／url／uppercase patterns | M4 |
-| 後期 | 自動判語（打 `th`／`app` 自動英候選） | M5 加分 |
+| **預設** | `recognizer` **uppercase**／email／url → 零切換夾拉丁 | **M0**／M2／M4 |
+| 可選 | `ascii_composer`；`Shift_L: inline_ascii`；`ascii_mode` toggle | M1／M3（可關） |
+| Flex | `*.custom.yaml` 改策略／鍵位／排序（`docs/CONFIG.md`） | 設定可改 |
+| 後期 | 自動判語（小寫英文） | M5 加分 |
 
-**速成特別風險**：首尾兩碼空間極密，英文字母易撞碼——**主測必須用速成**，唔好只測拼音。
+**速成特別風險**：首尾兩碼空間極密，小寫英文字母易撞碼——預設用**大寫拉丁**做零切換；**主測必須用速成**。
 
 詳見 `tests/ACCEPTANCE_MIXED_INPUT.md`。
 
@@ -96,4 +97,4 @@ Desktop 多數只「切中／英模式」≠ 組字途中夾英文。本專案�
 
 ## English
 
-Shared **librime** engine + thin frontends; schemas prioritize **Sucheng → Jyutping**. Hard acceptances: **CJK+Latin mixed input** (`inline_ascii`) and **candidate popup must not cover the caret** (below-first, edge flip, follow-cursor).
+Shared **librime** engine + thin frontends; schemas prioritize **Sucheng → Jyutping**. Hard acceptances: **CJK+Latin mixed input** (default uppercase zero-switch; optional `inline_ascii`) and **candidate popup must not cover the caret** (below-first, edge flip, follow-cursor).

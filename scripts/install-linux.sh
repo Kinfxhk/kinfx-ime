@@ -8,14 +8,17 @@ mkdir -p "$TARGET"
 
 echo "Installing KINFX schemas → $TARGET"
 
-# Base presets from system (needed for import_preset: default / punctuator / essay)
-for f in essay.txt key_bindings.yaml punctuation.yaml symbols.yaml \
+# Base presets from system (needed for import_preset / essay / tonal jyutping)
+for f in essay.txt essay-cantonese.txt key_bindings.yaml punctuation.yaml symbols.yaml \
          luna_pinyin.dict.yaml luna_quanpin.schema.yaml luna_pinyin.schema.yaml \
+         jyut6ping3.dict.yaml jyut6ping3.chars.dict.yaml jyut6ping3.words.dict.yaml \
+         jyut6ping3.phrase.dict.yaml jyut6ping3.lettered.dict.yaml jyut6ping3.maps.dict.yaml \
+         jyut6ping3.schema.yaml \
          jyutping.dict.yaml jyutping.lettered.dict.yaml jyutping.phrase.dict.yaml \
          jyutping.schema.yaml pinyin.yaml zhuyin.yaml; do
   if [[ -f "$SYS/$f" ]]; then
     if [[ -L "$TARGET/$f" || -f "$TARGET/$f" ]]; then
-      : # keep existing
+      :
     else
       ln -s "$SYS/$f" "$TARGET/$f" || cp -a "$SYS/$f" "$TARGET/$f"
       echo "  + $f"
@@ -25,7 +28,6 @@ for f in essay.txt key_bindings.yaml punctuation.yaml symbols.yaml \
   fi
 done
 
-# Start from system default.yaml (has key_binder / recognizer / punctuator includes)
 if [[ -f "$SYS/default.yaml" ]]; then
   cp -a "$SYS/default.yaml" "$TARGET/default.yaml"
 else
@@ -33,18 +35,11 @@ else
   exit 1
 fi
 
-# Patch schema_list + ascii_composer mixed-input defaults via rime_patch if available,
-# else rewrite with Python
 python3 - << PY
 from pathlib import Path
+import re
 p = Path("$TARGET/default.yaml")
 text = p.read_text(encoding="utf-8")
-# Replace schema_list block (simple approach: write our preferred head fields)
-import re
-# Ensure ascii_composer uses inline_ascii (usually already)
-if "Shift_L: inline_ascii" not in text and "ascii_composer:" in text:
-    text = text.replace("Shift_L:", "Shift_L: inline_ascii  # kinfx\n    # was:")
-# Replace schema_list
 new_list = """schema_list:
   - schema: kinfx_quick
   - schema: kinfx_jyutping
@@ -56,7 +51,6 @@ text2, n = re.subn(
     count=1,
 )
 if n == 0:
-    # prepend
     text2 = new_list + "\n" + text
 p.write_text(text2, encoding="utf-8")
 print("  patched default.yaml schema_list")
@@ -69,11 +63,11 @@ echo "  + kinfx_quick + kinfx_jyutping"
 
 if command -v rime_deployer >/dev/null; then
   echo "Deploying with rime_deployer…"
-  # Prefer building in user dir
   rime_deployer --build "$TARGET" 2>&1 || true
 else
   echo "rime_deployer not found; install librime-bin"
 fi
 
 echo "Done. Fcitx5 → 中州韻 → KINFX 速成"
-echo "Candidate UX: below caret, never cover typing line (docs/ARCHITECTURE.md §4)."
+echo "Mixed input default: uppercase Latin inline (no mode switch). See README."
+echo "Candidate UX: below caret (docs/ARCHITECTURE.md §4; visual check needs display)."
