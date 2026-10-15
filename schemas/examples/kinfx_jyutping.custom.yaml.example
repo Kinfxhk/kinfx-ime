@@ -10,3 +10,6 @@ patch:
   "translator/spelling_hints": 5                      # 0 = 唔顯示拼音提示
   # 若只要無聲調輸入、唔收 1–6：
   # "speller/alphabet": "zyxwvutsrqponmlkjihgfedcba"
+  # 選字預設同速成（空白翻頁、Enter 確認）。還原空白選字：
+  # "win_quick/space_pages": false
+  # "win_quick/hot_page": false

@@ -10,3 +10,4 @@ __pycache__/
 *.pyc
 /tmp/
 tests/rime_smoke
+kinfx_win_history.tsv
