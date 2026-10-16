@@ -6,7 +6,7 @@
 schema:
   schema_id: kinfx_quick
   name: KINFX 中英混打輸入法 · 速成
-  version: "0.4.1"
+  version: "0.5.0"
   author:
     - KINFX
     - 速成規則／碼表源流見 NOTICE（rime-quick / rime-cangjie）
@@ -24,6 +24,7 @@ schema:
   dependencies:
     - kinfx_phrase
     - kinfx_en
+    - kinfx_assoc
 
 switches:
   - name: ascii_mode
@@ -39,14 +40,20 @@ switches:
 
 engine:
   processors:
+    # v0.5 英文：仲係英文詞開頭就延遲頂字（照 v0.4.1 計好中文結果先擺住）；
+    # 空白／標點上屏安全英文詞，左 Shift 撳一下上屏字母。要喺 ascii_composer 之前。
+    - lua_processor@english_keys
     - ascii_composer
     - recognizer
     # 喺 key_binder 之前：Tab 展開；Page_Up/Down 先處理熱門環頁，其餘交返 selector。
     - lua_processor@win_quick_keys
     - key_binder
-    # 第三碼預設照 Windows 頂字；只有常用詞前綴（kinfx_capture.txt）先留低組詞。
+    # 第三碼預設照 Windows 頂字；常用詞前綴／英文詞前綴先留低組詞。
     - lua_processor@phrase_mix_keys
     - speller
+    # 揀完單字開聯想詞；再撳鍵處理聯想選單。要喺 punctuator 之前，
+    # 否則 Shift+digit 會被 punctuator 當標點上屏。
+    - lua_processor@assoc_keys
     - punctuator
     - selector
     - navigator
@@ -64,10 +71,13 @@ engine:
     - table_translator
     - table_translator@phrase
     - table_translator@english
+    - lua_translator@assoc_translator
     - reverse_lookup_translator
   filters:
     - simplifier
     - uniquifier
+    # 英文延遲頂字時喺游標後提示（␣word／⇧letters），候選唔改。
+    - lua_filter@english_hint
     # 正常頁原序通過（碼表已釘 Win 頭 9）。熱門頁／Tab 展開先至改顯示。
     - lua_filter@win_quick_menu
 
@@ -124,9 +134,13 @@ phrase:
   comment_format:
     - "xform/^.*$//"
 
-# 英詞補全（lexicon/en，SCOWL）。只喺長度 ≥4 出，me／or／of 永遠中文。
+# 英詞（lexicon/en，SCOWL）。smart 模式：延遲頂字＋空白上屏＋左 Shift。
+# shift = v0.4.1（+word 留住詞＋inline_ascii）；off = 唔處理英文。
 english:
   enable: true
+  mode: smart
+  space: safe          # safe（逐詞安全表）| long（只限 5 字母以上）| off
+  commit_key: Shift_L  # Linux 可改 Caps_Lock
   dictionary: kinfx_en
   tag: kinfx_en
   enable_completion: true
@@ -135,6 +149,14 @@ english:
   initial_quality: 1
   comment_format:
     - "xform/^.*$//"
+
+# 聯想詞（上屏一個中文字後出後續詞，同 Windows 聯想）。v0.5。
+association:
+  enable: true
+  max: 36
+
+assoc_translator:
+  tag: kinfx_assoc
 
 abc_segmentor:
   extra_tags:

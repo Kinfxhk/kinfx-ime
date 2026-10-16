@@ -441,6 +441,12 @@ local function processor_func(key, env)
   end
   local ctx = env.engine.context
   local repr = key:repr()
+  -- The association list (assoc.lua) owns its keys: no hot-page wrap, no
+  -- history entry for a suffix under the previous code.
+  local seg0 = segment_of(ctx)
+  if seg0 and seg0:has_tag("kinfx_assoc") then
+    return kNoop
+  end
   if ctx.input and ctx.input ~= "" then
     pending_code = ctx.input
   end

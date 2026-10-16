@@ -12,6 +12,7 @@ cp "$ROOT"/schemas/lua/*.lua "$U/lua/"
 cp "$ROOT"/schemas/rime.lua "$U/"
 cp "$ROOT"/lexicon/hk/*.yaml "$U/"
 cp "$ROOT"/lexicon/en/*.yaml "$U/"
+cp "$ROOT"/lexicon/en/kinfx_en_unsafe.txt "$U/"
 cp "$ROOT"/lexicon/hk/kinfx_capture.txt "$U/"
 cat > "$U/default.custom.yaml" <<'EOF'
 patch:

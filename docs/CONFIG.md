@@ -12,7 +12,8 @@
 | 選字 | 直列；空白翻頁；Enter／1–9 選字；Tab 展開 | 見 `docs/WIN_QUICK_SELECT.md` |
 | 頂字 | 第 3 碼照 Windows 上屏 | 常用詞前綴例外，見 `docs/PHRASE_MIX.md` |
 | 詞語 | 開（`phrase_mix/capture: hot`） | `ofc` → 人類／無錯、`ofca` → 無錯 |
-| 英文詞 | 開（只限 `extras.tsv` 嘅字） | `gmai` → Gmail |
+| 英文詞 | 開（`english/mode: smart`） | 空白上屏安全詞（`hello`␣→ hello）、左 Shift 上屏短詞（`of` Shift→ of） |
+| 聯想詞 | 開（`association/enable: true`） | 揀完單字出跟尾詞，Shift+數字揀 |
 | 混打 | 零切換 | 大寫英文、email、URL 直出 |
 | 常用熱門 | 開 | 第 1 頁按左 |
 | 候選窗 | 正黑體、圓角、淺／深色跟系統 | `weasel.custom.yaml` 入面嘅 `kinfx-ime:weasel-skin` 段 |
@@ -35,6 +36,11 @@
 | 任何詞前綴都留住（較少頂字） | `"phrase_mix/capture": all` |
 | 完全關掉詞語 | `"phrase_mix/enable": false` |
 | 關掉英文詞 | `"english/enable": false` |
+| 英文改返 v0.4.1（只限 extras.tsv 字） | `"english/mode": "shift"` |
+| 唔留英文（純 Windows 頂字） | `"english/mode": "off"` |
+| 空白只上屏 5 字或以上嘅英文 | `"english/space": "long"` |
+| 空白唔上屏英文（都要左 Shift） | `"english/space": "off"` |
+| 關掉聯想詞 | `"association/enable": false` |
 | 空白改回揀焦點候選 | `"win_quick/space_pages": false` |
 | 關掉常用熱門 | `"win_quick/hot_page": false` |
 | Tab 唔展開 | `"win_quick/tab_expand": false` |
@@ -46,11 +52,11 @@
 
 | 模式 | 做法 |
 | --- | --- |
-| 零切換（預設） | 英文用大寫開頭，或者打 email／URL |
-| 臨時英文（細楷詞） | 撳一下左 Shift → 打英文 → 再撳一下返中文。打到一半撳都得：已打嘅字母會變英文（`st` Shift `artup` → startup）。見 README「打英文」 |
+| 零切換（預設） | 細楷英文詞直接打，空白上屏（`hello`␣→ hello）。安全詞表唔畀上屏嘅（短詞、少見詞）就撳一下左 Shift 上屏。大寫、email、URL 直出 |
+| 短詞（`of`、`to`、`on`…） | 打到一半撳一下左 Shift：已打字母變英文（`of` Shift → of） |
 | 持久英文 | `Control+Shift+2` 切換 `ascii_mode` |
 | 一定要切先打英文 | 清空 `recognizer/patterns/uppercase` |
 
 ## Fcitx5 同左 Shift
 
-Fcitx5 預設用左 Shift 切輸入法，所以 rime 收唔到。實際效果差唔多：撳一下切去英文鍵盤，打完再撳一下返 KINFX，每個詞 2 下（2026-10-16 Linux VM 實測 58／58 次冇失誤）。打到一半撳 Shift 會點，Linux 上面未測。想要同 Windows 一樣，喺 `fcitx5-configtool` 解除左 Shift 嘅切換熱鍵。
+Fcitx5 預設用左 Shift 切輸入法，所以 rime 收唔到。v0.5 smart mode 大部分英文詞用空白上屏（唔使 Shift）；只有短詞（`of`、`to`）要左 Shift，喺 Fcitx5 上面就變咗「撳一下切英文鍵盤 → 打 → 撳一下返」，每個短詞 2 下。想要同 Windows 一樣，喺 `fcitx5-configtool` 解除左 Shift 嘅切換熱鍵（或者改用 Caps Lock）。

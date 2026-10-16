@@ -119,10 +119,18 @@ local function first_text(mem, code)
   return found
 end
 
+-- english/mode: smart (v0.5) | shift (v0.4.1) | off (no English at all).
+local function english_on(config)
+  if not config_bool(config, "english/enable", true) then
+    return false
+  end
+  return (config:get_string("english/mode") or "smart") ~= "off"
+end
+
 local function processor_init(env)
   local config = env.engine.schema.config
   env.enable = config_bool(config, "phrase_mix/enable", true)
-  env.eng_enable = config_bool(config, "english/enable", true)
+  env.eng_enable = english_on(config)
   env.capture = config:get_string("phrase_mix/capture") or "hot"
   env.main = new_memory(env, nil)
   env.phrase = new_memory(env, "kinfx_phrase")
@@ -219,7 +227,7 @@ end
 local function segmentor_init(env)
   local config = env.engine.schema.config
   env.enable = config_bool(config, "phrase_mix/enable", true)
-  env.eng_enable = config_bool(config, "english/enable", true)
+  env.eng_enable = english_on(config)
 end
 
 local function segmentor_func(segmentation, env)
@@ -244,7 +252,22 @@ local function segmentor_func(segmentation, env)
   return true
 end
 
+-- Shared with english_mix.lua: it replays this exact key rule to know what
+-- Windows / v0.4.1 would have committed while it delays the top-out.
+local helpers = {
+  config_bool = config_bool,
+  new_memory = new_memory,
+  has_prefix = has_prefix,
+  first_text = first_text,
+  load_capture = load_capture,
+  is_hold_prefix = is_hold_prefix,
+  init = processor_init,
+  may_capture = may_capture,
+  continues = continues,
+}
+
 return {
   processor = { init = processor_init, func = processor_func },
   segmentor = { init = segmentor_init, func = segmentor_func },
+  helpers = helpers,
 }
