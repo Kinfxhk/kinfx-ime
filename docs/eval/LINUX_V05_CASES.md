@@ -1,0 +1,48 @@
+# Linux VM v0.5 實測清單（交 Mac 側 Hermes）
+
+對象：v0.5（`feat/v0.5-english` 最新 commit）。部署 `scripts/install-linux.sh`，
+乾淨 userdb，fcitx5 + gedit，kernel-level replay（ydotool），byte-exact 對比。
+聯想詞測速成單字；英文詞測 smart mode 預設。
+
+## L1 — Fcitx5 預設左 Shift（短詞）
+
+- `of` 撳左 Shift → 結果？（fcitx5-rime 收到左 Shift 定係切走輸入法；切走時會唔會上屏字母）
+- 記錄：最終文字、切換次數。
+
+## L2 — 空白上屏安全詞
+
+- `the` 空白 → `the `
+- `startup` 空白 → `startup `
+- `hello` 空白 → `hello `
+
+## L3 — 空白唔上屏（unsafe／2 碼）
+
+- `door` 空白 → 翻頁，唔上屏英文
+- `of` 空白 → 翻頁，唔上屏英文
+
+## L4 — 解除 Fcitx5 左 Shift 熱鍵後重測 L1
+
+- 喺 `fcitx5-configtool` 解除左 Shift 嘅切換熱鍵，重測 L1。
+
+## L5 — `english/commit_key: Caps_Lock`
+
+- patch `english/commit_key: Caps_Lock`，`of` 撳 Caps Lock → `of`（重測 L1）。
+
+## L6 — 505 字文章重打
+
+- 用 v0.4.0 嗰篇 505 字文章（`LINUX-VM-EVAL-final4.txt`）重打，v0.5 smart mode，
+  byte-exact（唯一容許差異＝gedit 檔尾換行）。
+
+## L7 — 聯想詞
+
+- `hi7` 揀「我」→ 出跟尾詞（同講望見…）
+- `hi7` Shift+2 → 我講（Shift+數字揀）
+- `hi7` 1 → 我1（普通數字直打，唔揀）
+- `hi7` 空白 空白 → 我（空白翻頁，吞咗，冇空格）
+- `ofc1` → 人類（詞語上屏，唔出聯想）
+- `vd1` 空白 空白 Shift+1 → 好＋第 2 頁第 1 個聯想（如 Windows `vd1␣␣Shift+1` → 好過）
+
+## 交回格式
+
+每項寫：實際結果、同期望差幾多、Fcitx5 左 Shift 有冇切走輸入法。報告放 repo root
+`LINUX-VM-EVAL-<date>.md`（唔好 commit）。

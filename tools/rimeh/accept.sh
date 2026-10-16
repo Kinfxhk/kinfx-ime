@@ -9,6 +9,8 @@ SHARED="${RIMEH_SHARED:-C:/Program Files/Rime/weasel-0.17.4/data}"
 [ -x "$ROOT/tools/rimeh/rimeh.exe" ] || bash "$ROOT/tools/rimeh/build.sh" >/dev/null
 bash "$ROOT/tools/rimeh/stage.sh" "$U" >/dev/null
 # Cases: keys <TAB> expected commit (C:...) or expected first candidates (M:a|b|c)
+# v0.5: English smart mode commits on Space/Left Shift; association opens after
+# a one-character pick. C: with nothing after it asserts "no commit" (Space paged).
 CASES=$(cat <<'EOF'
 vd1	C:好
 vd{space}1	C:嫻
@@ -27,15 +29,9 @@ kjo1	C:大家
 vdvd1	C:好好
 vd8	C:綑
 vd9	C:綵
-{Shift_L}{Release+Shift_L}startup{Shift_L}{Release+Shift_L}vd1	C:好
-st{Shift_L}{Release+Shift_L}artup{Return}	C:startup
-vdst{Shift_L}{Release+Shift_L}artup{Return}	C:好startup
 ymml1	C:上面
 vdbr1	C:好同
 hioa1	C:我會
-gmai1	C:Gmail
-scriptwriti1	C:scriptwriting
-voiceove1	C:voiceover
 vdAPI{space}	C:好API
 or9	C:含
 of3	C:係
@@ -49,6 +45,31 @@ of	M:伙|你|係|偽|氮|焦|無|絛|僚
 h	M:竹|丿
 me	M:汞|歿|泵|玻|夏|破|球|豉|瑕
 rd	M:吁|呆|味|呼|咪|咻|哮|喋|嗓
+the{space}	C:the 
+hello{space}	C:hello 
+startup{space}	C:startup 
+gmail{space}	C:Gmail 
+the{comma}	C:the，
+meeting{Return}	C:汞泣划土
+of{Shift_L}{Release+Shift_L}	C:of
+of{space}	C:
+door{space}	C:來
+hel1	C:反中
+vdo	M:好人|媒人|好氣|彙集|妹會|樂仔|好入|好傷|好使
+hi7{Shift+exclam}	C:我同
+hi7{Shift+at}	C:我講
+hi71	C:我1
+vdhello{space}	C:好hello 
+vdthe{space}	C:好the 
+abac{comma}	C:明顯，
+abac3	C:abaci
+abac1	C:明顯
+ofcthe{space}	C:伙盆
+gmai1	C:Gmail
+scriptwriti1	C:scriptwriting
+startup{Shift_L}{Release+Shift_L}	C:startup
+vdof{Shift_L}{Release+Shift_L}	C:好of
+hello{Return}	C:反川人
 EOF
 )
 {
@@ -58,6 +79,7 @@ EOF
   echo "bench vd 100"
   echo "bench vdvdvdvd 50"
   echo "bench hiofrrvdmkaihime 30"
+  echo "bench thequickbrownfox{space} 30"
 } > "$U/cmds.txt"
 OUT=$("$ROOT/tools/rimeh/rimeh.exe" "$SHARED" "$(cygpath -m "$U")" < "$U/cmds.txt" 2>/dev/null | tr -d '\r')
 pass=0; fail=0

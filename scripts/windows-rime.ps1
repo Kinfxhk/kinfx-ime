@@ -32,15 +32,20 @@ function Get-KinfxDeployItems {
     [pscustomobject]@{ Rel = 'kinfx_quick.dict.yaml'; Src = 'schemas/kinfx-quick/kinfx_quick.dict.yaml' },
     [pscustomobject]@{ Rel = 'kinfx_phrase.schema.yaml'; Src = 'schemas/kinfx-quick/kinfx_phrase.schema.yaml' },
     [pscustomobject]@{ Rel = 'kinfx_en.schema.yaml'; Src = 'schemas/kinfx-quick/kinfx_en.schema.yaml' },
+    [pscustomobject]@{ Rel = 'kinfx_assoc.schema.yaml'; Src = 'schemas/kinfx-quick/kinfx_assoc.schema.yaml' },
     [pscustomobject]@{ Rel = 'kinfx_capture.txt'; Src = 'lexicon/hk/kinfx_capture.txt' },
+    [pscustomobject]@{ Rel = 'kinfx_en_unsafe.txt'; Src = 'lexicon/en/kinfx_en_unsafe.txt' },
     [pscustomobject]@{ Rel = 'kinfx_jyutping.schema.yaml'; Src = 'schemas/kinfx-jyutping/kinfx_jyutping.schema.yaml' },
     [pscustomobject]@{ Rel = 'kinfx_quick_phrase.dict.yaml'; Src = 'lexicon/hk/kinfx_quick_phrase.dict.yaml' },
     [pscustomobject]@{ Rel = 'kinfx_hk_words.dict.yaml'; Src = 'lexicon/hk/kinfx_hk_words.dict.yaml' },
     [pscustomobject]@{ Rel = 'kinfx_hk_idioms.dict.yaml'; Src = 'lexicon/hk/kinfx_hk_idioms.dict.yaml' },
+    [pscustomobject]@{ Rel = 'kinfx_assoc.dict.yaml'; Src = 'lexicon/hk/kinfx_assoc.dict.yaml' },
     [pscustomobject]@{ Rel = 'kinfx_en.dict.yaml'; Src = 'lexicon/en/kinfx_en.dict.yaml' },
     [pscustomobject]@{ Rel = 'rime.lua'; Src = 'schemas/rime.lua' },
     [pscustomobject]@{ Rel = 'lua/win_quick.lua'; Src = 'schemas/lua/win_quick.lua' },
-    [pscustomobject]@{ Rel = 'lua/phrase_mix.lua'; Src = 'schemas/lua/phrase_mix.lua' }
+    [pscustomobject]@{ Rel = 'lua/phrase_mix.lua'; Src = 'schemas/lua/phrase_mix.lua' },
+    [pscustomobject]@{ Rel = 'lua/english_mix.lua'; Src = 'schemas/lua/english_mix.lua' },
+    [pscustomobject]@{ Rel = 'lua/assoc.lua'; Src = 'schemas/lua/assoc.lua' }
   )
   # NoEnumerate: a bare return (and @()) collapses empty and one-item arrays.
   Write-Output -NoEnumerate $rows
@@ -623,7 +628,7 @@ function Test-KinfxRimeLua {
   if (-not (Test-Path -LiteralPath $Path)) { return $false }
   $text = Read-Utf8Text $Path
   if ($text -notmatch 'KINFX IME lua entry') { return $false }
-  $allowed = @('win_quick', 'phrase_mix', 'melt_eng', 'lexicon_index')
+  $allowed = @('win_quick', 'phrase_mix', 'english_mix', 'assoc', 'melt_eng', 'lexicon_index')
   foreach ($match in [regex]::Matches($text, 'require\s*\(\s*["'']([^"'']+)["'']\s*\)')) {
     $name = $match.Groups[1].Value
     if ($allowed -notcontains $name) { return $false }

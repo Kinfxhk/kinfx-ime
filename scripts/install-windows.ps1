@@ -132,9 +132,9 @@ Write-Host '     or: WeaselDeployer.exe /deploy'
 Write-Host '  2. Win+Space, choose 小狼毫 / RIME.'
 Write-Host '  3. Select schema: KINFX 中英混打輸入法 · 速成  (schema_id kinfx_quick).'
 Write-Host '     Jyutping: KINFX 中英混打輸入法 · 粵拼  (schema_id kinfx_jyutping).'
-Write-Host 'v0.4.1: Windows 11 Quick order on every page; page_size 9, vertical, Space pages, 1-9/Enter select, Tab expands.'
+Write-Host 'v0.5.0: Windows 11 Quick order on every page; lowercase English (Space / Left Shift); association words (Shift+digit).'
 Write-Host 'Candidate skin: rounded corners, soft shadow, light/dark. Static colors only (no images or animation). See docs/WINDOWS.md.'
-Write-Host 'Smoke: vd -> 好, ofc 1 -> 人類, ofca -> 無錯, gmai -> Gmail. See docs/WINDOWS.md.'
+Write-Host 'Smoke: vd -> 好, ofc 1 -> 人類, ofca -> 無錯, hello Space -> hello, of Left-Shift -> of. See docs/WINDOWS.md.'
 
 $deployed = $false
 if ($NoDeploy) {

@@ -16,3 +16,4 @@ kinfx_win_history.tsv
 # Local-only artifacts
 tools/rimeh/rimeh.exe
 HANDOFF-*.md
+LINUX-VM-EVAL-*

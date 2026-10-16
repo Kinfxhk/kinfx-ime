@@ -55,6 +55,63 @@ static class Rime {
     [DllImport("kernel32.dll", CharSet = CharSet.Unicode)] public static extern bool SetDllDirectory(string p);
 }
 
+// librime key_table.h modifier masks and X11 keysyms used by the `typed`
+// command. `typed` drives RimeProcessKey per token so it can tell whether a
+// key was handled (consumed by the IME) or passed through to the app.
+static class KeyTab {
+    public const int kShiftMask = 1 << 0;
+    public const int kControlMask = 1 << 2;
+    public const int kAltMask = 1 << 3;
+    public const int kSuperMask = 1 << 26;
+    public const int kReleaseMask = 1 << 30;
+
+    public static int KeycodeForName(string name) {
+        switch (name) {
+            case "space": return 0x20;
+            case "comma": return 0x2c;
+            case "period": return 0x2e;
+            case "Return": return 0xff0d;
+            case "Escape": return 0xff1b;
+            case "BackSpace": return 0xff08;
+            case "Tab": return 0xff09;
+            case "Left": return 0xff51;
+            case "Right": return 0xff53;
+            case "Shift_L": return 0xffe1;
+            case "Shift_R": return 0xffe2;
+            // Shifted digits (US layout) = 1..9
+            case "exclam": return 0x21;
+            case "at": return 0x40;
+            case "numbersign": return 0x23;
+            case "dollar": return 0x24;
+            case "percent": return 0x25;
+            case "asciicircum": return 0x5e;
+            case "ampersand": return 0x26;
+            case "asterisk": return 0x2a;
+            case "parenleft": return 0x28;
+            default: return -1;
+        }
+    }
+
+    // Printable char the app receives when the key is NOT handled.
+    public static string PrintableForName(string name) {
+        switch (name) {
+            case "space": return " ";
+            case "comma": return ",";
+            case "period": return ".";
+            case "exclam": return "!";
+            case "at": return "@";
+            case "numbersign": return "#";
+            case "dollar": return "$";
+            case "percent": return "%";
+            case "asciicircum": return "^";
+            case "ampersand": return "&";
+            case "asterisk": return "*";
+            case "parenleft": return "(";
+            default: return null;
+        }
+    }
+}
+
 static class P {
     static IntPtr U8(string s) {
         if (s == null) return IntPtr.Zero;
@@ -89,6 +146,58 @@ static class P {
         }
         Rime.RimeCandidateListEnd(ref it);
         return l;
+    }
+
+    // Split a rime key sequence into tokens: "{Name}" or a single character.
+    static List<string> Tokenize(string seq) {
+        var toks = new List<string>();
+        int n = seq.Length;
+        for (int i = 0; i < n; i++) {
+            if (seq[i] == '{') {
+                int j = seq.IndexOf('}', i + 1);
+                if (j < 0) break;
+                toks.Add(seq.Substring(i + 1, j - i - 1));
+                i = j;
+            } else {
+                toks.Add(seq.Substring(i, 1));
+            }
+        }
+        return toks;
+    }
+
+    // Map one token to (keycode, modifier mask, printable passthrough text).
+    static bool ParseToken(string tok, out int keycode, out int mask, out string printable) {
+        keycode = 0; mask = 0; printable = null;
+        if (tok.Length == 0) return false;
+        string name = tok;
+        int mods = 0;
+        int plus = tok.LastIndexOf('+');
+        if (plus >= 0) {
+            name = tok.Substring(plus + 1);
+            foreach (var m in tok.Substring(0, plus).Split('+')) {
+                if (m == "Shift") mods |= KeyTab.kShiftMask;
+                else if (m == "Release") mods |= KeyTab.kReleaseMask;
+                else if (m == "Control" || m == "Ctrl") mods |= KeyTab.kControlMask;
+                else if (m == "Alt") mods |= KeyTab.kAltMask;
+                else if (m == "Super") mods |= KeyTab.kSuperMask;
+                else return false;
+            }
+        }
+        mask = mods;
+        if (name.Length == 1) {
+            char c = name[0];
+            if ((c >= 'a' && c <= 'z') || (c >= '0' && c <= '9') || c == ' ' ||
+                c == ',' || c == '.') {
+                keycode = (int)c;
+                printable = name;
+                return true;
+            }
+        }
+        int kc = KeyTab.KeycodeForName(name);
+        if (kc < 0) return false;
+        keycode = kc;
+        printable = KeyTab.PrintableForName(name);
+        return true;
     }
 
     static int Main(string[] a) {
@@ -133,6 +242,26 @@ static class P {
                 var commit = ReadCommit(s);
                 Console.WriteLine("OK\t" + arg + "\t" + Clean(commit) + "\t" + Clean(Preedit(s)) + "\t" +
                     string.Join("|", Cands(s, maxc)) + "\t" + us.ToString("F0"));
+            } else if (cmd == "typed") {
+                // typed <seq>: model app-visible text. Feeds each token through
+                // RimeProcessKey (so handled vs passthrough is known), drains
+                // commits, and appends a printable char when a token passes
+                // through. Prints TYPED <seq> <app text> <preedit> <cands>.
+                Rime.RimeClearComposition(s); ReadCommit(s);
+                var app = new StringBuilder();
+                foreach (var tok in Tokenize(arg)) {
+                    int kc, mask; string printable;
+                    if (!ParseToken(tok, out kc, out mask, out printable)) {
+                        app.Append("[" + tok + "]");
+                        continue;
+                    }
+                    int handled = Rime.RimeProcessKey(s, kc, mask);
+                    app.Append(ReadCommit(s));
+                    if (handled == 0 && printable != null) app.Append(printable);
+                }
+                app.Append(ReadCommit(s));
+                Console.WriteLine("TYPED\t" + arg + "\t" + Clean(app.ToString()) + "\t" +
+                    Clean(Preedit(s)) + "\t" + string.Join("|", Cands(s, maxc)));
             } else if (cmd == "bench") {
                 // bench <seq> <n>: time each RimeSimulateKeySequence of seq, n times, clearing between
                 var parts = arg.Split(' ');

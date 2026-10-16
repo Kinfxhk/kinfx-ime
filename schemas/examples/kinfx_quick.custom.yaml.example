@@ -1,4 +1,4 @@
-# KINFX 速成 — 使用者覆寫例（v0.4）
+# KINFX 速成 — 使用者覆寫例（v0.5）
 # 複製到：
 #   Windows  %APPDATA%\Rime\kinfx_quick.custom.yaml
 #   Linux    ~/.local/share/fcitx5/rime/kinfx_quick.custom.yaml
@@ -7,13 +7,29 @@
 # 預設全部跟 Windows 11 微軟速成。以下全部註解住；取消註解先至生效。
 
 patch:
-  # ========== 詞語／英文詞（docs/PHRASE_MIX.md）==========
+  # ========== 詞語（docs/PHRASE_MIX.md）==========
   # hot  = 預設：只有常用詞前綴先留住第 3／4 碼，其餘照 Windows 頂字
   # none = 純 Windows：第 3 碼一律頂字，唔出詞
   # all  = 任何詞前綴都留住（頂字少啲，同 Windows 差多啲）
   # "phrase_mix/capture": none
   # "phrase_mix/enable": false        # 完全關掉詞語
-  # "english/enable": false           # 關掉 gmai → Gmail
+
+  # ========== 英文詞（docs/ENGLISH_MIX.md）==========
+  # smart = 預設：任何細楷英文詞空白上屏（安全詞表），短詞用左 Shift
+  # shift = v0.4.1：只留 extras.tsv 嘅字（gmai → Gmail），其他走 Shift
+  # off   = 唔留英文，純 Windows 頂字
+  # "english/mode": shift
+  # "english/enable": false           # 完全關掉英文詞
+  # safe = 預設：空白只上屏安全詞（kinfx_en_unsafe.txt 以外）
+  # long = 空白只上屏 5 字或以上嘅詞
+  # off  = 空白永遠唔上屏英文（都要左 Shift）
+  # "english/space": long
+  # "english/commit_key": Caps_Lock   # 左 Shift 改做 Caps Lock（Linux/Fcitx5）
+
+  # ========== 聯想詞（docs/STATUS.md）==========
+  # 揀完單字出跟尾詞，Shift+數字揀。預設開。
+  # "association/enable": false
+  # "association/max": 36             # 每字最多 36 個跟尾詞
 
   # ========== 選字（預設＝Windows）==========
   # "win_quick/space_pages": false    # 空白改回揀焦點候選
@@ -27,7 +43,7 @@ patch:
   # "translator/enable_user_dict": true
 
   # ========== 混打 ==========
-  # 零切換（預設）：大寫開頭英文、email、URL 直出。
+  # 零切換（預設）：細楷英文直接打、空白上屏；大寫、email、URL 直出。
   # "recognizer/patterns/uppercase": "^$"            # 一定要切 ascii_mode 先打英文
   # "ascii_composer/switch_key/Shift_L": noop        # 左 Shift 唔切英文
   # "key_binder/bindings/@last": { when: always, accept: Control+Shift+2, toggle: ascii_mode }

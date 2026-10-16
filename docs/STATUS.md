@@ -1,6 +1,21 @@
 # KINFX 中英混打輸入法 — STATUS
 
-**版本**：v0.4.1（2026-10-16）
+**版本**：v0.5.0（2026-10-17）
+
+## v0.5.0
+
+| 項目 | 狀態 |
+| --- | --- |
+| 細楷英文直接打：仲係英文詞開頭就延遲頂字；空白上屏安全詞、左 Shift 上屏短詞 | ✅ 真機 Windows 11（小狼毫 0.17.4） |
+| 打中文結果同 v0.4.1 一樣 | ✅ 離線比對 1,904,967 組序列：意外差異 0、中文改變 0（`docs/eval/V05_COMPARE.md`） |
+| 中文詞語優先（`abac` 明顯、`abac3` abaci 照舊） | ✅ 真機＋離線 |
+| 聯想詞（揀完單字出跟尾詞，Shift＋數字揀，同 Windows 實測行為） | ✅ 真機 |
+| 離線驗收 | ✅ accept 58／58、flex 22／22、fullorder 658／658 |
+| Windows 11 真機驗收 | ✅ 37／37（`windows-acceptance-v05.ps1`） |
+| 安裝腳本測試 | ✅ `scripts/test-windows-rime.ps1` 0 failure |
+| 打字延遲 | ✅ 16 粒鍵中文 p50 約 2.3 ms、23 粒鍵英文句 p50 約 2.3 ms（每粒鍵約 0.1–0.2 ms） |
+| Linux CI smoke | 見 GitHub Actions |
+| Linux Fcitx5 實打（左 Shift） | ⬜ 未做；測試清單 `docs/eval/LINUX_V05_CASES.md` |
 
 ## v0.4.1
 
@@ -11,7 +26,7 @@
 | 補實測單碼 `a`（日曰） | ✅ |
 | 細楷英文 Shift 流程寫入 README／CONFIG／驗收清單 | ✅ |
 | Linux（Fcitx5 + gedit）505 字實打 byte-exact | ✅ 外部實測（Mac 側 VM，v0.4.0） |
-**顯示名**：KINFX 中英混打輸入法（repo slug `kinfx-ime`）
+|**顯示名**：KINFX 中英混打輸入法（repo slug `kinfx-ime`）|
 
 ## v0.4.0
 
@@ -40,11 +55,10 @@
 
 ## Next
 
-1. 關聯詞（上屏後顯示詞窗，同 Windows「聯想字」一樣）
-2. 真四欄候選格（而家 Tab 展開仍然用註釋顯示）
-3. macOS Squirrel
-4. 倉頡、注音、拼音方案
-5. 設定介面
+1. 真四欄候選格（而家 Tab 展開仍然用註釋顯示）
+2. macOS Squirrel
+3. 倉頡、注音、拼音方案
+4. 設定介面
 
 ## 已知限制
 

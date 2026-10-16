@@ -26,6 +26,8 @@ the root NOTICE. CC BY 4.0 still applies to the word selection.
   kinfx_hk_words.dict.yaml    — 2-, 3-, and 5-character entries
   kinfx_hk_idioms.dict.yaml   — 4-character band (chengyu and other set phrases)
   kinfx_quick_phrase.dict.yaml — imports the two tables; no preset vocabulary
+  kinfx_assoc.dict.yaml       — association suffixes 聯想 (2-4 char words,
+                                grouped by first character; scripts/gen_assoc.py)
 
 There is no Cartesian expansion of character readings. A character that has
 several quick codes contributes only its highest-weight code.
@@ -51,6 +53,11 @@ lexicon/en/extras.tsv adds Gmail and GMAIL (completion targets; Gmail is a
 trademark of Google LLC) plus scriptwriting and voiceover. Those rows are
 project data. They do not change the SCOWL license of the rest of
 kinfx_en.dict.yaml.
+
+lexicon/en/kinfx_en_unsafe.txt is a derived subset (English words Space must
+not commit) produced by scripts/gen_english_space.py from the SCOWL list and
+essay-cantonese.txt weights. Same SCOWL terms as kinfx_en.dict.yaml; the
+selection is project data.
 
 Runtime policy (schemas/lua/melt_eng.lua): prefix completion is raised only
 when the input length is at least 4; a length-3 exact dictionary hit may
