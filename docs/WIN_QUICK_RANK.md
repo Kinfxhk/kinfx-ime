@@ -19,7 +19,7 @@ v0.3 只係把頭 9 個字釘死，第 2 頁之後按字頻排，所以同 Windo
 1. 每個碼先放 Windows 嘅完整清單，原樣保留，連 丂／丄 呢類罕用部件都留。
 2. 之後補 Windows 冇、但倉頡 5／rime-quick 補充表有嘅字（例如 㗎、𠻹、𨋢 等港字同 Ext-A／B），按 `essay.txt + 5× essay-cantonese.txt` 字頻排。Windows 唔顯示呢啲字，所以唔會郁到任何 Windows 格位。
 
-單碼（`a`、`h`、`k`…）喺 Windows 要按空白先見到，所以用 `win_quick_top9.tsv` 補返。Windows 速成冇補全、冇造句，所以 v0.4 關咗 `enable_completion`／`enable_sentence`。打 `h` 只出「竹丿」，同 Windows 一樣。
+單碼喺 Windows 要按空白先見到，而且大部分字母按空白後列出嘅係詞，唔係單字，所以實測只有 `a h i k l n y` 7 個單碼。其餘 18 個單碼用 `win_quick_top9.tsv` 補返（每個字母一行）。呢份檔**只可以有實測冇嘅單碼**；如果有兩碼，或者同實測唔一致，`gen_quick_dict.py` 會退出。Windows 速成冇補全、冇造句，所以 v0.4 關咗 `enable_completion`／`enable_sentence`。打 `h` 只出「竹丿」，同 Windows 一樣。
 
 ## 對照（Windows 11 實測 = kinfx）
 
@@ -31,7 +31,7 @@ v0.3 只係把頭 9 個字釘死，第 2 頁之後按字頻排，所以同 Windo
 | `me` | 汞歿泵玻夏破球豉瑕 | 碌酸憂豭璦霞覆瓊醱 |
 | `or` | 合何估佑伽伺佔佝含 | 知舍信侶俗侷倌倍倚 |
 
-v0.3 文件寫 `vd` 尾二係「網綜」，係錯嘅。全表實測係 **綑綵**。
+v0.3.3 嘅 `win_quick_top9.tsv` 寫 `vd` 尾二係「網綜」，係由截圖認字得嚟，認錯咗（綑／網、綵／綜字形相似）。2026-10-16 再用 `ms_uiless.ps1` 讀一次，結果係 **綑綵**，70 個候選同 `ms_quick_order.tsv` 完全一樣；「網」「綜」唔喺 `vd` 入面。v0.4.1 已經刪走嗰份檔入面全部 641 行兩碼。
 
 ## 權重
 

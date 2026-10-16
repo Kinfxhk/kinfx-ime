@@ -34,7 +34,7 @@ ROOT = Path(__file__).resolve().parents[1]
 MIN_WEIGHT = {2: 400, 3: 250, 4: 40, 5: 120}
 MIN_CODE_LEN = 3
 MAX_WORD_LEN = 5
-VERSION = "0.4.0"
+VERSION = "0.4.1"
 CAPTURE_MIN_WEIGHT = 19000  # 無錯 (ofca) is ~19399 in essay-cantonese
 EXACT4_MIN_WEIGHT = 3000  # 無錫 (ofch) ~3260: a full 4-letter phrase may hold key 4
 

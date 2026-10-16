@@ -5,7 +5,7 @@
 | ID | 通過條件 | 最低棒 | 預設實作 |
 | --- | --- | --- | --- |
 | M0 | **全程零切換**夾英文（例「今日用 API 測試」）；`ascii_mode` 保持關閉 | **必須** | `recognizer` `uppercase`／email／url |
-| M1 | 可選：一鍵臨時／持久英文（Shift／ascii_mode） | 可選 | `Shift_L: inline_ascii`；`Control+Shift+2` toggle（**可改**） |
+| M1 | 細楷英文詞用左 Shift：Shift `startup` Shift `vd` 1 → startup好；`st` Shift `artup` Enter → startup（Windows）。Linux 用 Fcitx5 切輸入法，每詞 2 下 | **必須** | `Shift_L: inline_ascii`；`tools/rimeh/accept.sh`；持久英文 `Control+Shift+2` |
 | M2 | 組字緩衝未清時可插入英文片段（如 `vd` 後打 `API`→`好API`） | 必須 | 同上 uppercase 路徑 |
 | M3 | 可選離開臨時英文後回速成 | 可選 | RIME inline_ascii 行為 |
 | M4 | Email／URL 唔被誤當形碼 | 應有 | `recognizer` patterns |

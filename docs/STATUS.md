@@ -1,6 +1,16 @@
 # KINFX 中英混打輸入法 — STATUS
 
-**版本**：v0.4.0（2026-10-16）
+**版本**：v0.4.1（2026-10-16）
+
+## v0.4.1
+
+| 項目 | 狀態 |
+| --- | --- |
+| `vd` 第 8、9 個＝綑綵（重新實測確認；`win_quick_top9.tsv` 嘅「網綜」係認字錯） | ✅ |
+| `win_quick_top9.tsv` 只留 18 個未實測單碼；同實測衝突時生成器會退出 | ✅ |
+| 補實測單碼 `a`（日曰） | ✅ |
+| 細楷英文 Shift 流程寫入 README／CONFIG／驗收清單 | ✅ |
+| Linux（Fcitx5 + gedit）505 字實打 byte-exact | ✅ 外部實測（Mac 側 VM，v0.4.0） |
 **顯示名**：KINFX 中英混打輸入法（repo slug `kinfx-ime`）
 
 ## v0.4.0
@@ -18,6 +28,7 @@
 | Windows 離線驗收 | ✅ 34／34（`tools/rimeh/accept.sh`） |
 | 安裝腳本測試 | ✅ `scripts/test-windows-rime.ps1` 0 failure |
 | Linux CI smoke | 見 GitHub Actions |
+| Linux 實打 | ✅ 505／505（Fcitx5 5.1.19 + gedit，外部實測） |
 
 ## 之前版本
 

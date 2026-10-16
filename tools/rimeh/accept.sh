@@ -25,6 +25,11 @@ lwm1	C:中國
 mor1	C:一個
 kjo1	C:大家
 vdvd1	C:好好
+vd8	C:綑
+vd9	C:綵
+{Shift_L}{Release+Shift_L}startup{Shift_L}{Release+Shift_L}vd1	C:好
+st{Shift_L}{Release+Shift_L}artup{Return}	C:startup
+vdst{Shift_L}{Release+Shift_L}artup{Return}	C:好startup
 ymml1	C:上面
 vdbr1	C:好同
 hioa1	C:我會
