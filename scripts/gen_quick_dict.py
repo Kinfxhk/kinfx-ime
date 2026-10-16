@@ -14,9 +14,16 @@ DENYLIST = frozenset({"丂", "丄", "丅", "丆", "丏", "丒", "丗"})
 # Minimum combined weight to keep (0-weight Extension noise drops out).
 MIN_WEIGHT = 1
 
-# Windows first page is pinned by weight. See docs/WIN_QUICK_RANK.md.
-# No per-keystroke filter: librime sort: by_weight reads these numbers.
+# Windows first page is row order within each code (`sort: original`).
+# Essay weights stay put. A rare page pin must not inherit a champion weight:
+# that chain fills the single-letter menu (h) with 么／我／丟 ahead of ordinary
+# completions. Exact 竹 stays first.
+# See docs/WIN_QUICK_RANK.md. No per-keystroke filter.
 WIN_PAGE_LEN = 9
+
+# Win glyphs placed on a code they do not have in Cangjie. Must stay strictly
+# below every real reading so they cannot become the primary code.
+INJECTED_WEIGHT = 0
 
 
 def load_weights(path: Path) -> dict[str, int]:
@@ -99,139 +106,87 @@ def _page_chars(raw: list[str], entries: dict[str, int]) -> list[str]:
     return page
 
 
-def _assign_code(
-    order: list[str],
-    page_len: int,
-    original: dict[str, int],
-) -> dict[str, int]:
-    """Keep frequency weights. Raise a glyph only to sit strictly above the next.
-
-    The tail is already frequency-sorted, so it usually stays put. Windows
-    page glyphs bubble up in front of that tail. Absolute weights stay in the
-    essay range, which keeps phrase-code ties and sentence quality stable.
-    """
-    weights = {ch: max(original.get(ch, 0), 0) for ch in order}
-    if not order:
-        return weights
-    if weights[order[-1]] < 1:
-        weights[order[-1]] = 1
-    if page_len <= 0:
-        return weights
-    for i in range(len(order) - 2, -1, -1):
-        if weights[order[i]] <= weights[order[i + 1]]:
-            weights[order[i]] = weights[order[i + 1]] + 1
-    return weights
+def _winner(
+    ch: str, weight_maps: dict[str, dict[str, int]]
+) -> tuple[int, int, str] | None:
+    cands = [
+        (wmap[ch], len(code), code)
+        for code, wmap in weight_maps.items()
+        if ch in wmap
+    ]
+    if not cands:
+        return None
+    return max(cands)
 
 
-def _fits(weight_of: dict[str, int], order: list[str], ch: str, target: int) -> bool:
-    if target < 1:
-        return False
-    idx = order.index(ch)
-    if idx > 0 and target >= weight_of[order[idx - 1]]:
-        return False
-    if idx + 1 < len(order) and target <= weight_of[order[idx + 1]]:
-        return False
-    return True
-
-
-def _restore_primaries(
+def _guarantee_primaries(
     weight_maps: dict[str, dict[str, int]],
-    orders: dict[str, list[str]],
     alts: dict[str, list[tuple[int, int, str]]],
-) -> int:
-    """Move weights back when a pin stole a character's best code and order allows it."""
-    old_code = {ch: max(cands)[2] for ch, cands in alts.items()}
+) -> None:
+    """Fail the build if any code outranks a character's real Cangjie primary.
 
-    def winner(ch: str) -> tuple[int, int, str] | None:
-        cands = [
-            (wmap[ch], len(code), code)
-            for code, wmap in weight_maps.items()
-            if ch in wmap
-        ]
-        if not cands:
-            return None
-        return max(cands)
-
-    flips = 0
-    for _ in range(4):
-        progress = False
-        for ch, primary in old_code.items():
-            win = winner(ch)
-            if win is None or win[2] == primary:
-                continue
-            new_code = win[2]
-            if primary not in weight_maps or ch not in weight_maps[primary]:
-                continue
-            if new_code not in weight_maps or ch not in weight_maps[new_code]:
-                continue
-            primary_w = weight_maps[primary][ch]
-            new_w = weight_maps[new_code][ch]
-            # Prefer keeping the historical primary: lower the pinned code if
-            # it still sits strictly between its neighbours.
-            if (len(new_code), new_code) < (len(primary), primary):
-                lower_to = primary_w
-            else:
-                lower_to = primary_w - 1
-            if _fits(weight_maps[new_code], orders[new_code], ch, lower_to):
-                weight_maps[new_code][ch] = lower_to
-                progress = True
-                continue
-            if (len(primary), primary) > (len(new_code), new_code):
-                raise_to = new_w
-            else:
-                raise_to = new_w + 1
-            if _fits(weight_maps[primary], orders[primary], ch, raise_to):
-                weight_maps[primary][ch] = raise_to
-                progress = True
-        if not progress:
-            break
-    seen: set[str] = set()
-    for ch, primary in old_code.items():
-        win = winner(ch)
-        if win is not None and win[2] != primary and ch not in seen:
-            seen.add(ch)
-            flips += 1
-    return flips
+    Injected Win-only rows stay at INJECTED_WEIGHT, so this is a hard check
+    rather than a best-effort weight nudge that prints leftover flips.
+    """
+    primaries = {ch: max(cands)[2] for ch, cands in alts.items()}
+    stolen: list[str] = []
+    for ch, primary in primaries.items():
+        win = _winner(ch, weight_maps)
+        if win is not None and win[2] != primary:
+            stolen.append(f"{ch}:{win[2]}!={primary}")
+    if stolen:
+        raise SystemExit("primary code stolen: " + "; ".join(stolen[:12]))
 
 
 def apply_win_top9_pin(
     rows: list[tuple[str, str, int]],
     win_top9: dict[str, list[str]],
 ) -> list[tuple[str, str, int]]:
-    """Pin each Windows page to ranks 1..n by weight. Tail stays frequency order.
+    """Put each Windows page first in row order. Weights stay essay frequency.
 
-    Common characters are not lifted over that page. 我／係／唔 stay where
-    Windows put them. 倉 is not forced onto page 1.
+    librime `sort: original` keeps that row order, so page 1 does not need a
+    weight chain. A rare pin such as 凡 on hi therefore cannot inherit 我's
+    weight and drag 么／我／丟 into the single-letter h menu ahead of 竹.
+
+    Glyphs the page shows on a code absent from Cangjie are inserted at
+    INJECTED_WEIGHT. That cannot outrank a real primary (綜 stays on vf,
+    網 stays on vv). Common characters are not lifted over the page.
+    倉 is not forced onto page 1.
     """
     by_code: dict[str, dict[str, int]] = {}
+    real_pairs: set[tuple[str, str]] = set()
     for ch, code, weight in rows:
+        real_pairs.add((ch, code))
         slot = by_code.setdefault(code, {})
         if weight > slot.get(ch, -1):
             slot[ch] = weight
     alts = _alts_index(rows)
     orders: dict[str, list[str]] = {}
     weight_maps: dict[str, dict[str, int]] = {}
+    injected = 0
     for code, entries in by_code.items():
         page = _page_chars(win_top9.get(code, []), entries)
-        for ch in page:
-            entries.setdefault(ch, 0)
         page_set = set(page)
+        for ch in page:
+            if (ch, code) not in real_pairs:
+                entries[ch] = INJECTED_WEIGHT
+                injected += 1
         rest = sorted(
             (ch for ch in entries if ch not in page_set),
             key=lambda ch: (-entries[ch], ch),
         )
-        order = page + rest
-        orders[code] = order
-        weight_maps[code] = _assign_code(order, len(page), entries)
-    flips = _restore_primaries(weight_maps, orders, alts)
+        orders[code] = page + rest
+        weight_maps[code] = dict(entries)
+    _guarantee_primaries(weight_maps, alts)
     out: list[tuple[str, str, int]] = []
-    for code, order in orders.items():
+    for code in sorted(orders):
         wmap = weight_maps[code]
-        for ch in order:
+        for ch in orders[code]:
             out.append((ch, code, wmap[ch]))
-    out.sort(key=lambda r: (r[1], -r[2], r[0]))
-    print(f"win top9: pinned {sum(1 for c in orders if win_top9.get(c))} codes; "
-          f"primary-code flips {flips}")
+    print(
+        f"win top9: pinned {sum(1 for c in orders if win_top9.get(c))} codes; "
+        f"injected {injected}; primaries held"
+    )
     return out
 
 
@@ -354,16 +309,20 @@ def main() -> None:
 
     header = """# encoding: utf-8
 # Generated by scripts/gen_quick_dict.py — Sucheng/Quick = Cangjie first+last.
-# Weights: essay.txt + 5× essay-cantonese.txt (HK bias), then Windows top-9
-# pinned to ranks 1–9 (win_quick_top9.tsv; vd ends 網綜). No hot-char lift.
-# Filtered: non-BMP, denylist, z-codes.
+# Weights stay essay.txt + 5× essay-cantonese.txt (HK bias). They are not
+# chained to force Windows order: a rare page pin must not inherit a champion
+# weight (凡 must not bury 竹 on h under enable_completion).
+# Page order is row order (`sort: original`): win_quick_top9.tsv first (at
+# most 9; vd ends 網綜), then frequency. Win-only codes absent from Cangjie
+# are weight 0 and cannot outrank the real primary (網@vv, 綜@vf).
+# No hot-char lift. Filtered: non-BMP, denylist, z-codes.
 # Licenses: see NOTICE and third_party/rime-quick/LICENSE (LGPL-3.0 upstream).
 # Ranking notes: docs/WIN_QUICK_RANK.md.
 
 ---
 name: kinfx_quick
-version: "0.1.1"
-sort: by_weight
+version: "0.1.2"
+sort: original
 use_preset_vocabulary: false
 columns:
   - text
