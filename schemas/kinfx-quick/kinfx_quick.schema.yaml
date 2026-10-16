@@ -89,7 +89,7 @@ translator:
   dictionary: kinfx_quick
   enable_completion: true
   enable_sentence: true
-  # 學頻會把常用字插返正常頭頁。頭頁跟 Win 權重；常用熱門只走左鍵環頁。
+  # 學頻會把常用字插返正常頭頁。頭頁跟碼表次序（Win 頭 9）；常用熱門只走左鍵環頁。
   enable_user_dict: false
   encode_commit_history: false
   max_phrase_length: 5

@@ -664,6 +664,27 @@ static int assert_win_table(RimeApi* api, RimeSessionId sid) {
   /* 倉 is outside the Windows nine; it must not be lifted onto page 1. */
   ok = rank_exact(api, sid, "hi", "凡", 1) && ok;
   ok = rank_exact(api, sid, "hi", "我", 7) && ok;
+  /* Exact 竹 stays first. Rare hi pins must not inherit 我 and fill this page. */
+  ok = rank_exact(api, sid, "h", "竹", 1) && ok;
+  {
+    api->clear_composition(sid);
+    api->simulate_key_sequence(sid, "h");
+    RIME_STRUCT(RimeContext, ctx);
+    int buried = 0;
+    if (api->get_context(sid, &ctx)) {
+      int mo = menu_rank(&ctx, "么");
+      int wo = menu_rank(&ctx, "我");
+      int diu = menu_rank(&ctx, "丟");
+      printf("h page rare-pins 么=%d 我=%d 丟=%d (want absent)\n", mo, wo, diu);
+      print_menu(&ctx);
+      buried = mo > 0 || wo > 0 || diu > 0;
+      api->free_context(&ctx);
+    } else {
+      buried = 1;
+    }
+    api->clear_composition(sid);
+    ok = ok && !buried;
+  }
   ok = rank_exact(api, sid, "rr", "呂", 1) && ok;
   ok = rank_exact(api, sid, "rr", "唔", 9) && ok;
   ok = rank_exact(api, sid, "me", "夏", 5) && ok;
