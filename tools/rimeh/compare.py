@@ -253,6 +253,7 @@ def stage_variant(base: Path, name: str, patch: dict):
         shutil.copy(str(src), str(d / src.name))
     for src in (ROOT / "lexicon/en").glob("*.yaml"):
         shutil.copy(str(src), str(d / src.name))
+    shutil.copy(str(ROOT / "lexicon/en/kinfx_en_unsafe.txt"), str(d / "kinfx_en_unsafe.txt"))
     shutil.copy(str(ROOT / "lexicon/hk/kinfx_capture.txt"), str(d / "kinfx_capture.txt"))
     (d / "default.custom.yaml").write_text(
         "patch:\n  schema_list:\n    - schema: kinfx_quick\n  \"menu/page_size\": 9\n",
@@ -300,19 +301,21 @@ def run_variant(variant_dir: Path, seqs: list[str], chunk: int = 4000):
 
 # ---------------------------------------------------------------- classification
 
-def classify(seq: str, words: set[str], unsafe: set[str], smart_app: str,
-             control_app: str):
-    """Return 'designed' or 'unexpected' for a smart-vs-control app-text diff."""
+def classify(seq: str, prefixes: set[str], smart_app: str, control_app: str):
+    """Return 'designed' or 'unexpected' for a smart-vs-control app-text diff.
+
+    Smart mode only ever changes output where the held letters form an English
+    prefix (space commits a safe word, punctuation commits it, the English menu
+    replaces the empty native menu, or the native English completion leaves the
+    menu). Any diff whose leading letter run is NOT an English prefix means the
+    English logic corrupted a pure-Chinese input and is a bug.
+    """
     i = 0
     while i < len(seq) and seq[i].islower() and seq[i].isalpha():
         i += 1
     run = seq[:i]
-    term = seq[i:]
-    if run in words and run not in unsafe:
-        if term.startswith("{space}") or term in ("{comma}", "{period}"):
-            # designed: Space/punctuation commits a space-safe English word.
-            if smart_app.startswith(run):
-                return "designed"
+    if run in prefixes:
+        return "designed"
     return "unexpected"
 
 
@@ -370,8 +373,8 @@ def main():
         if c != s:
             diffs.append((seq, s[0], c[0], s[1], c[1]))
 
-    designed = [d for d in diffs if classify(d[0], words, unsafe, d[1], d[2]) == "designed"]
-    unexpected = [d for d in diffs if classify(d[0], words, unsafe, d[1], d[2]) != "designed"]
+    designed = [d for d in diffs if classify(d[0], prefixes, d[1], d[2]) == "designed"]
+    unexpected = [d for d in diffs if classify(d[0], prefixes, d[1], d[2]) != "designed"]
 
     print(f"codes2={len(codes2)} english_words={len(words)} unsafe={len(unsafe)}")
     print(f"sequences={len(seqs)} variants={list(variants)}")
@@ -414,7 +417,8 @@ def main():
                     article_zh_mismatch += 1
             else:
                 article_en_total += 1
-                if s_app != expect:
+                # Display form may differ in case (SCOWL proper nouns: Bethe).
+                if s_app.lower() != expect.lower():
                     article_en_miss += 1
         print(f"article: zh-mismatch={article_zh_mismatch} "
               f"english={article_en_total - article_en_miss}/{article_en_total} correct")
