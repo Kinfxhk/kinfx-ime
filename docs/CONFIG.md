@@ -47,10 +47,10 @@
 | 模式 | 做法 |
 | --- | --- |
 | 零切換（預設） | 英文用大寫開頭，或者打 email／URL |
-| 臨時英文 | `Shift_L: inline_ascii`（Fcitx5 可能搶咗左 Shift） |
+| 臨時英文（細楷詞） | 撳一下左 Shift → 打英文 → 再撳一下返中文。打到一半撳都得：已打嘅字母會變英文（`st` Shift `artup` → startup）。見 README「打英文」 |
 | 持久英文 | `Control+Shift+2` 切換 `ascii_mode` |
 | 一定要切先打英文 | 清空 `recognizer/patterns/uppercase` |
 
 ## Fcitx5 同左 Shift
 
-Fcitx5 預設用左 Shift 切輸入法，所以 rime 收唔到。用大寫英文就唔使 Shift。要用 Shift 嘅話，喺 `fcitx5-configtool` 解除嗰個熱鍵。
+Fcitx5 預設用左 Shift 切輸入法，所以 rime 收唔到。實際效果差唔多：撳一下切去英文鍵盤，打完再撳一下返 KINFX，每個詞 2 下（2026-10-16 Linux VM 實測 58／58 次冇失誤）。打到一半撳 Shift 會點，Linux 上面未測。想要同 Windows 一樣，喺 `fcitx5-configtool` 解除左 Shift 嘅切換熱鍵。

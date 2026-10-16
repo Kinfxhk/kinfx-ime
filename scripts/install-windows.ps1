@@ -13,7 +13,7 @@
   Does not install Weasel, register a TSF profile, or require elevation for
   the file copy. Does not change page size or candidate order.
 
-  Release v0.4.0. This script does not create a git tag.
+  Release v0.4.1. This script does not create a git tag.
 #>
 [CmdletBinding()]
 param(
@@ -132,7 +132,7 @@ Write-Host '     or: WeaselDeployer.exe /deploy'
 Write-Host '  2. Win+Space, choose 小狼毫 / RIME.'
 Write-Host '  3. Select schema: KINFX 中英混打輸入法 · 速成  (schema_id kinfx_quick).'
 Write-Host '     Jyutping: KINFX 中英混打輸入法 · 粵拼  (schema_id kinfx_jyutping).'
-Write-Host 'v0.4.0: Windows 11 Quick order on every page; page_size 9, vertical, Space pages, 1-9/Enter select, Tab expands.'
+Write-Host 'v0.4.1: Windows 11 Quick order on every page; page_size 9, vertical, Space pages, 1-9/Enter select, Tab expands.'
 Write-Host 'Candidate skin: rounded corners, soft shadow, light/dark. Static colors only (no images or animation). See docs/WINDOWS.md.'
 Write-Host 'Smoke: vd -> 好, ofc 1 -> 人類, ofca -> 無錯, gmai -> Gmail. See docs/WINDOWS.md.'
 

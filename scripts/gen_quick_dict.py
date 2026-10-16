@@ -23,7 +23,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 
 DENYLIST = frozenset({"丂", "丄", "丅", "丆", "丏", "丒", "丗"})
-VERSION = "0.4.0"
+VERSION = "0.4.1"
 
 
 def load_weights(path: Path) -> dict[str, int]:
@@ -175,6 +175,31 @@ columns:
 """
 
 
+def merge_single(ms: dict[str, list[str]], text: str):
+    """Add one-letter fallback rows that the capture lacks.
+
+    Two-letter rows are not allowed (the capture is the only source there).
+    Any row whose code is also captured must match the capture's first slots.
+    Returns (merged table, list of (code, fallback, capture) conflicts).
+    """
+    out = dict(ms)
+    conflicts = []
+    for line in text.splitlines():
+        if not line or line.startswith("#"):
+            continue
+        code, _, chars = line.partition("\t")
+        want = list(dict.fromkeys(chars.rstrip("\r\n").replace(" ", "")))
+        if code in ms:
+            got = ms[code][: len(want)]
+            if got != want:
+                conflicts.append((code, "".join(want), "".join(got)))
+        elif len(code) == 1:
+            out[code] = want
+        else:
+            conflicts.append((code, "".join(want), "(not captured; 2-letter rows must come from the capture)"))
+    return out, conflicts
+
+
 def main() -> None:
     p = argparse.ArgumentParser(description=__doc__)
     p.add_argument("--cangjie", type=Path, default=Path("/usr/share/rime-data/cangjie5.dict.yaml"))
@@ -201,12 +226,11 @@ def main() -> None:
 
     ms = load_ms_order(args.ms_order)
     if args.single.exists():
-        for line in args.single.read_text(encoding="utf-8").splitlines():
-            if not line or line.startswith("#"):
-                continue
-            code, _, chars = line.partition("\t")
-            if len(code) == 1 and code not in ms:
-                ms[code] = list(dict.fromkeys(chars.strip()))
+        ms, conflicts = merge_single(ms, args.single.read_text(encoding="utf-8"))
+        if conflicts:
+            for code, want, got in conflicts:
+                print(f"conflict {code}: {args.single.name}={want} capture={got}")
+            raise SystemExit(f"{args.single} disagrees with {args.ms_order}; the capture wins, fix the fallback")
     essay = load_weights(args.essay)
     canto = load_weights(args.essay_cantonese)
     cangjie: list[tuple[str, str]] = []
