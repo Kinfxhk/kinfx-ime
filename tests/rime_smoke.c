@@ -815,7 +815,8 @@ int main(int argc, char** argv) {
   int ok_page2 = assert_page2(api, sid);
   int ok_topout = assert_windows_topout(api, sid);
   int ok_win = assert_win_table(api, sid);
-  int ok_no_qiao = assert_absent(api, sid, "ms", "丂");
+  /* 丂 is Windows slot 32 on ms: kept (Windows order), never on page 1. */
+  int ok_no_qiao = first_page_rank(api, sid, "ms", "丂") < 0;
   int ok_mix = try_mixed_zero_switch(api, sid);
   int ok_phrase = assert_phrase_mix(api, sid);
   int ok_keys = assert_space_enter(api, sid);
