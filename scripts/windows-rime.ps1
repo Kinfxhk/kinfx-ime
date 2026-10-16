@@ -30,6 +30,9 @@ function Get-KinfxDeployItems {
   $rows = @(
     [pscustomobject]@{ Rel = 'kinfx_quick.schema.yaml'; Src = 'schemas/kinfx-quick/kinfx_quick.schema.yaml' },
     [pscustomobject]@{ Rel = 'kinfx_quick.dict.yaml'; Src = 'schemas/kinfx-quick/kinfx_quick.dict.yaml' },
+    [pscustomobject]@{ Rel = 'kinfx_phrase.schema.yaml'; Src = 'schemas/kinfx-quick/kinfx_phrase.schema.yaml' },
+    [pscustomobject]@{ Rel = 'kinfx_en.schema.yaml'; Src = 'schemas/kinfx-quick/kinfx_en.schema.yaml' },
+    [pscustomobject]@{ Rel = 'kinfx_capture.txt'; Src = 'lexicon/hk/kinfx_capture.txt' },
     [pscustomobject]@{ Rel = 'kinfx_jyutping.schema.yaml'; Src = 'schemas/kinfx-jyutping/kinfx_jyutping.schema.yaml' },
     [pscustomobject]@{ Rel = 'kinfx_quick_phrase.dict.yaml'; Src = 'lexicon/hk/kinfx_quick_phrase.dict.yaml' },
     [pscustomobject]@{ Rel = 'kinfx_hk_words.dict.yaml'; Src = 'lexicon/hk/kinfx_hk_words.dict.yaml' },
@@ -37,9 +40,7 @@ function Get-KinfxDeployItems {
     [pscustomobject]@{ Rel = 'kinfx_en.dict.yaml'; Src = 'lexicon/en/kinfx_en.dict.yaml' },
     [pscustomobject]@{ Rel = 'rime.lua'; Src = 'schemas/rime.lua' },
     [pscustomobject]@{ Rel = 'lua/win_quick.lua'; Src = 'schemas/lua/win_quick.lua' },
-    [pscustomobject]@{ Rel = 'lua/phrase_mix.lua'; Src = 'schemas/lua/phrase_mix.lua' },
-    [pscustomobject]@{ Rel = 'lua/melt_eng.lua'; Src = 'schemas/lua/melt_eng.lua' },
-    [pscustomobject]@{ Rel = 'lua/lexicon_index.lua'; Src = 'schemas/lua/lexicon_index.lua' }
+    [pscustomobject]@{ Rel = 'lua/phrase_mix.lua'; Src = 'schemas/lua/phrase_mix.lua' }
   )
   # NoEnumerate: a bare return (and @()) collapses empty and one-item arrays.
   Write-Output -NoEnumerate $rows
@@ -67,7 +68,14 @@ function Get-KinfxOwnedUserRelativePaths {
     [void]$rels.Add($item.Rel)
   }
   [void]$rels.Add('kinfx-ime.deployed.txt')
+  foreach ($old in (Get-KinfxRetiredUserRelativePaths)) { [void]$rels.Add($old) }
   Write-Output -NoEnumerate $rels.ToArray()
+}
+
+function Get-KinfxRetiredUserRelativePaths {
+  # Files earlier releases installed. v0.4 loads lexicons natively, so these
+  # Lua-heap loaders must not stay behind after an upgrade.
+  Write-Output -NoEnumerate @('lua/melt_eng.lua', 'lua/lexicon_index.lua')
 }
 
 function ConvertTo-YamlLineList {
@@ -629,8 +637,10 @@ function Write-KinfxDeployManifest {
   )
   $lines = New-Object System.Collections.Generic.List[string]
   [void]$lines.Add('# kinfx-ime deployed files. scripts/uninstall-windows.ps1 removes this allowlist only.')
+  $retired = Get-KinfxRetiredUserRelativePaths
   foreach ($rel in (Get-KinfxOwnedUserRelativePaths)) {
     if ($rel -eq 'kinfx-ime.deployed.txt') { continue }
+    if ($retired -contains $rel) { continue }
     [void]$lines.Add(($rel -replace '\\', '/'))
   }
   $path = Join-Path $UserDir 'kinfx-ime.deployed.txt'

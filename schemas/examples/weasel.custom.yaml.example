@@ -19,9 +19,10 @@ patch:
   "style/horizontal": false
   "style/color_scheme": kinfx_modern
   "style/color_scheme_dark": kinfx_modern_dark
-  "style/font_face": "Microsoft YaHei UI"
-  "style/label_font_face": "Microsoft YaHei UI"
-  "style/comment_font_face": "Microsoft YaHei UI"
+  # 正黑體顯示香港繁體字形；後備字型令 㗎／𠻹／𨋢 等 HKSCS 字唔會變方格。
+  "style/font_face": "Microsoft JhengHei, MingLiU_HKSCS-ExtB, Segoe UI Emoji"
+  "style/label_font_face": "Microsoft JhengHei"
+  "style/comment_font_face": "Microsoft JhengHei"
   "style/font_point": 14
   "style/label_font_point": 12
   "style/comment_font_point": 12

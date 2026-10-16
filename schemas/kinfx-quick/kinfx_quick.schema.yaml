@@ -6,7 +6,7 @@
 schema:
   schema_id: kinfx_quick
   name: KINFX 中英混打輸入法 · 速成
-  version: "0.3.0"
+  version: "0.4.0"
   author:
     - KINFX
     - 速成規則／碼表源流見 NOTICE（rime-quick / rime-cangjie）
@@ -18,8 +18,12 @@ schema:
     硬需求：中英混打預設＝全程零切換（大寫拉丁／email／URL 直出）。
     可選：Shift inline_ascii 或 ascii_mode（見 docs／custom 例）。
     佈局變體見 docs/LAYOUTS.md（win_quick = 預設）。排序見 docs/WIN_QUICK_RANK.md。
-    詞庫前綴：ofc→無錯、ofca→無錯（全碼更高）。小寫英詞 len≥4 先抬（gmai→Gmail）。
-    短碼 me/or/of 中文絕對優先。見 docs/PHRASE_MIX.md。選字鍵唔改（空白翻頁、Enter 確認）。
+    v0.4：候選次序＝Windows 11 微軟速成實測全表（唔止頭 9）。第三碼照 Windows 頂字；
+    常用詞前綴（ofc→無錯）同英詞（gmai→Gmail）用原生詞表，唔再喺 Lua 載入大詞庫。
+    見 docs/WIN_QUICK_RANK.md、docs/PHRASE_MIX.md。
+  dependencies:
+    - kinfx_phrase
+    - kinfx_en
 
 switches:
   - name: ascii_mode
@@ -40,7 +44,7 @@ engine:
     # 喺 key_binder 之前：Tab 展開；Page_Up/Down 先處理熱門環頁，其餘交返 selector。
     - lua_processor@win_quick_keys
     - key_binder
-    # 第三個字母若續到詞庫／英詞，唔好頂走兩碼嘅第 1 候選（of+c 先至見得到無錯）。
+    # 第三碼預設照 Windows 頂字；只有常用詞前綴（kinfx_capture.txt）先留低組詞。
     - lua_processor@phrase_mix_keys
     - speller
     - punctuator
@@ -51,13 +55,15 @@ engine:
     - ascii_segmentor
     - matcher
     - abc_segmentor
+    # 長度 ≥3 加 kinfx_phrase、≥4 加 kinfx_en 標籤；兩碼頭頁唔會出詞。
+    - lua_segmentor@phrase_mix_seg
     - punct_segmentor
     - fallback_segmentor
   translators:
     - punct_translator
     - table_translator
-    - lua_translator@phrase_mix_tr
-    - lua_translator@melt_eng_tr
+    - table_translator@phrase
+    - table_translator@english
     - reverse_lookup_translator
   filters:
     - simplifier
@@ -87,9 +93,10 @@ speller:
 
 translator:
   dictionary: kinfx_quick
-  enable_completion: true
-  enable_sentence: true
-  # 學頻會把常用字插返正常頭頁。頭頁跟碼表次序（Win 頭 9）；常用熱門只走左鍵環頁。
+  # Windows 速成冇預測同造句：打 h 只出 竹丿，唔會補全成 hi 嘅字。
+  enable_completion: false
+  enable_sentence: false
+  # 學頻會改 Windows 次序；常用熱門只走左鍵環頁。
   enable_user_dict: false
   encode_commit_history: false
   max_phrase_length: 5
@@ -100,19 +107,34 @@ translator:
   disable_user_dict_for_patterns:
     - "^z.*$"
 
-# 詞庫驅動前綴。只喺長度 ≥ min_length 出詞，所以兩碼頭頁唔變。
-# 全碼 quality 高過末碼前綴。見 docs/PHRASE_MIX.md。
+# 詞庫前綴（原生 table_translator，編譯成 .table.bin，唔使 Lua 載入）。
+# capture: hot = 只有 kinfx_capture.txt 嘅常用詞前綴先留住第三碼；
+#          all = 任何詞前綴都留（較少頂字，同 Windows 差多啲）。
 phrase_mix:
   enable: true
-  top_k: 12
-  min_length: 3
+  capture: hot
 
-# M5 英詞（lexicon/en，SCOWL，唔係 rime-ice）。prefix_length≥4 先做前綴補全。
-# me/or/of 喺 Lua 寫死唔出。quality 低過中文詞帶。
-melt_eng:
+phrase:
+  dictionary: kinfx_quick_phrase
+  tag: kinfx_phrase
+  enable_completion: true
+  enable_sentence: false
+  enable_user_dict: false
+  initial_quality: 2
+  comment_format:
+    - "xform/^.*$//"
+
+# 英詞補全（lexicon/en，SCOWL）。只喺長度 ≥4 出，me／or／of 永遠中文。
+english:
   enable: true
-  prefix_length: 4
-  top_k: 4
+  dictionary: kinfx_en
+  tag: kinfx_en
+  enable_completion: true
+  enable_sentence: false
+  enable_user_dict: false
+  initial_quality: 1
+  comment_format:
+    - "xform/^.*$//"
 
 abc_segmentor:
   extra_tags:

@@ -215,6 +215,9 @@ try {
   foreach ($rel in @(
       'kinfx_quick.schema.yaml',
       'kinfx_quick.dict.yaml',
+      'kinfx_phrase.schema.yaml',
+      'kinfx_en.schema.yaml',
+      'kinfx_capture.txt',
       'kinfx_jyutping.schema.yaml',
       'kinfx_quick_phrase.dict.yaml',
       'kinfx_hk_words.dict.yaml',
@@ -223,8 +226,6 @@ try {
       'rime.lua',
       'lua/win_quick.lua',
       'lua/phrase_mix.lua',
-      'lua/melt_eng.lua',
-      'lua/lexicon_index.lua',
       'default.custom.yaml',
       'weasel.custom.yaml',
       'kinfx-ime.deployed.txt'
@@ -233,7 +234,16 @@ try {
   }
   Assert-True 'does not write default.yaml' (-not (Test-Path -LiteralPath (Join-Path $tmp 'default.yaml')))
   $custom = Read-Utf8Text (Join-Path $tmp 'default.custom.yaml')
-  Assert-Seq 'fresh user dir lists both schemas' (Ids-OfText $custom) @('kinfx_quick', 'kinfx_jyutping')
+  # KINFX first, then whatever the installed Weasel shared default.yaml seeds
+  # (none on a machine without Weasel).
+  $wantIds = @('kinfx_quick', 'kinfx_jyutping')
+  $weaselForSeed = Find-WeaselInstall
+  if (-not [string]::IsNullOrWhiteSpace($weaselForSeed.SharedData)) {
+    foreach ($id in (Get-SchemaIdsFromYamlFile (Join-Path $weaselForSeed.SharedData 'default.yaml'))) {
+      if ($wantIds -notcontains $id) { $wantIds += $id }
+    }
+  }
+  Assert-Seq 'fresh user dir lists both schemas' (Ids-OfText $custom) $wantIds
   $installedSkin = Read-Utf8Text (Join-Path $tmp 'weasel.custom.yaml')
   Assert-True 'install writes vertical lightweight skin' (($installedSkin -match '"style/horizontal": false') -and ($installedSkin -match '"style/layout/shadow_radius": 8') -and ($installedSkin -notmatch 'page_size'))
 
@@ -244,7 +254,7 @@ try {
 
   & (Join-Path $PSScriptRoot 'install-windows.ps1') -RimeUserDir $tmp -RepoRoot $repo -NoDeploy
   if ($LASTEXITCODE -ne 0) { throw "reinstall exit $LASTEXITCODE" }
-  Assert-Seq 'second install stays idempotent' (Ids-OfText (Read-Utf8Text (Join-Path $tmp 'default.custom.yaml'))) @('kinfx_quick', 'kinfx_jyutping')
+  Assert-Seq 'second install stays idempotent' (Ids-OfText (Read-Utf8Text (Join-Path $tmp 'default.custom.yaml'))) $wantIds
   Assert-True 'second install keeps one skin' (([regex]::Matches((Read-Utf8Text (Join-Path $tmp 'weasel.custom.yaml')), 'kinfx-ime:weasel-skin begin')).Count -eq 1)
 
   & (Join-Path $PSScriptRoot 'uninstall-windows.ps1') -RimeUserDir $tmp -RepoRoot $repo
