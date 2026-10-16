@@ -21,7 +21,7 @@
 
 ## 排序
 
-`scripts/gen_quick_dict.py` 底權重仍然係 `essay.txt + 5× essay-cantonese.txt`。有 Windows 頭頁嘅碼，再把 `schemas/kinfx-quick/win_quick_top9.tsv` 嗰幾個字（最多 9 個）按表嘅次序放喺第 1 頁前面；其餘字跟字頻排後面。權重只喺生成碼表時改，打字時 `win_quick.lua` 正常頁原序通過。
+`scripts/gen_quick_dict.py` 底權重仍然係 `essay.txt + 5× essay-cantonese.txt`，而且唔再為頭頁次序把冷門字連住抬到冠軍字頻。有 Windows 頭頁嘅碼，碼表 `sort: original`，按 `schemas/kinfx-quick/win_quick_top9.tsv` 嘅次序寫喺該碼前面（最多 9 個）；其餘字跟字頻排後面。倉頡冇嗰個碼、只為頭頁補上嘅字，權重係 0，唔可以重過真主碼（綜主碼 `vf`、網主碼 `vv`）。打字時 `win_quick.lua` 正常頁原序通過。
 
 頭頁次序唔喺每次按鍵計。冇新 filter、冇掃成張碼表、冇逐鍵重排 Lua。`win_quick.lua` 仍然只喺左鍵環頁同 Tab 展開先改顯示；歷史只喺選字鍵（1–9／Enter）記一格，字母鍵唔入呢條路。
 
