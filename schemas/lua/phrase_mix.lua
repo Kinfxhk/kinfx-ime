@@ -197,11 +197,16 @@ local function hold_kind(env, code)
   return nil
 end
 
--- Windows fallback: commit the top candidate of each complete pair.
+-- Windows fallback: commit the top candidate of each topped-out pair, leaving
+-- the last 1-2 letters pending (so the incoming char can still start a phrase,
+-- e.g. latc + j → 帕 + tcj → 其它). Mirrors flush_windows' split_parts.
 local function split_commit(env, ctx, input, ch)
+  local n = #input
+  local keep = (n % 2 == 0) and 2 or 1
+  local commit_len = n - keep
   local out = {}
   local i = 1
-  while i + 1 <= #input do
+  while i + 1 <= commit_len do
     local text = first_text(env.main, input:sub(i, i + 1))
     if not text then
       return false
@@ -209,7 +214,7 @@ local function split_commit(env, ctx, input, ch)
     out[#out + 1] = text
     i = i + 2
   end
-  local rest = input:sub(i) .. ch
+  local rest = input:sub(commit_len + 1) .. ch
   ctx:clear()
   env.engine:commit_text(table.concat(out))
   ctx:push_input(rest)

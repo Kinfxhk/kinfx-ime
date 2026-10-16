@@ -304,18 +304,20 @@ def run_variant(variant_dir: Path, seqs: list[str], chunk: int = 4000):
 def classify(seq: str, prefixes: set[str], smart_app: str, control_app: str):
     """Return 'designed' or 'unexpected' for a smart-vs-control app-text diff.
 
-    Smart mode only ever changes output where the held letters form an English
-    prefix (space commits a safe word, punctuation commits it, the English menu
-    replaces the empty native menu, or the native English completion leaves the
-    menu). Any diff whose leading letter run is NOT an English prefix means the
-    English logic corrupted a pure-Chinese input and is a bug.
+    Smart mode holds a run of letters as English when, after zero or more
+    topped-out 2-letter codes, the remaining >= 3 letters form an English
+    prefix. A diff is therefore designed iff some >= 3 letter substring that
+    starts at an even offset (0, 2, 4, ...) is an English prefix. Anything
+    else means the English logic corrupted a pure-Chinese input.
     """
     i = 0
     while i < len(seq) and seq[i].islower() and seq[i].isalpha():
         i += 1
     run = seq[:i]
-    if run in prefixes:
-        return "designed"
+    for off in range(0, len(run) - 2, 2):
+        for ln in range(3, len(run) - off + 1):
+            if run[off:off + ln] in prefixes:
+                return "designed"
     return "unexpected"
 
 
