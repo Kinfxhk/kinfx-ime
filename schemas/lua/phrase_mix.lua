@@ -1,17 +1,23 @@
--- Lexicon-driven Sucheng phrases, plus the key hook that keeps a prefix together.
+-- KINFX phrase / English mix on top of Windows-style Sucheng.
 --
--- max_code_length 2 would 頂字 the first candidate when a third letter arrives
--- (of + c confirms 係). If that letter continues a stored phrase code or an
--- English word, phrase_mix_keys appends it instead, so ofc stays one segment
--- and can surface 無錯. Two-letter menus (me/or/of) are untouched.
+-- Lookups go to librime's compiled tables (kinfx_quick_phrase, kinfx_en) through
+-- Memory:dict_lookup. Nothing large lives in the Lua heap, so a keystroke costs
+-- a few milliseconds instead of a garbage-collector sweep over 240k rows.
 --
--- Odd length is a trailing-code prefix (ofc → ofca). Even length prefers the
--- exact code, which uses a higher quality band.
-
-local index_lib = require("lexicon_index")
-
-local EXACT_BASE = 5000000
-local PREFIX_BASE = 3000000
+-- Key rule (Windows first):
+--   * Two letters, then a third: Windows tops out (頂字) and starts a new code.
+--     KINFX holds keys 3 and 4 only while the input is in the gate list
+--     (kinfx_capture.txt: prefixes of common phrases, plus full 4-letter
+--     phrases such as ofch 無錫). So ofc shows 人類 / 無錯, ofca = 無錯.
+--   * From key 5, any word in the compiled phrase table keeps it held. When
+--     nothing continues, Windows takes over: the first candidate of each full
+--     pair is committed and the rest becomes the new code, so ofcx → 伙 + cx
+--     and vd o f 3 still gives 好係.
+--   * English hold words ("+gmail" lines in kinfx_capture.txt: Gmail,
+--     scriptwriting, voiceover ...) keep every letter while the input is still
+--     a prefix of such a word. Other English goes through Shift or uppercase.
+-- Segmentor: tags the held abc segment kinfx_phrase / kinfx_en (len ≥ 3) so the
+-- native phrase / English translators never touch two-letter page 1.
 
 local kAccepted = 1
 local kNoop = 2
@@ -24,120 +30,151 @@ local function config_bool(config, path, default)
   return v
 end
 
-local function config_int(config, path, default)
-  local v = config:get_int(path)
-  if v == nil or v < 1 then
-    return default
+local function user_file(name)
+  if not rime_api or not rime_api.get_user_data_dir then
+    return nil
   end
-  return v
+  local dir = rime_api.get_user_data_dir()
+  if not dir or dir == "" then
+    return nil
+  end
+  return dir .. "/" .. name
 end
 
-local function pair_comment(code)
-  if not code or code == "" then
-    return "詞"
+-- Small set: one 3-letter prefix per line (about a thousand lines).
+local capture_cache = nil
+local hold_words = nil
+local function load_capture()
+  if capture_cache then
+    return capture_cache, hold_words
   end
-  local parts = {}
-  local i = 1
-  while i <= #code do
-    if i == #code then
-      parts[#parts + 1] = code:sub(i, i)
-      i = i + 1
-    else
-      parts[#parts + 1] = code:sub(i, i + 1)
-      i = i + 2
+  capture_cache = {}
+  hold_words = {}
+  local path = user_file("kinfx_capture.txt")
+  local fh = path and io.open(path, "r")
+  if fh then
+    for line in fh:lines() do
+      local w = line:match("^%+([a-z]+)")
+      if w then
+        hold_words[#hold_words + 1] = w
+        capture_cache[w:sub(1, 3)] = true
+      else
+        local p = line:match("^([a-z][a-z][a-z]+)%s*$")
+        if p then
+          capture_cache[p] = true
+        end
+      end
     end
+    fh:close()
   end
-  return table.concat(parts, "+")
+  return capture_cache, hold_words
 end
 
-local function open_indexes(env)
-  local phrase_files = {
-    index_lib.user_file("kinfx_hk_words.dict.yaml"),
-    index_lib.user_file("kinfx_hk_idioms.dict.yaml"),
-  }
-  local en_file = index_lib.user_file("kinfx_en.dict.yaml")
-  if phrase_files[1] and phrase_files[2] then
-    env.phrases = index_lib.load_merged(phrase_files)
+local function is_hold_prefix(words, code)
+  for _, w in ipairs(words) do
+    if #w >= #code and w:sub(1, #code) == code then
+      return true
+    end
   end
-  if en_file then
-    env.english = index_lib.load(en_file)
-  end
+  return false
 end
 
-local function sort_rows(rows, input_len)
-  table.sort(rows, function(a, b)
-    local a_exact = #a.code == input_len
-    local b_exact = #b.code == input_len
-    if a_exact ~= b_exact then
-      return a_exact
+local function new_memory(env, ns)
+  local ok, mem = pcall(function()
+    if ns then
+      return Memory(env.engine, Schema(ns))
     end
-    local a_rest = #a.code - input_len
-    local b_rest = #b.code - input_len
-    if a_rest ~= b_rest then
-      return a_rest < b_rest
-    end
-    if a.weight ~= b.weight then
-      return a.weight > b.weight
-    end
-    return a.text < b.text
+    return Memory(env.engine, env.engine.schema)
   end)
+  if ok then
+    return mem
+  end
+  return nil
 end
 
-local function init(env)
-  local config = env.engine.schema.config
-  env.enable = config_bool(config, "phrase_mix/enable", true)
-  env.top_k = config_int(config, "phrase_mix/top_k", 12)
-  env.min_len = config_int(config, "phrase_mix/min_length", 3)
-  open_indexes(env)
+local function has_prefix(mem, code)
+  if not mem then
+    return false
+  end
+  local ok, hit = pcall(function()
+    return mem:dict_lookup(code, true, 1)
+  end)
+  return ok and hit and true or false
 end
 
-local function func(input, seg, env)
-  if not env.enable or not env.phrases then
-    return
+local function first_text(mem, code)
+  if not mem then
+    return nil
   end
-  if not seg:has_tag("abc") then
-    return
-  end
-  if #input < env.min_len or not input:match("^[a-z]+$") then
-    return
-  end
-  local rows = env.phrases:collect(input, false)
-  if #rows == 0 then
-    return
-  end
-  sort_rows(rows, #input)
-  local limit = env.top_k
-  if limit > #rows then
-    limit = #rows
-  end
-  for i = 1, limit do
-    local row = rows[i]
-    local base = PREFIX_BASE
-    if #row.code == #input then
-      base = EXACT_BASE
+  local found = nil
+  pcall(function()
+    if mem:dict_lookup(code, false, 1) then
+      for entry in mem:iter_dict() do
+        found = entry.text
+        break
+      end
     end
-    local cand = Candidate(
-      "phrase",
-      seg.start,
-      seg._end,
-      row.text,
-      pair_comment(row.code)
-    )
-    cand.quality = base + row.weight
-    yield(cand)
-  end
+  end)
+  return found
 end
 
--- Runs before the speller. A third letter that continues a lexicon code must
--- not 頂字 the 2-letter character (that would drop 無 and keep only 係).
-local function key_init(env)
+local function processor_init(env)
   local config = env.engine.schema.config
   env.enable = config_bool(config, "phrase_mix/enable", true)
-  env.eng_enable = config_bool(config, "melt_eng/enable", true)
-  open_indexes(env)
+  env.eng_enable = config_bool(config, "english/enable", true)
+  env.capture = config:get_string("phrase_mix/capture") or "hot"
+  env.main = new_memory(env, nil)
+  env.phrase = new_memory(env, "kinfx_phrase")
+  env.hot, env.hold = load_capture()
 end
 
-local function key_func(key, env)
+local function may_capture(env, code)
+  if env.capture == "none" then
+    return false
+  end
+  if env.enable and env.hot[code] then
+    return true
+  end
+  if env.eng_enable and is_hold_prefix(env.hold, code) then
+    return true
+  end
+  if env.capture == "all" and env.enable and has_prefix(env.phrase, code) then
+    return true
+  end
+  return false
+end
+
+-- After the gate: any phrase or English hold word that continues the input.
+local function continues(env, code)
+  if env.enable and has_prefix(env.phrase, code) then
+    return true
+  end
+  if env.eng_enable and is_hold_prefix(env.hold, code) then
+    return true
+  end
+  return false
+end
+
+-- Windows fallback: commit the top candidate of each complete pair.
+local function split_commit(env, ctx, input, ch)
+  local out = {}
+  local i = 1
+  while i + 1 <= #input do
+    local text = first_text(env.main, input:sub(i, i + 1))
+    if not text then
+      return false
+    end
+    out[#out + 1] = text
+    i = i + 2
+  end
+  local rest = input:sub(i) .. ch
+  ctx:clear()
+  env.engine:commit_text(table.concat(out))
+  ctx:push_input(rest)
+  return true
+end
+
+local function processor_func(key, env)
   if not env.enable and not env.eng_enable then
     return kNoop
   end
@@ -149,28 +186,48 @@ local function key_func(key, env)
     return kNoop
   end
   local ctx = env.engine.context
-  local input = ctx.input
-  if not input or not input:match("^[a-z]*$") or #input < 2 then
+  local input = ctx.input or ""
+  if #input < 2 or not input:match("^[a-z]+$") then
     return kNoop
   end
   local extended = input .. ch
-  local hit = false
-  if env.enable and env.phrases and env.phrases:has_prefix(extended) then
-    hit = true
+  if #input == 2 then
+    if may_capture(env, extended) and ctx:push_input(ch) then
+      return kAccepted
+    end
+    return kNoop -- speller tops out, exactly like Windows
   end
-  if env.eng_enable and env.english and env.english:has_prefix(extended) then
-    hit = true
+  -- Held composition (length ≥ 3). Key 4 must pass the gate list too
+  -- (ofca 無錯, ofch 無錫); a full-table key 4 would turn 好同 into 好貼.
+  -- From key 5 on, any phrase in the compiled table keeps it held.
+  local gated = may_capture(env, extended)
+  if gated or (#extended >= 5 and continues(env, extended)) then
+    ctx:push_input(ch)
+    return kAccepted
   end
-  if not hit then
-    return kNoop
+  if split_commit(env, ctx, input, ch) then
+    return kAccepted
   end
-  if not ctx:push_input(ch) then
-    return kNoop
-  end
-  return kAccepted
+  return kNoop
 end
 
-local translator = { init = init, func = func }
-local processor = { init = key_init, func = key_func }
+-- Tag long abc segments so the native phrase / English translators run there only.
+local function segmentor_func(segmentation, env)
+  if segmentation:empty() then
+    return true
+  end
+  local seg = segmentation:back()
+  if not seg or not seg:has_tag("abc") then
+    return true
+  end
+  local n = seg._end - seg.start
+  if n >= 3 then
+    seg.tags = seg.tags + Set({ "kinfx_phrase", "kinfx_en" })
+  end
+  return true
+end
 
-return { translator = translator, processor = processor }
+return {
+  processor = { init = processor_init, func = processor_func },
+  segmentor = { func = segmentor_func },
+}

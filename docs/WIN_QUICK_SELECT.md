@@ -35,7 +35,7 @@ editor:
 | 空白翻頁、左右換頁、Enter 確認 | schema `key_binder` + `editor`（無 Lua 都成立） |
 | 直列 | **前端**。Fcitx5 classicui：`Vertical Candidate List=True`（`install-linux.sh` 寫入）。Squirrel／Weasel／ibus-rime：schema `style/horizontal: false`。librime 嘅 `_vertical` 係直書文字，**唔好**開，否則左右頁向會反。 |
 | Tab 展開 4×9 | Lua。`page_size` 維持 9，數字鍵仍然只標當欄。其餘欄寫喺候選註釋：`【係】 伱 僬 儵`（【】＝而家呢欄）。左右換欄＝翻一頁，註釋跟住移。真正四欄格仔係前端畫；而家 Fcitx5 直列加註釋係最小可用。 |
-| 常用熱門環頁 | Lua filter。正常頁**原序通過**（碼表頭頁係 Win 頭 9）。 |
+| 常用熱門環頁 | Lua filter。正常頁**原序通過**（碼表每頁都係 Windows 次序）。 |
 
 依賴：`librime-plugin-lua`（`rime.lua` + `lua/win_quick.lua`）。插件未裝時，空白／Enter 兩行仍然生效；Tab 同熱門頁唔會。
 

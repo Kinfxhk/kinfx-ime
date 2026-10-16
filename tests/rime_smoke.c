@@ -523,7 +523,7 @@ static int commit_at_rank(RimeApi* api, RimeSessionId sid, const char* seq,
   return ok;
 }
 
-/* A third letter that is not a lexicon prefix still 頂字 (vdz → 好 + z). */
+/* A third letter that does not start a common phrase 頂字 like Windows. */
 static int assert_top_keeps_char(RimeApi* api, RimeSessionId sid) {
   api->clear_composition(sid);
   drain_commit(api, sid);
@@ -553,10 +553,16 @@ static int assert_phrase_mix(RimeApi* api, RimeSessionId sid) {
   int ok_top = assert_top_keeps_char(api, sid);
   int r_ofc = first_page_rank(api, sid, "ofc", "無錯");
   int r_ofca = first_page_rank(api, sid, "ofca", "無錯");
-  /* ofca is the full code, so it ranks at least as high as the ofc prefix. */
+  /* ofca is the full code of 無錯 and stays held (kinfx_capture.txt). */
   int ok = r_ofc > 0 && r_ofc <= 9 && r_ofca > 0 && r_ofca <= r_ofc;
   ok = ok && commit_at_rank(api, sid, "ofc", r_ofc, "無錯");
   ok = ok && commit_at_rank(api, sid, "ofca", r_ofca, "無錯");
+  /* 3-letter phrases (1-letter + 2-letter char) and a held 4th key. */
+  ok = ok && commit_at_rank(api, sid, "ofc", 1, "人類");
+  ok = ok && commit_at_rank(api, sid, "lwm", 1, "中國");
+  ok = ok && commit_at_rank(api, sid, "ofch", 1, "無錫");
+  /* Windows top-out text comes first when it is itself a word. */
+  ok = ok && commit_at_rank(api, sid, "vdvd", 1, "好好");
 
   int r_gmail = first_page_rank(api, sid, "gmai", "Gmail");
   int r_gmail_up = first_page_rank(api, sid, "gmai", "GMAIL");
@@ -568,8 +574,7 @@ static int assert_phrase_mix(RimeApi* api, RimeSessionId sid) {
   ok = ok && r_en > 0 && r_en <= 9;
   ok = ok && commit_at_rank(api, sid, "gmai", r_en, en_text);
 
-  /* melt_eng sorts by shorter remainder before weight, so scri→script and
-   * voic→voice. These prefixes leave the extra as the unique short tail. */
+  /* Hold words (kinfx_capture.txt "+word") keep every letter. */
   int r_sw = first_page_rank(api, sid, "scriptwriti", "scriptwriting");
   int r_vo = first_page_rank(api, sid, "voiceove", "voiceover");
   printf("extras scriptwriti:%d voiceove:%d\n", r_sw, r_vo);
@@ -632,9 +637,58 @@ static int try_jyutping_tone(RimeApi* api, RimeSessionId sid) {
   return ok5 && ok6 && ok0 && ok_page && ok_keys;
 }
 
+/* v0.4: later pages follow the measured Windows list too, not frequency. */
+static int assert_page2(RimeApi* api, RimeSessionId sid) {
+  const char* vd2[] = {"嫻", "槳", "樂", "繅", "孿", "姀", "孥", "姝", "婐"};
+  Snap a;
+  api->clear_composition(sid);
+  drain_commit(api, sid);
+  if (!api->simulate_key_sequence(sid, "vd")) return 0;
+  api->process_key(sid, XK_SPACE, 0);
+  if (!snap_menu(api, sid, &a)) return 0;
+  RIME_STRUCT(RimeContext, ctx);
+  int ok = api->get_context(sid, &ctx) && ctx.menu.num_candidates == 9;
+  for (int i = 0; ok && i < 9; ++i) {
+    const char* got = ctx.menu.candidates[i].text;
+    if (!got || strcmp(got, vd2[i]) != 0) {
+      printf("  vd page2 [%d] got '%s' want '%s'\n", i + 1, got ? got : "", vd2[i]);
+      ok = 0;
+    }
+  }
+  if (ctx.menu.candidates) api->free_context(&ctx);
+  printf("vd page2 windows order: %s\n", ok ? "PASS" : "FAIL");
+  api->clear_composition(sid);
+  return ok;
+}
+
+/* Continuous Sucheng tops out exactly like Windows: vd o f 3 → 好係. */
+static int assert_windows_topout(RimeApi* api, RimeSessionId sid) {
+  struct { const char* keys; const char* want; } cases[] = {
+      {"vdof3", "好係"}, {"hiofrr1", "凡伙呂"}, {"hi7", "我"}, {"ofcx1", "伙鏽"},
+  };
+  int ok = 1;
+  for (unsigned i = 0; i < sizeof cases / sizeof cases[0]; ++i) {
+    char all[256] = {0};
+    char part[128];
+    api->clear_composition(sid);
+    drain_commit(api, sid);
+    for (const char* k = cases[i].keys; *k; ++k) {
+      api->process_key(sid, (unsigned char)*k, 0);
+      if (take_commit(api, sid, part, sizeof part))
+        strncat(all, part, sizeof all - strlen(all) - 1);
+    }
+    int pass = strcmp(all, cases[i].want) == 0;
+    printf("topout %s → '%s' want '%s' %s\n", cases[i].keys, all, cases[i].want,
+           pass ? "PASS" : "FAIL");
+    ok = ok && pass;
+  }
+  api->clear_composition(sid);
+  return ok;
+}
+
 /* Documented Windows first page. an has 8 glyphs in the table; the code has no 9th. */
 static int assert_win_table(RimeApi* api, RimeSessionId sid) {
-  const char* vd[] = {"好", "她", "妹", "紆", "巢", "媒", "彙", "網", "綜"};
+  const char* vd[] = {"好", "她", "妹", "紆", "巢", "媒", "彙", "綑", "綵"};
   const char* hi[] = {"凡", "么", "丟", "夙", "舟", "卵", "我", "私", "的"};
   const char* me[] = {"汞", "歿", "泵", "玻", "夏", "破", "球", "豉", "瑕"};
   const char* orc[] = {"合", "何", "估", "佑", "伽", "伺", "佔", "佝", "含"};
@@ -664,7 +718,7 @@ static int assert_win_table(RimeApi* api, RimeSessionId sid) {
   /* 倉 is outside the Windows nine; it must not be lifted onto page 1. */
   ok = rank_exact(api, sid, "hi", "凡", 1) && ok;
   ok = rank_exact(api, sid, "hi", "我", 7) && ok;
-  /* Exact 竹 stays first. Rare hi pins must not inherit 我 and fill this page. */
+  /* Single letter = Windows: no completion into hi, so h lists 竹丿 only. */
   ok = rank_exact(api, sid, "h", "竹", 1) && ok;
   {
     api->clear_composition(sid);
@@ -758,6 +812,8 @@ int main(int argc, char** argv) {
   int ok_me = try_code(api, sid, "me", "夏");
   int ok_vd = try_code(api, sid, "vd", "好");
   int ok_or = try_code(api, sid, "or", "倉");
+  int ok_page2 = assert_page2(api, sid);
+  int ok_topout = assert_windows_topout(api, sid);
   int ok_win = assert_win_table(api, sid);
   int ok_no_qiao = assert_absent(api, sid, "ms", "丂");
   int ok_mix = try_mixed_zero_switch(api, sid);
@@ -783,9 +839,11 @@ int main(int argc, char** argv) {
       ok_keys ? "PASS" : "FAIL", ok_hot ? "PASS" : "FAIL",
       ok_tab ? "PASS" : "FAIL", ok_one ? "PASS" : "FAIL",
       ok_hist ? "PASS" : "FAIL", ok_jyut ? "PASS" : "FAIL");
+  printf("RESULT2 page2:%s topout:%s\n", ok_page2 ? "PASS" : "FAIL",
+         ok_topout ? "PASS" : "FAIL");
   return (ok_page && ok_sel && ok_me && ok_vd && ok_or && ok_win &&
           ok_no_qiao && ok_mix && ok_phrase && ok_keys && ok_hot && ok_tab &&
-          ok_one && ok_hist && ok_jyut)
+          ok_one && ok_hist && ok_jyut && ok_page2 && ok_topout)
              ? 0
              : 1;
 }

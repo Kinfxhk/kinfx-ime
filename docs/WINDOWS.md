@@ -1,10 +1,10 @@
 # KINFX 中英混打輸入法 — Windows 11
 
-**建議標籤 v0.3.2**（文件同 Windows 安裝腳本一齊出）。呢個 PR **唔打 git tag**；Boss merge 之後先標。`schema_id` 仍然係 `kinfx_quick`／`kinfx_jyutping`。UX 仍然係 v0.3.1：每頁 9、直列、空白翻頁、1–9／Enter 選字、Tab 展開、零切換中英混打。
+**v0.4.0**。`schema_id` 係 `kinfx_quick`／`kinfx_jyutping`。候選次序逐頁跟 Windows 11 微軟速成；每頁 9、直列、空白翻頁、1–9／Enter 選字、Tab 展開、零切換中英混打。
 
 Windows 11 用 **Weasel（小狼毫）** 做 TSF 宿主。本 repo 只交 schema、詞庫、部署／卸載腳本同文件。唔包含自寫 TSF DLL、純 MSIX TSF 註冊、DLL 注入，亦唔 fork Weasel。
 
-English: On Windows 11, KINFX rides on [Weasel](https://github.com/rime/weasel) (Rime's TSF front-end). This repository deploys schemas into the per-user Rime directory. It does not ship a text service. The installer also merges a lightweight rounded light/dark candidate skin; the list stays vertical, nine per page. Suggested tag **v0.3.2**; the tag is not created here.
+English: On Windows 11, KINFX rides on [Weasel](https://github.com/rime/weasel) (Rime's TSF front-end). This repository deploys schemas into the per-user Rime directory. It does not ship a text service. The installer also merges a lightweight rounded light/dark candidate skin; the list stays vertical, nine per page, in Windows 11 Microsoft Quick order on every page (v0.4.0).
 
 ## 點解係 Weasel
 
@@ -62,10 +62,14 @@ powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\install-windows.ps
 | 用戶目錄 | 來源 |
 | --- | --- |
 | `kinfx_quick.schema.yaml`／`kinfx_quick.dict.yaml` | `schemas/kinfx-quick/` |
+| `kinfx_phrase.schema.yaml`／`kinfx_en.schema.yaml`（只用嚟編譯詞表，唔使揀） | `schemas/kinfx-quick/` |
+| `kinfx_capture.txt`（詞語留鍵清單） | `lexicon/hk/` |
 | `kinfx_jyutping.schema.yaml` | `schemas/kinfx-jyutping/` |
 | `kinfx_quick_phrase.dict.yaml`、`kinfx_hk_words.dict.yaml`、`kinfx_hk_idioms.dict.yaml` | `lexicon/hk/` |
 | `kinfx_en.dict.yaml` | `lexicon/en/` |
-| `rime.lua`、`lua/*.lua` | `schemas/` |
+| `rime.lua`、`lua/win_quick.lua`、`lua/phrase_mix.lua` | `schemas/` |
+
+v0.4 升級時，安裝腳本會刪走舊版嘅 `lua/melt_eng.lua`、`lua/lexicon_index.lua`。
 
 詞庫授權見 `lexicon/NOTICE`，唔係 MIT。
 
@@ -119,7 +123,10 @@ powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\install-windows.ps
 
 | 輸入 | 預期 |
 | --- | --- |
-| `ofc` | 無錯（詞前綴） |
+| `vd` 空白 1 | 嫻（第 2 頁，同 Windows） |
+| `vd` `of` 3 | 好係（Windows 頂字） |
+| `ofc` 1／2 | 人類／無錯 |
+| `ofca` 1 | 無錯 |
 | `gmai` | Gmail |
 | `me`／`or`／`of` | 中文首位，唔出英詞 |
 | 空白 | 有候選窗時翻頁 |
@@ -129,7 +136,7 @@ powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\install-windows.ps
 
 直列、每頁 9。大寫拉丁、email、URL 直出，唔使切英文模式。頭頁對照見 `docs/WIN_QUICK_RANK.md`。Flex 見 `docs/CONFIG.md`（例檔喺 `schemas/examples/`；分享 zip 未必包例檔）。
 
-**真機驗收未做。** 呢份文件同腳本可以 review；Win11 上嘅目測要喺有小狼毫嘅機器跑。
+**真機驗收（2026-10-16，Windows 11 Pro + 小狼毫 0.17.4）：26／26 通過。**
 
 ## 卸載
 
