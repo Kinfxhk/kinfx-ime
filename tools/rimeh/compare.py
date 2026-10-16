@@ -366,6 +366,18 @@ def run_variant(variant_dir: Path, seqs: list[str], chunk: int = 4000):
 
 # ---------------------------------------------------------------- classification
 
+def seq_has_en_prefix(seq: str, prefixes: set[str]) -> bool:
+    """True if any 3+ letter run at an even offset in the sequence (letters
+    separated by digits/{space}/... are distinct runs) is an English prefix —
+    i.e. smart mode would hold it and delay top-out."""
+    for run in re.findall(r"[a-z]+", seq):
+        for off in range(0, len(run) - 2, 2):
+            for ln in range(3, len(run) - off + 1):
+                if run[off:off + ln] in prefixes:
+                    return True
+    return False
+
+
 def classify(seq: str, prefixes: set[str], smart_app: str, control_app: str):
     """Return 'designed' or 'unexpected' for a smart-vs-control app-text diff.
 
@@ -498,11 +510,12 @@ def main():
             c_app = c_art.get(seq, ("", ""))[0]
             if kind == "zh":
                 if s_app != c_app:
-                    # A zh diff where either side shows English is a designed
-                    # collision (smart commits a space-safe word, or the shift
-                    # control shows native completion that smart shows as the
-                    # Windows result). Pure-Chinese drift is a bug.
-                    if re.search(r"[A-Za-z]", s_app) or re.search(r"[A-Za-z]", c_app):
+                    # Designed when either side shows English, or the sequence
+                    # holds a 3+ letter English prefix (which delays top-out and
+                    # changes the phrase segmentation). Pure-Chinese drift with
+                    # no English hold is a bug.
+                    has_ascii = re.search(r"[A-Za-z]", s_app) or re.search(r"[A-Za-z]", c_app)
+                    if has_ascii or seq_has_en_prefix(seq, prefixes):
                         article_zh_designed += 1
                     else:
                         article_zh_mismatch += 1
