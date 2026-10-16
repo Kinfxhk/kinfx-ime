@@ -66,6 +66,9 @@ PY
 
 cp -a "$ROOT/schemas/kinfx-quick/kinfx_quick.schema.yaml" "$TARGET/"
 cp -a "$ROOT/schemas/kinfx-quick/kinfx_quick.dict.yaml" "$TARGET/"
+cp -a "$ROOT/schemas/kinfx-quick/kinfx_phrase.schema.yaml" "$TARGET/"
+cp -a "$ROOT/schemas/kinfx-quick/kinfx_en.schema.yaml" "$TARGET/"
+cp -a "$ROOT/lexicon/hk/kinfx_capture.txt" "$TARGET/"
 cp -a "$ROOT/schemas/kinfx-jyutping/kinfx_jyutping.schema.yaml" "$TARGET/"
 # Phrase / English tables stay licensed under lexicon/NOTICE. Flat copy: rime
 # compiles dictionary names from the user-data directory, not from subfolders.
@@ -77,9 +80,9 @@ mkdir -p "$TARGET/lua"
 cp -a "$ROOT/schemas/rime.lua" "$TARGET/rime.lua"
 cp -a "$ROOT/schemas/lua/win_quick.lua" "$TARGET/lua/win_quick.lua"
 cp -a "$ROOT/schemas/lua/phrase_mix.lua" "$TARGET/lua/phrase_mix.lua"
-cp -a "$ROOT/schemas/lua/melt_eng.lua" "$TARGET/lua/melt_eng.lua"
-cp -a "$ROOT/schemas/lua/lexicon_index.lua" "$TARGET/lua/lexicon_index.lua"
-echo "  + kinfx_quick + phrase/en lexicons + lua (win_quick, phrase_mix, melt_eng)"
+# v0.4 dropped the Lua-heap lexicon loaders. Remove stale copies.
+rm -f "$TARGET/lua/melt_eng.lua" "$TARGET/lua/lexicon_index.lua"
+echo "  + kinfx_quick + native phrase/en tables + lua (win_quick, phrase_mix)"
 
 # One-arg `rime_deployer --build "$TARGET"` reuses the user dir as shared data
 # and silently fails to load punctuation/key_bindings. Always pass shared data.

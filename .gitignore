@@ -12,3 +12,7 @@ __pycache__/
 tests/rime_smoke
 kinfx_win_history.tsv
 /dist/
+
+# Local-only artifacts
+tools/rimeh/rimeh.exe
+HANDOFF-*.md

@@ -108,6 +108,25 @@ class PhraseEncodeTest(unittest.TestCase):
         self.assertEqual(gen.prefix_hits(rows, "voiceove")[0][0], "voiceover")
         self.assertEqual(gen.prefix_hits(rows, "gmai")[0][0], "Gmail")
 
+    def test_capture_keeps_hot_prefixes_only(self) -> None:
+        rows = [("無錯", "ofca", 19399), ("無錫", "ofch", 3260), ("你鐘", "ofcg", 1067), ("好嘢", "vdmh", 50000)]
+        caps = gen.capture_prefixes(rows, 19000, 3000)
+        self.assertIn("ofc", caps)
+        self.assertIn("ofca", caps)
+        self.assertIn("ofch", caps)  # full 4-letter phrase above the exact floor
+        self.assertNotIn("ofcg", caps)  # below it: key 4 tops out like Windows
+        self.assertIn("vdm", caps)
+        self.assertNotIn("vdo", caps)
+
+    def test_windows_consistent_phrase_first(self) -> None:
+        tops = {"vd": "好", "of": "伙"}
+        rows = [("妹妹", "vdvd", 85071), ("好好", "vdvd", 19833), ("樂樂", "vdvd", 900)]
+        out, lifted = gen.lift_windows_consistent(rows, tops)
+        self.assertEqual(out[0][0], "好好")
+        self.assertEqual(lifted, 1)
+        self.assertEqual(gen.windows_text("vdof", tops), "好伙")
+        self.assertIsNone(gen.windows_text("ofc", tops))
+
     def test_prefix_order_exact_before_tail(self) -> None:
         rows = [
             ("無法", "ofxx", 99999),

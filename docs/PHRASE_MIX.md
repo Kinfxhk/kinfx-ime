@@ -1,53 +1,80 @@
-# 詞／成語／英詞聯想（phrase-mix）
+# 詞語、成語、英文詞（phrase-mix）
 
-**基礎**：v0.2.0 選字（每頁 9、直列、空白翻頁、Enter 確認）唔改。  
-**建議標籤**：v0.3.0 詞庫前綴；英詞 extras（scriptwriting／voiceover）建議 **v0.3.1**。
+選字方式唔變：每頁 9、直列、空白翻頁、Enter／1–9 選字。
 
-## 三條通道
+## 原則：Windows 速成優先
 
-同一段小寫拉丁，候選按 quality 合併：
+Windows 微軟速成打第 3 個字母時，會將頭兩碼嘅第 1 個字上屏（頂字），再開始新碼。KINFX 預設照做，只有以下情況會**留住**個字母唔上屏，等你揀詞：
 
-| 順序 | 通道 | 幾時出 |
+| 鍵 | 幾時留住 | 例 |
 | --- | --- | --- |
-| 1 | 中文詞，全碼 | 輸入等於詞庫連碼（`ofca`→無錯） |
-| 2 | 中文詞，末碼前綴 | 輸入係連碼前綴而且長度 ≥ 3（`ofc`→無錯，註釋 `of+ca`） |
-| 3 | 單字 | 現行速成碼表（`me`／`or`／`of` 頭頁） |
-| 4 | 英詞 | 長度 ≥ 4 嘅前綴，或長度 3 嘅詞典全中 |
+| 第 3 碼 | 打出嚟係常用詞嘅頭 3 碼（詞頻 ≥ 19000），或者啱啱打完一個 3 碼詞（詞頻 ≥ 3000） | `ofc` → 人類、無錯…；`lwm` → 中國 |
+| 第 4 碼 | 仍然係常用詞前綴，或者啱啱打完一個 4 碼詞（詞頻 ≥ 3000） | `ofca` → 無錯、`ofch` → 無錫 |
+| 第 5 碼起 | 詞庫仲有詞接得落去 | 四字詞、成語 |
+| 英文詞 | 輸入係 `lexicon/en/extras.tsv` 入面嘅字嘅前綴 | `gmai` → Gmail |
 
-英詞 quality 低過中文詞。`me`／`or`／`of`（以及所有 1–2 碼）**唔出英詞**。
+詞庫冇詞接得落去，就照 Windows 做：每兩碼上屏第 1 個字，剩低嘅碼做新碼。例如 `ofcx` 會上屏「伙」，剩 `cx`；`vd` `of` `3` 會上屏「好係」，同 Windows 一樣。
 
-## 點解唔爆
+規則清單喺 `lexicon/hk/kinfx_capture.txt`，由 `scripts/gen_quick_phrases.py` 生成。
 
-`scripts/gen_quick_phrases.py` 掃 `kinfx_quick.dict.yaml`，每個字只取**最高權重嗰一個**速成碼，再把詞庫入面嘅詞串起來。唔會對 `of` × `c*` 做笛卡爾積。字唔喺碼表就丟棄。連碼短過 4 嘅詞唔收，避免兩碼短碼被詞條精确命中。
+## 點解門檻係 19000／3000
 
-運行時 Lua 讀詞表（按碼二分），最多 `phrase_mix/top_k`（預設 12）條。`of`／`me`／`or` 長度係 2，翻譯器直接返回，頭頁排序同 v0.2.0 一樣。
+`tools/rimeh/hold_harm_top.py` 計晒 658 × 658 個「兩碼 + 兩碼」組合，假設用戶靠 Windows 頂字連打，數有幾多組會因為留住而變咗結果：
 
-`max_code_length: 2` 原本會喺第三個字母**頂字**（`of`+`c` 會先確認「係」）。`phrase_mix_keys` 喺呢個字母仍然續到詞庫碼或者英詞時，把字母拼入同一段，先至查得到 `ofc`→無錯。續唔到詞庫嘅第三個字母（例如 `vdz`）仍然頂字，上屏係「好」。拼埋之後預編輯顯示拉丁碼（`ofc`），因為字表嘅字根 `xlit` 只改寫有單字命中嘅兩碼。
+| 方案 | 有變嘅組合 | 按字頻加權 |
+| --- | --- | --- |
+| 第 4 碼都要過門檻（v0.4 採用） | 0.31% | 0.61% |
+| 第 4 碼只要詞庫有就留住 | 1.71% | 5.6%（例：好同 → 好貼） |
+
+有變嘅組合，大部分係變好咗，例如 上而 → **上面**、出而 → **出面**、左方 → **左邊**。
+
+如果某個碼 Windows 頂字嘅結果本身就係一個詞，嗰個詞會排第 1。例如 `vdvd` 第 1 個係 **好好**，唔係字頻較高嘅妹妹。
+
+## 3 碼詞
+
+v0.4 開始收錄 3 碼詞（1 碼字加 2 碼字），例如：
+
+| 詞 | 碼 |
+| --- | --- |
+| 人類 | `o`+`fc` = `ofc` |
+| 中國 | `l`+`wm` = `lwm` |
+| 一個 | `m`+`or` = `mor` |
+| 大家 | `k`+`jo` = `kjo` |
+
+2 碼詞唔收，因為會同 Windows 單字頁撞碼。
+
+## 實作
+
+詞庫係 librime 原生表，部署時編譯成 `.table.bin`：
+
+- `table_translator@phrase`（`kinfx_quick_phrase`）
+- `table_translator@english`（`kinfx_en`）
+
+Lua（`schemas/lua/phrase_mix.lua`）只負責：
+
+- 判斷留唔留住按鍵
+- 用 `Memory:dict_lookup` 查詞庫前綴
+- 加 segment tag
+
+所以兩碼頭頁唔會出詞。v0.3 喺 Lua heap 載入大約 24 萬行詞庫，每粒鍵約 70 ms；v0.4 約 0.03–0.06 ms（rimeh 量度）。
 
 ## 詞庫同授權
 
-獨立目錄 `lexicon/`，**唔係 MIT**。見 `lexicon/NOTICE`。
+`lexicon/` **唔係 MIT**，見 `lexicon/NOTICE`。
 
 | 檔 | 內容 | 授權 |
 | --- | --- | --- |
-| `lexicon/hk/kinfx_hk_words.dict.yaml` | essay-cantonese 2／3／5 字 | 詞條 CC BY 4.0；速成碼 LGPL-3.0 |
-| `lexicon/hk/kinfx_hk_idioms.dict.yaml` | 四字帶（成語同其他四字詞） | 同上 |
-| `lexicon/en/kinfx_en.dict.yaml` | SCOWL（Debian `wamerican`）+ `extras.tsv` 嘅 Gmail／GMAIL、scriptwriting、voiceover | SCOWL 許可（Kevin Atkinson）；見 NOTICE |
-
-冇打入 GPL-3 rime-ice。`en_spacer` 唔開。大寫拉丁仍然走 recognizer 零切換（M0），`GMAI` 唔會變候選。
-
-## 英詞
-
-`schemas/lua/melt_eng.lua`。`gmai` 係 `gmail` 嘅前綴（長度 4），所以抬 `Gmail`／`GMAIL`。`scriptwriting`／`voiceover` 唔喺 SCOWL，由 extras 以 Gmail 級權重補上。排序先剩長度、先權重，所以驗收用 `scriptwriti`／`voiceove`（`scri` 會先抬 `script`，`voic` 會先抬 `voice`）。長度 3 只抬詞典全中，唔做前綴。
+| `lexicon/hk/kinfx_hk_words.dict.yaml` | essay-cantonese 2／3／5 字詞 | 詞條 CC BY 4.0；速成碼 LGPL-3.0 |
+| `lexicon/hk/kinfx_hk_idioms.dict.yaml` | 四字詞 | 同上 |
+| `lexicon/en/kinfx_en.dict.yaml` | SCOWL + `extras.tsv`（Gmail、scriptwriting、voiceover） | SCOWL 許可 |
 
 ## 重新生成
 
 ```bash
-python3 scripts/gen_quick_phrases.py
+python3 scripts/gen_quick_phrases.py --essay-cantonese <essay-cantonese.txt>
 ```
 
-需要系統有 `essay-cantonese.txt`（`rime-data-jyut6ping3`）同 `/usr/share/dict/words`（`wamerican`）。生成器會檢查 `無錯` 碼係 `ofca`，而且 `ofc`／`ofca` 都排到。
+生成器會檢查：
 
-## 驗收
-
-`./scripts/smoke-linux.sh`：`ofc`→無錯、`ofca`→無錯且排名不高過 `ofc`、數字鍵上屏係個詞而唔係原碼；`gmai` 第一頁有 Gmail 或 GMAIL；`scriptwriti`→scriptwriting、`voiceove`→voiceover；`me`／`or`／`of` 見唔到對應英詞。`of` 頭頁跟 Windows：第 1 係「伙」，「係」喺第 3。空白翻頁／Enter 確認／每頁 9 同 v0.2.0 一齊跑。
+- `無錯` 嘅碼係 `ofca`
+- `ofc`、`ofca`、`ofch` 都喺留住清單入面

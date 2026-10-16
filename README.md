@@ -1,135 +1,112 @@
 # KINFX 中英混打輸入法
 
-Desktop 優先的開源中英混打輸入法（繁體／香港）。同一套打法要在全平台都好用；**這一版先把 Desktop 打磨好**：Linux（Fcitx5）已經可用，Windows 11 用小狼毫載入同一套 schema（見 `docs/WINDOWS.md`），macOS、手機其後。共用引擎係 **librime**。GitHub repo slug 仍然係 `kinfx-ime`。
+香港繁體速成輸入法，可以中英混打，唔使切換模式。速成候選次序**逐頁跟 Windows 11 微軟速成**，另外補齊港字、常用詞同英文詞。引擎用 [librime](https://github.com/rime/librime)：Windows 11 由 [小狼毫（Weasel）](https://github.com/rime/weasel) 載入，Linux 用 Fcitx5。
 
-設計目標：中文同英文夾在同一輸入流，預設唔使切模式。候選窗、選字鍵、詞庫都按 Desktop 打字習慣收斂，再帶到其他平台。
+**最新版本：v0.4.0**
 
-**方案優先**：**速成（做到最好）→ 粵拼 → 倉頡／注音／拼音**
+## 特點
 
-## 功能（v0.3.1）
+- **候選次序同 Windows 一樣**：658 個兩碼全部喺 Windows 11 Pro 實測，每頁每格逐格比對過，658／658 一致（見 `docs/WIN_QUICK_RANK.md`）。
+- **打字唔 lag**：每粒鍵約 0.03–0.06 ms，舊版 v0.3 要約 70 ms（離線測量）。
+- **港字齊**：㗎、嘅、𠻹、𨋢 等 Windows 冇嘅字，排喺 Windows 候選之後，唔會郁到 Windows 原本嘅位置。
+- **連打順**：第 3 碼照 Windows 頂字上屏。只有打出嚟係常用詞先會留住等你揀，例如：
+  - `ofc` → 人類、無錯
+  - `ofca` → 無錯
+  - `lwm` → 中國
+  - 冇詞接得落去就照 Windows 上屏（`vd` `of` `3` → 好係）。
+- **英文**：大寫開頭英文、email、URL 直接輸入；`gmai` → Gmail。
+- **選字同 Windows**：每頁 9 個、直列；空白翻頁；1–9／Enter 選字；Tab 展開；第 1 頁按左開「常用熱門」。
+- **候選窗**：正黑體、圓角、淺陰影，淺色／深色跟系統。
+- **粵拼**：有聲調（`nei5` → 你）。
 
-- **速成優先**：倉頡字根、只取首尾二碼，對齊 Windows 微軟速成。**粵拼有聲調**（`jyut6ping3`，例 `nei5`、`jyut6`）。
-- **中英混打預設零切換**：大寫拉丁、email、URL 直出，唔使切英文模式。
-- **候選（Windows 選字習慣）**：每頁 9 個、直列；空白翻頁；Enter／1–9 選字；Tab 展開；多頁碼有常用熱門環頁。
-- **詞／成語前綴**：例 `ofc`→無錯。**英詞補全**：`gmai`→Gmail；另有 scriptwriting、voiceover。
-- **短碼中文首位**：`me`／`or`／`of` 唔會被英詞搶走。
-- **Flex**：混打、Shift、ASCII、排序、頁數全部可設定（`docs/CONFIG.md`）。
-- **引擎 librime**；**Linux Desktop（Fcitx5）先**。候選窗跟游標、開喺下方、貼邊自動翻（目測需顯示器，見 `docs/ARCHITECTURE.md` §4）。
+## Windows 11 安裝
 
-Fcitx 選單（`schema_id` 冇改）：
+```powershell
+# 1. 安裝小狼毫
+winget install Rime.Weasel
+
+# 2. 粵拼資料（可選）：將 rime-cantonese 嘅 jyut6ping3*.yaml 同 essay-cantonese.txt 放入 %APPDATA%\Rime
+
+# 3. 安裝 KINFX（用平時打字嗰個帳戶，唔好用系統管理員）
+git clone https://github.com/Kinfxhk/kinfx-ime.git
+cd kinfx-ime
+powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\install-windows.ps1
+```
+
+安裝完會自動重新部署。按 **Win+Space** 揀小狼毫，再喺方案選單（Ctrl+` 或 F4）揀「**KINFX 中英混打輸入法 · 速成**」。
+
+卸載：`scripts\uninstall-windows.ps1`。詳細步驟：`docs/WINDOWS.md`。
+
+## Linux（Fcitx5）安裝
+
+```bash
+sudo apt install fcitx5 fcitx5-rime librime-bin librime-plugin-lua \
+  rime-data-cangjie5 rime-data-jyut6ping3 rime-essay rime-prelude rime-data-luna-pinyin
+./scripts/install-linux.sh
+```
+
+Fcitx5 設定 → 加入「中州韻」→ 揀「KINFX 中英混打輸入法 · 速成」。
+
+## 打法速查
+
+| 輸入 | 結果 |
+| --- | --- |
+| `vd` 1 | 好 |
+| `vd` 空白 1 | 嫻（第 2 頁第 1 個，同 Windows） |
+| `vd` `of` 3 | 好係（Windows 頂字） |
+| `ofc` 1 | 人類 |
+| `ofca` 1 | 無錯 |
+| `hioa` 1 | 我會 |
+| `vd` `API` 空白 | 好API |
+| `gmai` 1 | Gmail |
+| `nei5`（粵拼） | 你 |
+
+## 設定
+
+全部跟 Windows 預設，要改先改，見 `docs/CONFIG.md` 同 `schemas/examples/kinfx_quick.custom.yaml.example`。
+
+| 想要 | 設定 |
+| --- | --- |
+| 純 Windows 頂字，唔出詞 | `"phrase_mix/capture": none` |
+| 關掉英文詞 | `"english/enable": false` |
+| 空白揀字而唔係翻頁 | `"win_quick/space_pages": false` |
+
+## 方案
 
 | 選單名 | schema_id |
 | --- | --- |
 | KINFX 中英混打輸入法 · 速成 | `kinfx_quick` |
 | KINFX 中英混打輸入法 · 粵拼 | `kinfx_jyutping` |
 
-## 點解用 RIME
+## 測試
 
-見 `docs/ARCHITECTURE.md`：唔從零造引擎；schema 覆蓋形碼＋拼音；前端只做系統對接與 UX。Linux 選 **Fcitx5 + fcitx5-rime**（LGPL 系）。
+| 指令 | 內容 |
+| --- | --- |
+| `bash tools/rimeh/accept.sh` | Windows，離線 34 項，用已安裝嘅小狼毫 rime.dll |
+| `bash tools/rimeh/fullorder.sh` | 658 個碼逐格同 Windows 比對 |
+| `pwsh -File scripts/test-windows-rime.ps1` | 安裝／卸載腳本 |
+| `python tests/test_gen_quick_dict.py`<br>`python tests/test_gen_quick_phrases.py` | 碼表生成器 |
+| `./scripts/smoke-linux.sh` | Linux／CI headless smoke |
 
 ## 目錄
 
-| 路徑 | 說明 |
+| 路徑 | 內容 |
 | --- | --- |
-| `schemas/kinfx-quick/` | P0 速成 schema + 單字碼表（字頻權重／罕用字過濾） |
-| `lexicon/` | 詞／四字帶／英詞（各自授權，見 `lexicon/NOTICE`，唔係 MIT） |
-| `schemas/kinfx-jyutping/` | P1 粵拼（`jyut6ping3` 有聲調） |
-| `schemas/examples/` | `*.custom.yaml.example`（Flex 設定） |
-| `docs/` | ARCHITECTURE／LAYOUTS／STATUS／**CONFIG**／**WIN_QUICK_RANK**／**WIN_QUICK_SELECT**／**PHRASE_MIX**／**desktop-verify**／**WINDOWS** |
-| `scripts/` | 安裝（Linux／Windows）、smoke、GUI checklist、重新生成碼表 |
-| `tests/` | Headless smoke、混打驗收 |
-| `third_party/rime-quick/` | 上游速成參考（LGPL-3） |
-
-## Linux Desktop 安裝
-
-```bash
-# 依賴（Debian/Ubuntu 例）
-sudo apt install fcitx5 fcitx5-rime librime-bin librime-plugin-lua \
-  rime-data-cangjie5 rime-data-jyut6ping3 rime-essay rime-prelude rime-data-luna-pinyin
-
-# 安裝本專案 schema
-./scripts/install-linux.sh
-
-# Fcitx5 設定 → 加入「中州韻」→ 選「KINFX 中英混打輸入法 · 速成」
-# schema_id 係 kinfx_quick（粵拼選單：「KINFX 中英混打輸入法 · 粵拼」／ kinfx_jyutping）
-```
-
-預設資料目錄：`~/.local/share/fcitx5/rime/`。
-
-### Fcitx5 與左 Shift
-
-Fcitx5 預設常用 **LShift** 切輸入法／鍵盤，會**搶走** rime `inline_ascii`。  
-**預設混打唔依賴呢個鍵**：同一輸入流打大寫英文即可（例：`今日用 API 測試`）。  
-若要 rime 食到 Shift：用 `fcitx5-configtool` 改綁定，或見 `docs/CONFIG.md`。
-
-## Windows 11 安裝
-
-Windows 11 用 **Weasel（小狼毫）** 做 TSF 宿主。本 repo 只部署 schema／詞庫，唔包含自寫 TSF DLL、純 MSIX 註冊、或 Weasel fork。步驟、驗收表、卸載、簽章／Store 說明見 **`docs/WINDOWS.md`**。
-
-```powershell
-# 先裝小狼毫（安裝器要系統管理員；或用 GitHub Releases 官方安裝器）
-winget install Rime.Weasel
-
-# schema 部署去打字用戶的 %APPDATA%\Rime（唔好用管理員身分跑）
-powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\install-windows.ps1
-```
-
-重新部署（小狼毫右鍵 → **重新部署**）之後，**Win+Space** 揀小狼毫，選單選 **KINFX 中英混打輸入法 · 速成**（`kinfx_quick`）。粵拼選單係 **KINFX 中英混打輸入法 · 粵拼**（`kinfx_jyutping`）。UX 同 v0.3.1：每頁 9、直列、空白翻頁、1–9／Enter 選字、Tab 展開。安裝會一併寫入輕量候選窗皮膚（圓角、淺陰影、淺色／深色，仍然直列 9）。見 `docs/WINDOWS.md`「候選窗外觀」。
-
-分享 zip：`.\scripts\pack-windows-share.ps1` → `dist/kinfx-ime-windows-share.zip`。
-
-**建議標籤 v0.3.2**（文件同 Windows 腳本；標籤由維護者 merge 之後先打）。Win11 真機驗收仍然係手動。
-
-## 中英混打（預設＝零切換）
-
-| ID | 條件 |
-| --- | --- |
-| M0 | **零切換**：大寫拉丁／email／URL 直出；唔使切英文模式 |
-| M1 | 可選 Shift 臨時西文／`ascii_mode`（可關、可改鍵） |
-| M2 | 組字途中可夾英文（`好API`） |
-| M4 | email／URL 唔被形碼食掉 |
-
-清單：`tests/ACCEPTANCE_MIXED_INPUT.md`。改行為：`docs/CONFIG.md`。
-
-## 粵拼（有聲調）
-
-依賴套件：`rime-data-jyut6ping3`（rime-cantonese）。
-
-| 輸入 | 預期 |
-| --- | --- |
-| `nei5` | 你 |
-| `ngo5` | 我 |
-| `jyut6` | 粵 |
-| `nei`／`ngo`／`jyut` | 同上（可唔打調號） |
-
-## Headless 測試
-
-```bash
-./scripts/smoke-linux.sh
-# 等同 ./tests/run_smoke.sh
-```
-
-Smoke 用 **schema_id** `kinfx_quick` 選方案，唔靠選單顯示名。桌面 checklist（**候選窗視覺需顯示器**）：`docs/desktop-verify.md`、`./scripts/verify-gui-mixed.sh`。
-
-## 候選
-
-每頁 **9** 個、**直列**、選字鍵 **1–9**。**空白翻頁**，**Enter／1–9 選焦點**，**Tab 展開**多欄，多頁碼有「常用熱門」環頁。無候選窗時空白仍然上屏（`好API`）。詳見 `docs/WIN_QUICK_SELECT.md`。頭頁對照：`docs/WIN_QUICK_RANK.md`。詞／英詞：`docs/PHRASE_MIX.md`。視窗預設 **跟游標、開喺下方、貼邊自動翻**。直列同展開格仔嘅目測標 **需顯示器**。見 `docs/ARCHITECTURE.md` §4。Flex：`docs/CONFIG.md`。
-
-## 排列
-
-預設 **`win_quick`**。表：`docs/LAYOUTS.md`。
-
-## English (short)
-
-**KINFX 中英混打輸入法** is a Desktop-first mixed Chinese–English IME on **librime**. The repository slug stays `kinfx-ime`. Linux Desktop (Fcitx5) is the headless/CI path. Windows 11 uses Weasel (小狼毫) as the TSF host; this repo ships schemas plus `scripts/install-windows.ps1` (`docs/WINDOWS.md`). macOS follows. Suggested tag for the Windows docs and scripts: **v0.3.2** (not tagged in-repo).
-
-As of v0.3.1: Sucheng/Quick first, tonal Jyutping (`jyut6`, `nei5`). Zero-switch mix (uppercase Latin, email, URL). Nine vertical candidates; Space pages; Enter or 1–9 selects; Tab expands; hot-favorites wrap. Phrase prefix `ofc`→無錯; English completion `gmai`→Gmail, plus scriptwriting and voiceover. Short codes `me` / `or` / `of` stay Chinese-first. On Windows, `install-windows.ps1` also merges a lightweight rounded light/dark Weasel skin (still nine vertical candidates). Flex settings: `docs/CONFIG.md`. Code: MIT; dictionaries keep upstream licenses (`NOTICE`).
+| `schemas/kinfx-quick/` | 速成方案、碼表、Windows 實測次序 `ms_quick_order.tsv` |
+| `schemas/kinfx-jyutping/` | 粵拼方案 |
+| `schemas/lua/` | 選字（`win_quick.lua`）、詞語留鍵（`phrase_mix.lua`） |
+| `lexicon/` | 港詞、四字詞、英文詞（各自授權） |
+| `scripts/` | 安裝、卸載、生成碼表 |
+| `tools/mscapture/` | 讀取 Windows 微軟速成候選次序 |
+| `tools/rimeh/` | 離線測試同效能量度 |
+| `docs/` | 詳細文件 |
 
 ## 授權
 
-- 本專案原創程式／文件：**MIT**（`LICENSE`）
-- 詞庫／上游：見 `NOTICE` 同 `lexicon/NOTICE`（LGPL／CC BY／SCOWL 等）。`lexicon/` 唔係 MIT
+- 本專案程式同文件：MIT（`LICENSE`）
+- 詞庫同上游資料：見 `NOTICE` 同 `lexicon/NOTICE`（LGPL-3.0、CC BY 4.0、SCOWL）。`lexicon/` 唔係 MIT。
+- `ms_quick_order.tsv` 只記錄候選次序作為參考，唔包含微軟程式或者字庫檔。
 
-## 狀態
+## English
 
-見 `docs/STATUS.md`（v0.3.1 已出；Windows 11 安裝腳本建議標籤 **v0.3.2**，真機驗收仍係手動）。
+KINFX is a Hong Kong Traditional Chinese Sucheng (Quick) IME on librime. On Windows 11 it runs inside Weasel; on Linux it runs inside Fcitx5. v0.4 follows the Windows 11 Microsoft Quick candidate order on every page. All 658 two-letter codes were measured on Windows 11 Pro and match 658/658. It also adds HK glyphs after the Windows list, holds keys only for common phrases (`ofc` → 人類), and moves the lexicons to native tables. Measured offline, a keystroke takes about 0.05 ms; v0.3 took about 70 ms. Install with `scripts/install-windows.ps1` or `scripts/install-linux.sh`. Code is MIT; dictionaries keep their upstream licenses.

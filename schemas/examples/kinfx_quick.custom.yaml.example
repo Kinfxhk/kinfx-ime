@@ -1,55 +1,33 @@
-# KINFX 速成 — 使用者覆寫例
-# 複製到：~/.local/share/fcitx5/rime/kinfx_quick.custom.yaml
-# 然後重新部署（F4 或 rime_deployer）。完整說明：docs/CONFIG.md
+# KINFX 速成 — 使用者覆寫例（v0.4）
+# 複製到：
+#   Windows  %APPDATA%\Rime\kinfx_quick.custom.yaml
+#   Linux    ~/.local/share/fcitx5/rime/kinfx_quick.custom.yaml
+# 然後重新部署。完整說明：docs/CONFIG.md
 #
-# 預設（schema）：全程零切換混打＝大寫拉丁／email／URL 直出，唔使切英文模式。
-# 以下全部可改；唔改＝沿用 schema 預設。
+# 預設全部跟 Windows 11 微軟速成。以下全部註解住；取消註解先至生效。
 
 patch:
-  # ========== 混打策略 ==========
-  # A) 零切換（預設）：大寫開頭英詞直出
-  "recognizer/patterns/uppercase": "[A-Z][-_+.'0-9A-Za-z]*$"
-  "recognizer/patterns/email": "^[A-Za-z][-_.0-9A-Za-z]*@.*$"
-  "recognizer/patterns/url": "^(www[.]|https?:|ftp[.:]|mailto:|file:).*$|[a-z]+[.].+$"
+  # ========== 詞語／英文詞（docs/PHRASE_MIX.md）==========
+  # hot  = 預設：只有常用詞前綴先留住第 3／4 碼，其餘照 Windows 頂字
+  # none = 純 Windows：第 3 碼一律頂字，唔出詞
+  # all  = 任何詞前綴都留住（頂字少啲，同 Windows 差多啲）
+  # "phrase_mix/capture": none
+  # "phrase_mix/enable": false        # 完全關掉詞語
+  # "english/enable": false           # 關掉 gmai → Gmail
 
-  # B) 臨時西文鍵（可選；Fcitx5 預設 LShift 可能搶走）
-  "ascii_composer/switch_key/Shift_L": inline_ascii   # 或 noop / commit_code / clear
-  "ascii_composer/switch_key/Shift_R": commit_text
-  "ascii_composer/switch_key/Caps_Lock": clear
-  "ascii_composer/good_old_caps_lock": true
+  # ========== 選字（預設＝Windows）==========
+  # "win_quick/space_pages": false    # 空白改回揀焦點候選
+  # "win_quick/hot_page": false       # 關掉常用熱門環頁
+  # "win_quick/tab_expand": false     # Tab 唔展開
+  # "style/horizontal": true          # 候選打橫
+  # "menu/page_size": 5               # 每頁 5 個（產品預設係 9）
 
-  # C) 持久中／西文開關鍵（預設 Control+Shift+2）
-  # 若只要「必須切 ascii_mode 先打英文」，可將 uppercase pattern 清空並靠呢個 toggle：
-  # "recognizer/patterns/uppercase": "^$"
-  # "key_binder/bindings":
-  #   - { when: always, accept: Control+Shift+2, toggle: ascii_mode }
-
-  # ========== 候選／排序偏好 ==========
-  # 產品預設 menu/page_size = 9（Windows 官方速成；選字鍵 1–9）。
-  # 所有前端跟 schema，唔會自己改成 5。下面只係 Flex 示範：
-  # 取消註解會偏離產品預設，第 6–9 位會睇唔到／選字鍵錯位。
-  # "menu/page_size": 5
-  # 預設關。開咗會學頻，常用字可能爬返正常頭頁；常用熱門係左鍵環頁。
+  # ========== 排序 ==========
+  # 開咗會學字，常用字會爬上第 1 頁，次序唔再同 Windows 一樣。
   # "translator/enable_user_dict": true
-  "translator/enable_completion": true
-  "translator/enable_sentence": true
-  "translator/max_phrase_length": 5
 
-  # ========== 選字（預設＝Windows；取消註解即偏離）==========
-  # 空白改回「選焦點候選」（v0.1.1 習慣；有候選窗時通常即第 1 個）。
-  # 無候選窗（好API）空白仍然上屏。唔使改 key_binder 索引。
-  # "win_quick/space_pages": false
-  # "win_quick/hot_page": false          # 關掉常用熱門環頁
-  # "win_quick/tab_expand": false        # Tab 唔再展開
-  # "style/horizontal": true             # 打橫。Fcitx5 另設 classicui「Vertical Candidate List=False」
-  # "editor/bindings/Return": commit_raw_input   # 還原 Enter 原樣上屏（會出 vd）
-
-  # ========== 詞前綴／英詞（預設開；見 docs/PHRASE_MIX.md）==========
-  # "phrase_mix/enable": false       # 關掉 ofc→無錯
-  # "phrase_mix/min_length": 3       # 細過 3 會打進兩碼頭頁，唔好改細
-  # "melt_eng/enable": false         # 關掉 gmai→Gmail
-  # "melt_eng/prefix_length": 4      # 英詞前綴至少幾多個字母先抬
-
-  # ========== 方案內其他 ==========
-  # "speller/max_code_length": 2
-  # "speller/auto_select": false
+  # ========== 混打 ==========
+  # 零切換（預設）：大寫開頭英文、email、URL 直出。
+  # "recognizer/patterns/uppercase": "^$"            # 一定要切 ascii_mode 先打英文
+  # "ascii_composer/switch_key/Shift_L": noop        # 左 Shift 唔切英文
+  # "key_binder/bindings/@last": { when: always, accept: Control+Shift+2, toggle: ascii_mode }

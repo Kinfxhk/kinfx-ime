@@ -635,11 +635,16 @@ end
 
 local function filter_init(env)
   read_opts(env)
-  local ok, mem = pcall(function()
-    return Memory(env.engine, env.engine.schema)
-  end)
-  if ok then
-    env.mem = mem
+  -- User dict is off (Windows order is fixed). Open Memory only if a custom
+  -- patch turns it back on, so the default filter stays allocation-free.
+  local cfg = env.engine.schema.config
+  if cfg:get_bool("translator/enable_user_dict") then
+    local ok, mem = pcall(function()
+      return Memory(env.engine, env.engine.schema)
+    end)
+    if ok then
+      env.mem = mem
+    end
   end
 end
 

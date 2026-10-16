@@ -13,8 +13,7 @@
   Does not install Weasel, register a TSF profile, or require elevation for
   the file copy. Does not change page size or candidate order.
 
-  Suggested release tag: v0.3.2 (docs + these scripts). This script does not
-  create a git tag.
+  Release v0.4.0. This script does not create a git tag.
 #>
 [CmdletBinding()]
 param(
@@ -66,6 +65,13 @@ foreach ($item in (Get-KinfxDeployItems)) {
   }
   Copy-Item -LiteralPath $src -Destination $dest -Force
   Write-Host ("  + {0}" -f $item.Rel)
+}
+foreach ($old in (Get-KinfxRetiredUserRelativePaths)) {
+  $oldPath = Join-RepoPath $userDir $old
+  if (Test-Path -LiteralPath $oldPath) {
+    Remove-Item -LiteralPath $oldPath -Force
+    Write-Host ("  - {0} (retired in v0.4)" -f $old)
+  }
 }
 Write-KinfxDeployManifest $userDir
 
@@ -126,9 +132,9 @@ Write-Host '     or: WeaselDeployer.exe /deploy'
 Write-Host '  2. Win+Space, choose 小狼毫 / RIME.'
 Write-Host '  3. Select schema: KINFX 中英混打輸入法 · 速成  (schema_id kinfx_quick).'
 Write-Host '     Jyutping: KINFX 中英混打輸入法 · 粵拼  (schema_id kinfx_jyutping).'
-Write-Host 'UX stays v0.3.1: page_size 9, vertical, Space pages, 1-9/Enter select, Tab expands.'
+Write-Host 'v0.4.0: Windows 11 Quick order on every page; page_size 9, vertical, Space pages, 1-9/Enter select, Tab expands.'
 Write-Host 'Candidate skin: rounded corners, soft shadow, light/dark. Static colors only (no images or animation). See docs/WINDOWS.md.'
-Write-Host 'Smoke: ofc -> 無錯, gmai -> Gmail, me/or/of stay Chinese-first. See docs/WINDOWS.md.'
+Write-Host 'Smoke: vd -> 好, ofc 1 -> 人類, ofca -> 無錯, gmai -> Gmail. See docs/WINDOWS.md.'
 
 $deployed = $false
 if ($NoDeploy) {

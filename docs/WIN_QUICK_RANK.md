@@ -1,80 +1,51 @@
-# Windows 速成頭 9 對照
+# Windows 速成排序（全表）
 
-**產品預設**：每頁 **9** 個候選，選字鍵 **1–9**。速成（`kinfx_quick`）同粵拼（`kinfx_jyutping`）都寫 `menu/page_size: 9`。Fcitx5 classicui、Squirrel、Weasel 顯示 librime 交嚟嘅一頁，前端冇 page size 可以改成 5。`scripts/install-linux.sh` 亦把用戶 `default.yaml` 設成 9。
+**產品預設**：每頁 **9** 個候選，選字鍵 **1–9**。速成（`kinfx_quick`）同粵拼（`kinfx_jyutping`）都寫 `menu/page_size: 9`。Weasel、Fcitx5、Squirrel 顯示 librime 交嚟嘅一頁。
 
-要改頁數先用 `schemas/examples/*.custom.yaml.example` 入面註解住嘅 `"menu/page_size": 5`。呢個係 Flex，產品預設仍然係 9。
+## v0.4：每一頁都跟 Windows 11
 
-## 兩頁分工
+v0.3 只係把頭 9 個字釘死，第 2 頁之後按字頻排，所以同 Windows 唔一樣。v0.4 改為**全表跟 Windows 11 Pro 微軟速成**。
 
-正常第 1 頁同「常用熱門」分開。常用字**唔再**硬抬去蓋過微軟頭頁。
-
-| 頁 | 點入 | 次序 |
-| --- | --- | --- |
-| 第 1 頁 | 打完碼 | **Microsoft 速成頭 9**。碼表權重釘死，運行時唔加逐鍵 filter |
-| 常用熱門 | 第 1 頁按 **左** | 現有 `schemas/lua/win_quick.lua` 環頁，剛好 9 格 |
-
-左鍵環頁先見選過嘅字（♥常），再係 user dict（而家 schema 預設關），唔夠先用正常候選由頭填（♥熱）。未選過字時，熱門頁會暫時同 Win 頭 9 一樣，靠 ♥ 同 `〔♥常用熱門〕` 分辨；呢個填補**唔改**正常第 1 頁。選過第 2 頁嘅字之後，嗰個字先至排到熱門頁第 1 格。
-
-`translator/enable_user_dict` 預設 **關**。開返學頻會把常用字插返正常頭頁，同呢個分工衝突。要熟字就用左鍵嗰頁。
-
-頁面大小、空白翻頁、Enter 確認、Tab 展開、混打／英詞都唔改。
-
-## 排序
-
-`scripts/gen_quick_dict.py` 底權重仍然係 `essay.txt + 5× essay-cantonese.txt`，而且唔再為頭頁次序把冷門字連住抬到冠軍字頻。有 Windows 頭頁嘅碼，碼表 `sort: original`，按 `schemas/kinfx-quick/win_quick_top9.tsv` 嘅次序寫喺該碼前面（最多 9 個）；其餘字跟字頻排後面。倉頡冇嗰個碼、只為頭頁補上嘅字，權重係 0，唔可以重過真主碼（綜主碼 `vf`、網主碼 `vv`）。打字時 `win_quick.lua` 正常頁原序通過。
-
-頭頁次序唔喺每次按鍵計。冇新 filter、冇掃成張碼表、冇逐鍵重排 Lua。`win_quick.lua` 仍然只喺左鍵環頁同 Tab 展開先改顯示；歷史只喺選字鍵（1–9／Enter）記一格，字母鍵唔入呢條路。
-
-唔再做舊規則：近頻 1.15、冷門字下限、以及硬抬 `我@hi`／`係@of`／`唔@rr`／`時@ai` 去第 1。Windows 排第幾就第幾。
-
-`vd` 跟 Win11 24H2 實測（2026-10-15），尾二係 **網綜**，唔係較早公開重構嘅 **綑綵**。TSV 同碼表用同一行。
-
-`夏@me` 喺 Windows 第 5 位，所以頭頁第 5 仍然係夏。`倉@or` **唔喺** Windows 頭 9（傳統序約第 22）。頭頁跟 Win，倉唔留第 9 格；字仍然喺碼表後面，選過之後可以出現喺左鍵常用熱門。
-
-## 頭 9 對照
-
-kinfx 頭頁同 Windows 欄一樣。`an` 表入面得 8 個字，頭 8 位跟表。第 9 位唔係 Windows 頭頁字。
-
-| 碼 | 頭 9（Windows = kinfx） |
+| 項目 | 數字 |
 | --- | --- |
-| `vd` | 好她妹紆巢媒彙網綜 |
-| `hi` | 凡么丟夙舟卵我私的 |
-| `me` | 汞歿泵玻夏破球豉瑕 |
-| `or` | 合何估佑伽伺佔佝含 |
-| `ai` | 昤時閎閩閥曇旳昡戥 |
-| `mk` | 天攻更玟玫政殃致敔 |
-| `of` | 伙你係偽氮焦無絛僚 |
-| `rr` | 呂呵咖咕品哈咯唁唔 |
-| `yr` | 占吝言迦迢迥迨站迴 |
-| `go` | 坎走垓堤款塚壕垗欯 |
-| `an` | 門剔旯昑昲閌閅闁 |
-| `ni` | 夕弘多兔弦虱附強蛋 |
-| `wm` | 國置疊畇罡罝罭黚翾 |
+| 實測碼數 | 664（658 個兩碼 + 6 個單碼） |
+| 實測候選 | 24,073 個字 |
+| 兩碼逐格比對 | 658／658 一致（`tools/rimeh/fullorder.sh`） |
 
-## 關鍵字
+來源：`schemas/kinfx-quick/ms_quick_order.tsv`。用 `tools/mscapture/ms_uiless.ps1` 喺 Windows 11 微軟速成（zh-TW）透過 TSF UILess 介面逐個碼讀出完整候選表。每個碼讀完按 Esc，冇上屏，所以微軟輸入法唔會因此學字。讀取時嘅設定係「固定候選字順序」關、Ext-A／B／HKSCS 關，即係 Windows 預設。
 
-| 字 | 碼 | 頭頁 | 說明 |
-| --- | --- | --- | --- |
-| 好 | `vd` | 1 | 同 Windows。第 2 頁第 1 個係「樂」 |
-| 凡 | `hi` | 1 | 「我」喺第 7，唔再硬抬 |
-| 我 | `hi` | 7 | |
-| 昤 | `ai` | 1 | 「時」喺第 2 |
-| 時 | `ai` | 2 | |
-| 夏 | `me` | 5 | 跟 Windows 第 5 |
-| 倉 | `or` | 唔喺頭 9 | 跟 Win，唔留第 9 格 |
-| 天 | `mk` | 1 | Microsoft Learn 例子 `MK` 再按 1 |
-| 伙 | `of` | 1 | 「係」喺第 3 |
-| 係 | `of` | 3 | |
-| 呂 | `rr` | 1 | 「唔」喺第 9 |
-| 唔 | `rr` | 9 | |
-| 網／綜 | `vd` | 8／9 | Win11 24H2。綜亦有 `vf` 讀音 |
+碼表 `kinfx_quick.dict.yaml` 用 `sort: original`，行序就係顯示次序：
+
+1. 每個碼先放 Windows 嘅完整清單，原樣保留，連 丂／丄 呢類罕用部件都留。
+2. 之後補 Windows 冇、但倉頡 5／rime-quick 補充表有嘅字（例如 㗎、𠻹、𨋢 等港字同 Ext-A／B），按 `essay.txt + 5× essay-cantonese.txt` 字頻排。Windows 唔顯示呢啲字，所以唔會郁到任何 Windows 格位。
+
+單碼（`a`、`h`、`k`…）喺 Windows 要按空白先見到，所以用 `win_quick_top9.tsv` 補返。Windows 速成冇補全、冇造句，所以 v0.4 關咗 `enable_completion`／`enable_sentence`。打 `h` 只出「竹丿」，同 Windows 一樣。
+
+## 對照（Windows 11 實測 = kinfx）
+
+| 碼 | 第 1 頁 | 第 2 頁 |
+| --- | --- | --- |
+| `vd` | 好她妹紆巢媒彙綑綵 | 嫻槳樂繅孿姀孥姝婐 |
+| `hi` | 凡么丟夙舟卵我私的 | 待禹風射特鬼得符舷 |
+| `of` | 伙你係偽氮焦無絛僚 | 鴒繁鴿黛鯈鶴儻尒伓 |
+| `me` | 汞歿泵玻夏破球豉瑕 | 碌酸憂豭璦霞覆瓊醱 |
+| `or` | 合何估佑伽伺佔佝含 | 知舍信侶俗侷倌倍倚 |
+
+v0.3 文件寫 `vd` 尾二係「網綜」，係錯嘅。全表實測係 **綑綵**。
+
+## 權重
+
+字頻權重只用嚟揀每個字嘅主碼（詞語編碼用）。Windows 喺某個碼顯示、但倉頡冇呢個碼嘅字（例如 網@vd），權重係 0，所以詞語仍然用真主碼（網 = `vv`）。
+
+## 常用熱門頁
+
+正常頁唔受學字影響（`translator/enable_user_dict: false`）。第 1 頁按 **左** 會開「♥常用熱門」環頁，揀過嘅字（♥常）排先，唔夠就用正常候選補（♥熱）。
 
 ## 重新生成
 
 ```bash
-python3 scripts/gen_quick_dict.py
+python3 tools/mscapture/merge_capture.py tools/mscapture/raw/*.tsv   # 重新合併實測
+python3 scripts/gen_quick_dict.py --cangjie <cangjie5.dict.yaml> --essay <essay.txt> --essay-cantonese <essay-cantonese.txt>
 ```
 
-需要系統有 `cangjie5.dict.yaml`、`essay.txt`、`essay-cantonese.txt`（Debian：`rime-data-cangjie5`、`rime-essay`、`rime-data-jyut6ping3`）。腳本會檢查每個有 Windows 頭頁嘅碼，頭幾個字同表不一致就退出。
-
-Headless：`./scripts/smoke-linux.sh` 斷言 `page_size=9`、上表頭頁次序、選字鍵 `1` 上屏「好」、`倉` 唔喺 `or` 頭頁，以及第 1 頁按左仍然開 9 格常用熱門。
+腳本會逐個碼檢查 Windows 次序；有一格唔對就退出。
