@@ -523,6 +523,40 @@ static int commit_at_rank(RimeApi* api, RimeSessionId sid, const char* seq,
   return ok;
 }
 
+/* v0.5 English smart mode: Space commits a space-safe word. */
+static int commit_space(RimeApi* api, RimeSessionId sid, const char* seq,
+                        const char* expect) {
+  api->clear_composition(sid);
+  drain_commit(api, sid);
+  char keys[64];
+  snprintf(keys, sizeof keys, "%s ", seq);
+  if (!api->simulate_key_sequence(sid, keys)) return 0;
+  char commit[128];
+  int committed = take_commit(api, sid, commit, sizeof commit);
+  printf("space '%s ' → '%s' want '%s'\n", seq, committed ? commit : "", expect);
+  int ok = committed && strcmp(commit, expect) == 0;
+  api->clear_composition(sid);
+  drain_commit(api, sid);
+  return ok;
+}
+
+/* v0.5 English smart mode: Left Shift tap commits the raw letters. */
+static int commit_shift_tap(RimeApi* api, RimeSessionId sid, const char* seq,
+                            const char* expect) {
+  api->clear_composition(sid);
+  drain_commit(api, sid);
+  char keys[64];
+  snprintf(keys, sizeof keys, "%s{Shift_L}{Release+Shift_L}", seq);
+  if (!api->simulate_key_sequence(sid, keys)) return 0;
+  char commit[128];
+  int committed = take_commit(api, sid, commit, sizeof commit);
+  printf("shift-tap '%s' → '%s' want '%s'\n", seq, committed ? commit : "", expect);
+  int ok = committed && strcmp(commit, expect) == 0;
+  api->clear_composition(sid);
+  drain_commit(api, sid);
+  return ok;
+}
+
 /* A third letter that does not start a common phrase 頂字 like Windows. */
 static int assert_top_keeps_char(RimeApi* api, RimeSessionId sid) {
   api->clear_composition(sid);
@@ -567,24 +601,6 @@ static int assert_phrase_mix(RimeApi* api, RimeSessionId sid) {
   ok = ok && commit_at_rank(api, sid, "vd", 8, "綑");
   ok = ok && commit_at_rank(api, sid, "vd", 9, "綵");
 
-  int r_gmail = first_page_rank(api, sid, "gmai", "Gmail");
-  int r_gmail_up = first_page_rank(api, sid, "gmai", "GMAIL");
-  int r_en = -1;
-  if (r_gmail > 0 && (r_gmail_up < 1 || r_gmail <= r_gmail_up)) r_en = r_gmail;
-  else if (r_gmail_up > 0) r_en = r_gmail_up;
-  const char* en_text = (r_en == r_gmail) ? "Gmail" : "GMAIL";
-  printf("gmai best rank=%d text=%s\n", r_en, r_en > 0 ? en_text : "");
-  ok = ok && r_en > 0 && r_en <= 9;
-  ok = ok && commit_at_rank(api, sid, "gmai", r_en, en_text);
-
-  /* Hold words (kinfx_capture.txt "+word") keep every letter. */
-  int r_sw = first_page_rank(api, sid, "scriptwriti", "scriptwriting");
-  int r_vo = first_page_rank(api, sid, "voiceove", "voiceover");
-  printf("extras scriptwriti:%d voiceove:%d\n", r_sw, r_vo);
-  ok = ok && r_sw == 1 && r_vo == 1;
-  ok = ok && commit_at_rank(api, sid, "scriptwriti", r_sw, "scriptwriting");
-  ok = ok && commit_at_rank(api, sid, "voiceove", r_vo, "voiceover");
-
   /* Short codes: English must not appear. 係 is Windows slot 3, not rank 1. */
   ok = ok && assert_absent(api, sid, "me", "me");
   ok = ok && assert_absent(api, sid, "or", "or");
@@ -593,9 +609,35 @@ static int assert_phrase_mix(RimeApi* api, RimeSessionId sid) {
   ok = ok && assert_absent(api, sid, "me", "Gmail");
   ok = ok && rank_exact(api, sid, "of", "伙", 1);
   ok = ok && rank_exact(api, sid, "of", "係", 3);
-  printf("phrase-mix ofc:%d ofca:%d gmai:%d scriptwriti:%d voiceove:%d top:%d\n",
-         r_ofc, r_ofca, r_en, r_sw, r_vo, ok_top);
+  printf("phrase-mix ofc:%d ofca:%d top:%d\n", r_ofc, r_ofca, ok_top);
   return ok && ok_top;
+}
+
+/* v0.5 English smart mode: Space commits a safe word; Left Shift taps short words. */
+static int assert_english_mix(RimeApi* api, RimeSessionId sid) {
+  int ok = 1;
+  ok = ok && commit_space(api, sid, "the", "the ");
+  ok = ok && commit_space(api, sid, "hello", "hello ");
+  ok = ok && commit_space(api, sid, "startup", "startup ");
+  /* 2-letter word needs Left Shift (Space pages the Sucheng menu). */
+  ok = ok && commit_shift_tap(api, sid, "of", "of");
+  printf("english-mix space/shift:%s\n", ok ? "PASS" : "FAIL");
+  return ok;
+}
+
+/* v0.5 association: a one-char pick opens follow-up words; Shift+digit picks. */
+static int assert_association(RimeApi* api, RimeSessionId sid) {
+  api->clear_composition(sid);
+  drain_commit(api, sid);
+  if (!api->simulate_key_sequence(sid, "hi7{Shift+exclam}")) return 0;
+  char commit[128];
+  int committed = take_commit(api, sid, commit, sizeof commit);
+  printf("assoc 'hi7{Shift+exclam}' → '%s' (want 我 + suffix)\n",
+         committed ? commit : "");
+  int ok = committed && strstr(commit, "我") != NULL && strcmp(commit, "我") != 0;
+  api->clear_composition(sid);
+  drain_commit(api, sid);
+  return ok;
 }
 
 static int try_jyutping_tone(RimeApi* api, RimeSessionId sid) {
@@ -822,6 +864,8 @@ int main(int argc, char** argv) {
   int ok_no_qiao = first_page_rank(api, sid, "ms", "丂") < 0;
   int ok_mix = try_mixed_zero_switch(api, sid);
   int ok_phrase = assert_phrase_mix(api, sid);
+  int ok_engmix = assert_english_mix(api, sid);
+  int ok_assoc = assert_association(api, sid);
   int ok_keys = assert_space_enter(api, sid);
   int ok_hot = assert_hot_cycle(api, sid);
   int ok_tab = assert_tab_expand(api, sid);
@@ -834,19 +878,21 @@ int main(int argc, char** argv) {
 
   printf(
       "\nRESULT page9:%s sel1:%s me:%s vd:%s or:%s win-top9:%s no丂:%s "
-      "mix0switch:%s phrase:%s space/enter:%s hot:%s tab:%s single:%s hist:%s "
+      "mix0switch:%s phrase:%s engmix:%s assoc:%s space/enter:%s hot:%s tab:%s single:%s hist:%s "
       "jyut:%s\n",
       ok_page ? "PASS" : "FAIL", ok_sel ? "PASS" : "FAIL",
       ok_me ? "PASS" : "FAIL", ok_vd ? "PASS" : "FAIL", ok_or ? "PASS" : "FAIL",
       ok_win ? "PASS" : "FAIL", ok_no_qiao ? "PASS" : "FAIL",
       ok_mix ? "PASS" : "FAIL", ok_phrase ? "PASS" : "FAIL",
+      ok_engmix ? "PASS" : "FAIL", ok_assoc ? "PASS" : "FAIL",
       ok_keys ? "PASS" : "FAIL", ok_hot ? "PASS" : "FAIL",
       ok_tab ? "PASS" : "FAIL", ok_one ? "PASS" : "FAIL",
       ok_hist ? "PASS" : "FAIL", ok_jyut ? "PASS" : "FAIL");
   printf("RESULT2 page2:%s topout:%s\n", ok_page2 ? "PASS" : "FAIL",
          ok_topout ? "PASS" : "FAIL");
   return (ok_page && ok_sel && ok_me && ok_vd && ok_or && ok_win &&
-          ok_no_qiao && ok_mix && ok_phrase && ok_keys && ok_hot && ok_tab &&
+          ok_no_qiao && ok_mix && ok_phrase && ok_engmix && ok_assoc &&
+          ok_keys && ok_hot && ok_tab &&
           ok_one && ok_hist && ok_jyut && ok_page2 && ok_topout)
              ? 0
              : 1;

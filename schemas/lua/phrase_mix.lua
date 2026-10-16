@@ -230,6 +230,7 @@ local function processor_func(key, env)
   local ctx = env.engine.context
   local input = ctx.input or ""
   if #input < 2 or not input:match("^[a-z]+$") then
+    ctx:set_property("kinfx_hold", "")
     return kNoop
   end
   local extended = input .. ch
