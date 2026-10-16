@@ -30,14 +30,6 @@ local function config_bool(config, path, default)
   return v
 end
 
-local function config_str(config, path, default)
-  local v = config:get_string(path)
-  if v == nil or v == "" then
-    return default
-  end
-  return v
-end
-
 local function user_file(name)
   if not rime_api or not rime_api.get_user_data_dir then
     return nil
@@ -111,16 +103,6 @@ local function has_prefix(mem, code)
   return ok and hit and true or false
 end
 
-local function has_exact(mem, code)
-  if not mem then
-    return false
-  end
-  local ok, hit = pcall(function()
-    return mem:dict_lookup(code, false, 1)
-  end)
-  return ok and hit and true or false
-end
-
 local function first_text(mem, code)
   if not mem then
     return nil
@@ -137,76 +119,58 @@ local function first_text(mem, code)
   return found
 end
 
--- Every complete two-letter pair must be a real Sucheng code, so the
--- split_commit fallback always has a top candidate to commit.
-local function all_pairs_valid(env, code)
-  local i = 1
-  while i + 1 <= #code do
-    if not has_exact(env.main, code:sub(i, i + 1)) then
-      return false
-    end
-    i = i + 2
-  end
-  return true
-end
-
--- English hold: smart = any English-word prefix (fallback-safe); shift = the
--- +word hold list (v0.4.1). off = none.
-local function english_continues(env, code)
-  if not env.eng_enable then
+-- english/mode: smart (v0.5) | shift (v0.4.1) | off (no English at all).
+local function english_on(config)
+  if not config_bool(config, "english/enable", true) then
     return false
   end
-  if env.mode == "smart" then
-    return has_prefix(env.en_mem, code) and all_pairs_valid(env, code)
-  elseif env.mode == "shift" then
-    return is_hold_prefix(env.hold, code)
-  end
-  return false
+  return (config:get_string("english/mode") or "smart") ~= "off"
 end
 
 local function processor_init(env)
   local config = env.engine.schema.config
   env.enable = config_bool(config, "phrase_mix/enable", true)
-  env.eng_enable = config_bool(config, "english/enable", true)
+  env.eng_enable = english_on(config)
   env.capture = config:get_string("phrase_mix/capture") or "hot"
-  env.mode = config_str(config, "english/mode", "smart")
   env.main = new_memory(env, nil)
   env.phrase = new_memory(env, "kinfx_phrase")
-  env.en_mem = new_memory(env, "kinfx_en")
   env.hot, env.hold = load_capture()
 end
 
--- Whether the code is held, and by which side. "zh" = Chinese phrase gate
--- (its menu takes precedence); "en" = English prefix (smart) or hold word
--- (shift). Returns nil when nothing holds it.
-local function hold_kind(env, code)
-  if env.enable and env.capture ~= "none" then
-    if env.hot[code] then
-      return "zh"
-    end
-    if env.capture == "all" and has_prefix(env.phrase, code) then
-      return "zh"
-    end
-    if #code >= 5 and has_prefix(env.phrase, code) then
-      return "zh"
-    end
+local function may_capture(env, code)
+  -- English hold words follow english/enable only; capture: none is the
+  -- Chinese switch (pure Windows top-out), so gmai → Gmail still works.
+  if env.eng_enable and is_hold_prefix(env.hold, code) then
+    return true
   end
-  if english_continues(env, code) then
-    return "en"
+  if env.capture == "none" or not env.enable then
+    return false
   end
-  return nil
+  if env.hot[code] then
+    return true
+  end
+  if env.capture == "all" and has_prefix(env.phrase, code) then
+    return true
+  end
+  return false
 end
 
--- Windows fallback: commit the top candidate of each topped-out pair, leaving
--- the last 1-2 letters pending (so the incoming char can still start a phrase,
--- e.g. latc + j → 帕 + tcj → 其它). Mirrors flush_windows' split_parts.
+-- After the gate: any phrase or English hold word that continues the input.
+local function continues(env, code)
+  if env.enable and env.capture ~= "none" and has_prefix(env.phrase, code) then
+    return true
+  end
+  if env.eng_enable and is_hold_prefix(env.hold, code) then
+    return true
+  end
+  return false
+end
+
+-- Windows fallback: commit the top candidate of each complete pair.
 local function split_commit(env, ctx, input, ch)
-  local n = #input
-  local keep = (n % 2 == 0) and 2 or 1
-  local commit_len = n - keep
   local out = {}
   local i = 1
-  while i + 1 <= commit_len do
+  while i + 1 <= #input do
     local text = first_text(env.main, input:sub(i, i + 1))
     if not text then
       return false
@@ -214,7 +178,7 @@ local function split_commit(env, ctx, input, ch)
     out[#out + 1] = text
     i = i + 2
   end
-  local rest = input:sub(commit_len + 1) .. ch
+  local rest = input:sub(i) .. ch
   ctx:clear()
   env.engine:commit_text(table.concat(out))
   ctx:push_input(rest)
@@ -235,16 +199,11 @@ local function processor_func(key, env)
   local ctx = env.engine.context
   local input = ctx.input or ""
   if #input < 2 or not input:match("^[a-z]+$") then
-    ctx:set_property("kinfx_hold", "")
     return kNoop
   end
   local extended = input .. ch
-  local kind = hold_kind(env, extended)
-  if kind then
-    ctx:set_property("kinfx_hold", kind)
-  end
   if #input == 2 then
-    if kind and ctx:push_input(ch) then
+    if may_capture(env, extended) and ctx:push_input(ch) then
       return kAccepted
     end
     return kNoop -- speller tops out, exactly like Windows
@@ -252,12 +211,12 @@ local function processor_func(key, env)
   -- Held composition (length ≥ 3). Key 4 must pass the gate list too
   -- (ofca 無錯, ofch 無錫); a full-table key 4 would turn 好同 into 好貼.
   -- From key 5 on, any phrase in the compiled table keeps it held.
-  if kind then
+  local gated = may_capture(env, extended)
+  if gated or (#extended >= 5 and continues(env, extended)) then
     ctx:push_input(ch)
     return kAccepted
   end
   if split_commit(env, ctx, input, ch) then
-    ctx:set_property("kinfx_hold", "")
     return kAccepted
   end
   return kNoop
@@ -268,8 +227,7 @@ end
 local function segmentor_init(env)
   local config = env.engine.schema.config
   env.enable = config_bool(config, "phrase_mix/enable", true)
-  env.eng_enable = config_bool(config, "english/enable", true)
-  env.mode = config_str(config, "english/mode", "smart")
+  env.eng_enable = english_on(config)
 end
 
 local function segmentor_func(segmentation, env)
@@ -285,10 +243,7 @@ local function segmentor_func(segmentation, env)
   if env.enable and n >= 3 then
     tags[#tags + 1] = "kinfx_phrase"
   end
-  -- Native English completion is only for mode shift (+word holds). In smart
-  -- mode the Lua filter draws the Windows-like menu, so kinfx_en is not tagged
-  -- (English must never sit in the 9 Windows slots).
-  if env.eng_enable and env.mode ~= "smart" and n >= 4 then
+  if env.eng_enable and n >= 4 then
     tags[#tags + 1] = "kinfx_en"
   end
   if #tags > 0 then
@@ -297,7 +252,22 @@ local function segmentor_func(segmentation, env)
   return true
 end
 
+-- Shared with english_mix.lua: it replays this exact key rule to know what
+-- Windows / v0.4.1 would have committed while it delays the top-out.
+local helpers = {
+  config_bool = config_bool,
+  new_memory = new_memory,
+  has_prefix = has_prefix,
+  first_text = first_text,
+  load_capture = load_capture,
+  is_hold_prefix = is_hold_prefix,
+  init = processor_init,
+  may_capture = may_capture,
+  continues = continues,
+}
+
 return {
   processor = { init = processor_init, func = processor_func },
   segmentor = { init = segmentor_init, func = segmentor_func },
+  helpers = helpers,
 }

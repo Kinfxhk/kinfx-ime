@@ -20,6 +20,8 @@
 local kAccepted = 1
 local kNoop = 2
 
+local rearming = false
+
 local function config_bool(config, path, default)
   local v = config:get_bool(path)
   if v == nil then
@@ -134,12 +136,14 @@ local function open_assoc(env, ctx, ch)
   local seg = Segment(0, 0)
   seg.tags = Set({ "kinfx_assoc", "placeholder" })
   local comp = ctx.composition
+  rearming = true
   comp:push_back(seg)
   ctx:set_property("kinfx_assoc_code", code)
   -- Fire update_notifier to re-translate the placeholder. refresh_non_confirmed
   -- would CLEAR the composition (dropping the segment); setting caret_pos
   -- re-fires the update notifier without clearing.
   ctx.caret_pos = 0
+  rearming = false
   return true
 end
 
@@ -185,6 +189,38 @@ local function processor_init(env)
   local config = env.engine.schema.config
   env.enable = config_bool(config, "association/enable", true)
   env.mem = new_memory(env, "kinfx_assoc")
+  if not env.enable then
+    return
+  end
+  -- Weasel clears the composition after a commit (the TSF composition ends),
+  -- which drops the placeholder segment. Like librime-predict, put it back on
+  -- every update while the association is armed (kinfx_assoc_code set) and
+  -- nothing is being composed. Every closing path clears kinfx_assoc_code.
+  env.update_conn = env.engine.context.update_notifier:connect(function(ctx)
+    if rearming then
+      return
+    end
+    local code = ctx:get_property("kinfx_assoc_code") or ""
+    if code == "" or (ctx.input or "") ~= "" then
+      return
+    end
+    local comp = ctx.composition
+    if comp and not comp:empty() then
+      return
+    end
+    rearming = true
+    local seg = Segment(0, 0)
+    seg.tags = Set({ "kinfx_assoc", "placeholder" })
+    comp:push_back(seg)
+    ctx.caret_pos = 0
+    rearming = false
+  end)
+end
+
+local function processor_fini(env)
+  if env.update_conn then
+    env.update_conn:disconnect()
+  end
 end
 
 local function handle_pick(env, ctx, repr)
@@ -196,8 +232,9 @@ local function handle_pick(env, ctx, repr)
   if not ctx:has_menu() then
     return kNoop
   end
-  -- Never open association while a phrase / English hold is showing.
-  if (ctx:get_property("kinfx_hold") or "") ~= "" then
+  -- Only a plain Windows pick (1-2 letter code) opens it, never a held
+  -- phrase / English run (3+ letters).
+  if #(ctx.input or "") > 2 then
     return kNoop
   end
   local seg = ctx.composition and ctx.composition:back() or nil
@@ -230,7 +267,8 @@ local function handle_assoc(env, ctx, repr)
   local ps = page_size_of(env)
 
   -- Shift+digit picks the suffix.
-  local base = repr:match("^Shift%+(%a+)$")
+  -- Weasel may send the shifted keysym with or without the Shift modifier.
+  local base = repr:match("^Shift%+(%a+)$") or repr
   local d = base and SHIFT_DIGIT[base] or nil
   if d then
     local start = page_start_of(seg, ps)
@@ -251,9 +289,11 @@ local function handle_assoc(env, ctx, repr)
     return kAccepted
   end
 
-  -- Esc / BackSpace / Enter / Left Shift close without deleting.
+  -- Esc / BackSpace / Enter close without deleting. A Left Shift tap closes
+  -- it too (english_mix, before ascii_composer); a Shift press alone must not,
+  -- or Shift+digit could never pick.
   if repr == "Escape" or repr == "BackSpace" or repr == "Return"
-     or repr == "KP_Enter" or repr == "Shift_L" or repr == "Release+Shift_L" then
+     or repr == "KP_Enter" then
     close_assoc(ctx)
     return kAccepted
   end
@@ -287,13 +327,20 @@ local function processor_func(key, env)
   end
   local ctx = env.engine.context
   local repr = key:repr()
+  local kc = key.keycode
+  if kc == 0xffe1 or kc == 0xffe2 then
+    return kNoop
+  end
   if assoc_active(ctx) then
     return handle_assoc(env, ctx, repr)
+  end
+  if (ctx:get_property("kinfx_assoc_code") or "") ~= "" then
+    ctx:set_property("kinfx_assoc_code", "") -- stale arm: never reopen later
   end
   return handle_pick(env, ctx, repr)
 end
 
 return {
-  processor = { init = processor_init, func = processor_func },
+  processor = { init = processor_init, func = processor_func, fini = processor_fini },
   translator = { init = translator_init, func = translator_func },
 }

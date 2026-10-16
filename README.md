@@ -7,7 +7,7 @@
 ## 特點
 
 - **候選次序同 Windows 一樣**：658 個兩碼全部喺 Windows 11 Pro 實測，每頁每格逐格比對過，658／658 一致（見 `docs/WIN_QUICK_RANK.md`）。
-- **打字唔 lag**：每粒鍵約 0.03–0.06 ms，舊版 v0.3 要約 70 ms（離線測量）。
+- **打字唔 lag**：每粒鍵約 0.1–0.2 ms（英文延遲頂字計埋），舊版 v0.3 要約 70 ms（離線測量）。
 - **港字齊**：㗎、嘅、𠻹、𨋢 等 Windows 冇嘅字，排喺 Windows 候選之後，唔會郁到 Windows 原本嘅位置。
 - **連打順**：第 3 碼照 Windows 頂字上屏。只有打出嚟係常用詞先會留住等你揀，例如：
   - `ofc` → 人類、無錯
@@ -78,7 +78,7 @@ v0.5 smart mode：細楷英文詞直接打，大部分用空白上屏。速成�
 
 空白上屏係「安全詞表」（SCOWL 字頻篩選）：會同速成碼撞車嘅短詞、或者太生僻嘅詞，空白唔會上屏，改用左 Shift。詳情見 `docs/ENGLISH_MIX.md`。
 
-注意：第 3 碼頂字之後先撳 Shift，已經上屏嘅中文唔會變返英文，所以要喺打英文之前或者頭兩個字母之內撳。
+打英文期間，頂字嘅中文會擺住等你決定；撳其他鍵就照 Windows 上屏，打中文結果唔變。
 
 ## 設定
 
@@ -132,4 +132,4 @@ v0.5 smart mode：細楷英文詞直接打，大部分用空白上屏。速成�
 
 ## English
 
-KINFX is a Hong Kong Traditional Chinese Sucheng (Quick) IME on librime. On Windows 11 it runs inside Weasel; on Linux it runs inside Fcitx5. v0.5 follows the Windows 11 Microsoft Quick candidate order on every page (all 658 two-letter codes measured and matching 658/658), holds keys only for common phrases (`ofc` → 人類), commits lowercase English words on Space with a safe-word list (Left Shift for short words), and opens Windows-style association words after a single-character pick. Measured offline, a keystroke takes about 0.05 ms; v0.3 took about 70 ms. Install with `scripts/install-windows.ps1` or `scripts/install-linux.sh`. Code is MIT; dictionaries keep their upstream licenses.
+KINFX is a Hong Kong Traditional Chinese Sucheng (Quick) IME on librime. On Windows 11 it runs inside Weasel; on Linux it runs inside Fcitx5. v0.5 follows the Windows 11 Microsoft Quick candidate order on every page (all 658 two-letter codes measured and matching 658/658), holds keys only for common phrases (`ofc` → 人類), commits lowercase English words on Space with a safe-word list (Left Shift for short words), and opens Windows-style association words after a single-character pick. Measured offline, a two-letter code takes about 0.2 ms and a long English word about 0.2 ms per key; v0.3 took about 70 ms. Install with `scripts/install-windows.ps1` or `scripts/install-linux.sh`. Code is MIT; dictionaries keep their upstream licenses.

@@ -245,14 +245,33 @@ def type_char(ch: str, best) -> str:
     return code + "{space}" + "{space}" * pages + str(slot)
 
 
-def english_keys(word: str, unsafe: set[str]) -> str:
-    if word in unsafe:
+def load_hold_words() -> list[str]:
+    """+word lines of kinfx_capture.txt (Gmail, scriptwriting, voiceover)."""
+    out = []
+    for line in (ROOT / "lexicon/hk/kinfx_capture.txt").read_text(encoding="utf-8").splitlines():
+        m = re.match(r"^\+([a-z]+)", line)
+        if m:
+            out.append(m.group(1))
+    return out
+
+
+def space_words(unsafe: set[str]) -> set[str]:
+    """Words Space commits (mirrors english_mix.lua space_text): 3+ letters,
+    not unsafe, and a lowercase entry exists or the word is a +hold extra."""
+    texts = en_texts()
+    extras = set(load_hold_words())
+    return {w for w, ts in texts.items()
+            if len(w) >= 3 and w not in unsafe and (w in ts or w in extras)}
+
+
+def english_keys(word: str, space_ok: set[str]) -> str:
+    if word not in space_ok:
         return word + "{Shift_L}{Release+Shift_L}"
     return word + "{space}"
 
 
-def english_text(word: str, unsafe: set[str]) -> str:
-    return word + ("" if word in unsafe else " ")
+def english_text(word: str, space_ok: set[str]) -> str:
+    return word + (" " if word in space_ok else "")
 
 
 def gen_article(best, words: set[str], unsafe: set[str], freq: dict[str, int],
@@ -339,6 +358,9 @@ def stage_variant(base: Path, name: str, patch: dict):
     return d
 
 
+HINT_RE = re.compile(r" (‹[^›]*›)?[␣⇧][A-Za-z]+$")
+
+
 def run_chunk(variant_dir: Path, seqs: list[str]) -> dict[str, tuple[str, str]]:
     stdin = "schema kinfx_quick\nmax 9\n" + "".join("typed " + s + "\n" for s in seqs)
     p = subprocess.run(
@@ -350,7 +372,9 @@ def run_chunk(variant_dir: Path, seqs: list[str]) -> dict[str, tuple[str, str]]:
             continue
         parts = line.rstrip("\n").split("\t")
         if len(parts) >= 4:
-            out[parts[1]] = (parts[2], parts[3])
+            # smart mode shows a hint after the caret; it is not text.
+            pre = HINT_RE.sub("", parts[3])
+            out[parts[1]] = (parts[2], pre)
     return out
 
 
@@ -378,24 +402,133 @@ def seq_has_en_prefix(seq: str, prefixes: set[str]) -> bool:
     return False
 
 
-def classify(seq: str, prefixes: set[str], smart_app: str, control_app: str):
-    """Return 'designed' or 'unexpected' for a smart-vs-control app-text diff.
+TOKEN_TEXT = {"{space}": " ", "{comma}": "，", "{period}": "。"}
 
-    Smart mode holds a run of letters as English when, after zero or more
-    topped-out 2-letter codes, the remaining >= 3 letters form an English
-    prefix. A diff is therefore designed iff some >= 3 letter substring that
-    starts at an even offset (0, 2, 4, ...) is an English prefix. Anything
-    else means the English logic corrupted a pure-Chinese input.
+
+def tail_text(rest: str) -> str | None:
+    """App text the keys after the English word produce once the composition is
+    empty (digits and Space pass through; comma/period become full-width)."""
+    out = []
+    for tok in re.findall(r"\{[^}]+\}|.", rest):
+        if tok in TOKEN_TEXT:
+            out.append(TOKEN_TEXT[tok])
+        elif tok.isdigit():
+            out.append(tok)
+        elif tok == "{Return}":
+            continue
+        else:
+            return None
+    return "".join(out)
+
+
+def classify(seq: str, smart_app: str, control_app: str, ctx) -> str:
+    """Strict: 'designed' only for the one change v0.5 is meant to make.
+
+    The leading letters split at an even offset k into topped-out pairs
+    letters[:k] and an English word w = letters[k:] (>= 3 letters) that Space
+    may commit; the next key is Space or comma/period; control did NOT hold w as
+    a Chinese phrase; and smart typed exactly
+        Windows(letters[:k]) + text(w) + (" " for Space) + passthrough(rest).
+    Everything else is unexpected. The classifier is never widened to pass.
     """
-    i = 0
-    while i < len(seq) and seq[i].islower() and seq[i].isalpha():
-        i += 1
-    run = seq[:i]
-    for off in range(0, len(run) - 2, 2):
-        for ln in range(3, len(run) - off + 1):
-            if run[off:off + ln] in prefixes:
+    m = re.match(r"[a-z]+", seq)
+    if not m:
+        return "unexpected"
+    letters, rest = m.group(0), seq[m.end():]
+    if not (rest.startswith("{space}") or rest.startswith("{comma}") or rest.startswith("{period}")):
+        return "unexpected"
+    for k in range(0, len(letters) - 2, 2):
+        w = letters[k:]
+        if w not in ctx["space_ok"]:
+            continue
+        if ctx["control_held"].get(letters):
+            continue
+        pre = ""
+        ok = True
+        for i in range(0, k, 2):
+            t = ctx["top1"].get(letters[i:i + 2])
+            if t is None:
+                ok = False
+                break
+            pre += t
+        if not ok:
+            continue
+        sep = " " if rest.startswith("{space}") else ""
+        after = rest[len("{space}"):] if sep else rest
+        tail = tail_text(after)
+        if tail is None:
+            continue
+        for t in ctx["word_text"].get(w, {w}):
+            if smart_app == pre + t + sep + tail:
                 return "designed"
     return "unexpected"
+
+
+def chinese_changed(control_app: str, smart_app: str) -> bool:
+    """Smart dropped or replaced Chinese that control typed (beyond what an
+    English word legitimately replaces): the Chinese of smart must be a prefix
+    of control's Chinese."""
+    cz = "".join(ch for ch in control_app if "\u3400" <= ch <= "\u9fff" or ord(ch) > 0x20000)
+    sz = "".join(ch for ch in smart_app if "\u3400" <= ch <= "\u9fff" or ord(ch) > 0x20000)
+    return not cz.startswith(sz)
+
+
+def en_texts() -> dict[str, set[str]]:
+    """code -> every display text kinfx_en has for it (Gmail, gmail, ...)."""
+    out: dict[str, set[str]] = {}
+    body = False
+    for line in EN_DICT.read_text(encoding="utf-8").splitlines():
+        if line.startswith("..."):
+            body = True
+            continue
+        if not body or not line or line.startswith("#"):
+            continue
+        parts = line.rstrip("\r\n").split("\t")
+        if len(parts) >= 2:
+            out.setdefault(parts[1], set()).add(parts[0])
+    return out
+
+
+def space_collision(seq, s_app, c_app, space_ok, texts) -> bool:
+    """True when the only change is a Space-committed English word: some letter
+    run immediately before a {space} ends in a space-safe word w (starting at a
+    code boundary of that run), and smart's text equals control's text with the
+    Chinese typed by those keys replaced by w + " " (checked by the common
+    prefix/suffix of the two outputs)."""
+    i = 0
+    while i < min(len(s_app), len(c_app)) and s_app[i] == c_app[i]:
+        i += 1
+    j = 0
+    while (j < min(len(s_app), len(c_app)) - i
+           and s_app[len(s_app) - 1 - j] == c_app[len(c_app) - 1 - j]):
+        j += 1
+    s_mid = s_app[i:len(s_app) - j]
+    for m in re.finditer(r"([a-z]+)\{space\}", seq):
+        run = m.group(1)
+        for k in range(0, len(run) - 2, 2):
+            w = run[k:]
+            if w in space_ok and any(t in s_mid for t in texts.get(w, {w})):
+                return True
+    return False
+
+
+def build_ctx(order, unsafe, control_dir: Path, diffs):
+    """Facts the strict classifier needs. control_held is measured in rimeh:
+    the control variant still shows >= 3 raw letters after typing them."""
+    texts = en_texts()
+    top1 = {c: v[0] for c, v in order.items() if len(c) == 2 and v}
+    space_ok = space_words(unsafe)
+    letters = sorted({re.match(r"[a-z]*", d[0]).group(0) for d in diffs})
+    letters = [x for x in letters if len(x) >= 3]
+    held: dict[str, bool] = {}
+    for i in range(0, len(letters), 4000):
+        chunk = letters[i:i + 4000]
+        res = run_chunk(control_dir, chunk)
+        for x in chunk:
+            pre = res.get(x, ("", ""))[1]
+            m = re.search(r"[a-z]+$", pre)
+            held[x] = bool(m and len(m.group(0)) >= 3)
+    return {"top1": top1, "space_ok": space_ok, "word_text": texts, "control_held": held}
 
 
 # ---------------------------------------------------------------- main
@@ -452,13 +585,18 @@ def main():
         if c != s:
             diffs.append((seq, s[0], c[0], s[1], c[1]))
 
-    designed = [d for d in diffs if classify(d[0], prefixes, d[1], d[2]) == "designed"]
-    unexpected = [d for d in diffs if classify(d[0], prefixes, d[1], d[2]) != "designed"]
+    ctx = build_ctx(order, unsafe, dirs["control"], diffs)
+    designed = [d for d in diffs if classify(d[0], d[1], d[2], ctx) == "designed"]
+    unexpected = [d for d in diffs if classify(d[0], d[1], d[2], ctx) != "designed"]
+    zh_changed = [d for d in unexpected if chinese_changed(d[2], d[1])]
 
     print(f"codes2={len(codes2)} english_words={len(words)} unsafe={len(unsafe)}")
     print(f"sequences={len(seqs)} variants={list(variants)}")
     print(f"smart-vs-control diffs={len(diffs)} "
-          f"(designed={len(designed)} unexpected={len(unexpected)})")
+          f"(designed={len(designed)} unexpected={len(unexpected)} "
+          f"chinese_changed={len(zh_changed)})")
+    for d in unexpected[:30]:
+        print(f"  UNEXPECTED {d[0]} smart=[{d[1]}] control=[{d[2]}]")
 
     # association vs smart: the association only opens after an explicit one-char
     # pick (digit/Enter) and is picked with Shift+digit. The comparator sequences
@@ -478,12 +616,15 @@ def main():
 
     # article replay
     article_zh_mismatch = 0
+    article_space: list = []
     article_zh_designed = 0
     article_en_miss = 0
     article_en_total = 0
+    article_chars = 0
     if not args.no_article and not args.limit and ESSAY.exists():
         freq = load_char_freq(ESSAY)
         units = gen_article(best, words, unsafe, freq, args.article_chars, rng)
+        art_space = space_words(unsafe)
         art_seqs: list[str] = []
         art_expect: list[str] = []  # per-segment expected committed text
         art_kinds: list[str] = []
@@ -498,9 +639,11 @@ def main():
                 art_kinds.append("zh")
             else:
                 w = u[0]
-                art_seqs.append(english_keys(w, unsafe))
-                art_expect.append(english_text(w, unsafe))
+                art_seqs.append(english_keys(w, art_space))
+                art_expect.append(english_text(w, art_space))
                 art_kinds.append("en")
+        en_text_map = en_texts()
+        space_ok = art_space
         sdir = dirs["smart"]
         cdir = dirs["control"]
         s_art = run_variant(sdir, art_seqs, chunk=400)
@@ -509,64 +652,92 @@ def main():
             s_app = s_art.get(seq, ("", ""))[0]
             c_app = c_art.get(seq, ("", ""))[0]
             if kind == "zh":
+                # Strict: a Chinese run must type exactly what control types,
+                # except the designed Space collision: the letters before a
+                # Space spell a space-safe English word and smart typed exactly
+                # that word where control typed Chinese. Each one is listed.
                 if s_app != c_app:
-                    # Designed when either side shows English, or the sequence
-                    # holds a 3+ letter English prefix (which delays top-out and
-                    # changes the phrase segmentation). Pure-Chinese drift with
-                    # no English hold is a bug.
-                    has_ascii = re.search(r"[A-Za-z]", s_app) or re.search(r"[A-Za-z]", c_app)
-                    if has_ascii or seq_has_en_prefix(seq, prefixes):
-                        article_zh_designed += 1
+                    if space_collision(seq, s_app, c_app, space_ok, en_text_map):
+                        article_space.append((seq, s_app, c_app))
                     else:
                         article_zh_mismatch += 1
+                        if article_zh_mismatch <= 20:
+                            print(f"  ARTICLE-ZH {seq[:70]} smart=[{s_app}] control=[{c_app}]")
             else:
                 article_en_total += 1
                 # Display form may differ in case (SCOWL proper nouns: Bethe).
                 if s_app.lower() != expect.lower():
                     article_en_miss += 1
+                    if article_en_miss <= 20:
+                        print(f"  ARTICLE-EN {seq} smart=[{s_app}] want=[{expect}]")
+        zh_chars = sum(len(u) for k, u in units if k == "zh")
+        article_chars = zh_chars
+        print(f"article: zh-chars={zh_chars} space-collisions={len(article_space)} "
+              f"({len(article_space) / max(1, zh_chars) * 1e4:.2f} per 10k chars)")
+        for row in article_space:
+            print(f"  SPACE {row[0][:70]} smart=[{row[1]}] control=[{row[2]}]")
         print(f"article: zh-mismatch={article_zh_mismatch} "
               f"zh-designed={article_zh_designed} "
               f"english={article_en_total - article_en_miss}/{article_en_total} correct")
 
     if args.write_report:
-        write_report(seqs, diffs, designed, unexpected, len(codes2), len(words),
-                     len(unsafe), args)
+        write_report(seqs, diffs, designed, unexpected, zh_changed, len(codes2), len(words),
+                     len(unsafe), args,
+                     (article_zh_mismatch, article_en_total, article_en_miss, article_space,
+                      article_chars),
+                     assoc_diffs)
 
-    sys.exit(1 if unexpected or article_zh_mismatch or article_en_miss or assoc_diffs else 0)
+    sys.exit(1 if unexpected or zh_changed or article_zh_mismatch or article_en_miss
+             or assoc_diffs else 0)
 
 
-def write_report(seqs, diffs, designed, unexpected, n_codes, n_words, n_unsafe, args):
+def write_report(seqs, diffs, designed, unexpected, zh_changed, n_codes, n_words, n_unsafe,
+                 args, article, assoc_diffs):
     import datetime
     REPORT.parent.mkdir(parents=True, exist_ok=True)
+    zh_mis, en_total, en_miss, space_rows, zh_chars = article
+    rate = len(designed) / max(1, len(seqs)) * 1e4
     lines = [
-        "# V05 離線比對（offline comparator）",
+        "# v0.5 離線比對（tools/rimeh/compare.py）",
         "",
-        f"日期：{datetime.date.today().isoformat()}（工具：tools/rimeh/compare.py）",
+        f"日期：{datetime.date.today().isoformat()}。對照組 control＝`english/mode: shift`"
+        "（v0.4.1 行為）；實驗組 smart＝預設值；兩組都關閉聯想同常用熱門頁。",
         "",
-        f"- 兩碼碼數：{n_codes}（ms_quick_order.tsv）",
-        f"- 英文詞：{n_words}（kinfx_en.dict.yaml，SCOWL）",
-        f"- 空白不安全詞：{n_unsafe}（kinfx_en_unsafe.txt）",
-        f"- 比對序列數：{len(seqs)}",
+        f"- 兩碼碼數：{n_codes}；英文詞：{n_words}；空白不安全詞：{n_unsafe}",
+        f"- 比對序列：{len(seqs)}（全部兩碼＋兩碼，加三段連打抽樣，每組帶結尾鍵）",
         "",
-        "## smart 對 control",
+        "## smart 對 control（嚴格分類）",
+        "",
+        "「設計內」只限：前面已頂字嘅兩碼照 Windows 上屏，之後 3 個字母或以上嘅"
+        "空白安全英文詞，遇空白或標點上屏成英文，而對照組冇用中文詞語留住呢串字母。",
         "",
         f"- 差異總數：{len(diffs)}",
-        f"- 設計內差異（空白／標點上屏空白安全英文詞）：{len(designed)}",
+        f"- 設計內：{len(designed)}（每 1 萬組序列 {rate:.2f} 組）",
         f"- 意外差異：{len(unexpected)}（必須為 0）",
+        f"- 中文改變：{len(zh_changed)}（必須為 0）",
         "",
     ]
-    if unexpected:
-        lines.append("### 意外差異")
-        lines.append("")
-        for d in unexpected[:50]:
-            lines.append(f"- `{d[0]}` smart=[{d[1]}] control=[{d[2]}]")
-        lines.append("")
-    if designed:
-        lines.append("### 設計內差異（前 40 個）")
-        lines.append("")
-        for d in designed[:40]:
-            lines.append(f"- `{d[0]}` smart=[{d[1]}] control=[{d[2]}]")
-        lines.append("")
+    if not args.no_article and not args.limit:
+        lines += [
+            "## 文章重打（smart）",
+            "",
+            f"- 中文字數：{zh_chars}；英文詞：{en_total}，正確 {en_total - en_miss}",
+            f"- 空白規則撞中文（設計內，逐個列出）：{len(space_rows)}"
+            f"（每 1 萬中文字 {len(space_rows) / max(1, zh_chars) * 1e4:.2f}；"
+            "模型估計見 kinfx_en_unsafe.txt 檔頭）",
+            f"- 其他中文改變：{zh_mis}（必須為 0）",
+            "",
+        ]
+        lines += [f"  - `{r[0][:60]}…` smart=[{r[1]}] control=[{r[2]}]" for r in space_rows]
+        if space_rows:
+            lines.append("")
+    if assoc_diffs is not None and args.assoc:
+        lines += [f"- 聯想（assoc 對 smart）差異：{len(assoc_diffs)}", ""]
+    for title, rows in (("意外差異", unexpected[:50]), ("設計內差異（前 40 個）", designed[:40])):
+        if rows:
+            lines += [f"### {title}", ""]
+            lines += [f"- `{d[0]}` smart=[{d[1]}] control=[{d[2]}]" for d in rows]
+            lines.append("")
     REPORT.write_text("\n".join(lines) + "\n", encoding="utf-8")
     print(f"wrote {REPORT}")
 

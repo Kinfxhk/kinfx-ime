@@ -31,7 +31,8 @@ SPACEOFF='  "english/space": "off"'
 ASSOFF='  "association/enable": false'
 
 check none "$NONE" "ofc1" "伙金"        # pure Windows top-out
-check none "$NONE" "gmai1" "址昤"       # English hold still works (smart, not capture)
+check none "$NONE" "gmai1" "Gmail"      # English holds still work (capture is the Chinese switch)
+check none "$NONE" "the{space}" "the "  # smart English independent of capture
 check noen "$NOEN" "gmai1" "址昤"       # gm a i: Windows top-out
 check noen "$NOEN" "ofc1" "人類"        # Chinese phrases unaffected
 check noph "$NOPH" "ofc1" "伙金"
@@ -42,6 +43,7 @@ check shift "$SHIFT" "gmai1" "Gmail"
 check shift "$SHIFT" "scriptwriti1" "scriptwriting"
 check shift "$SHIFT" "voiceove1" "voiceover"
 check shift "$SHIFT" "the{space}" "芽"
+check shift "$SHIFT" "abac3" "abaci"
 check shift "$SHIFT" "st{Shift_L}{Release+Shift_L}artup{Return}" "startup"
 # mode off = no English hold at all
 check enoff "$ENOFF" "the{space}" "芽"

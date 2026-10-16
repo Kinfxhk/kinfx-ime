@@ -59,6 +59,17 @@ vdo	M:好人|媒人|好氣|彙集|妹會|樂仔|好入|好傷|好使
 hi7{Shift+exclam}	C:我同
 hi7{Shift+at}	C:我講
 hi71	C:我1
+vdhello{space}	C:好hello 
+vdthe{space}	C:好the 
+abac{comma}	C:明顯，
+abac3	C:abaci
+abac1	C:明顯
+ofcthe{space}	C:伙盆
+gmai1	C:Gmail
+scriptwriti1	C:scriptwriting
+startup{Shift_L}{Release+Shift_L}	C:startup
+vdof{Shift_L}{Release+Shift_L}	C:好of
+hello{Return}	C:反川人
 EOF
 )
 {
@@ -68,6 +79,7 @@ EOF
   echo "bench vd 100"
   echo "bench vdvdvdvd 50"
   echo "bench hiofrrvdmkaihime 30"
+  echo "bench thequickbrownfox{space} 30"
 } > "$U/cmds.txt"
 OUT=$("$ROOT/tools/rimeh/rimeh.exe" "$SHARED" "$(cygpath -m "$U")" < "$U/cmds.txt" 2>/dev/null | tr -d '\r')
 pass=0; fail=0
