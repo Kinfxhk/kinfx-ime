@@ -56,8 +56,9 @@ local function load_capture()
     for line in fh:lines() do
       local w = line:match("^%+([a-z]+)")
       if w then
+        -- English hold words live in their own list; they never enter the
+        -- Chinese gate set, so gm+a still tops out when English is off.
         hold_words[#hold_words + 1] = w
-        capture_cache[w:sub(1, 3)] = true
       else
         local p = line:match("^([a-z][a-z][a-z]+)%s*$")
         if p then
@@ -129,16 +130,18 @@ local function processor_init(env)
 end
 
 local function may_capture(env, code)
-  if env.capture == "none" then
-    return false
-  end
-  if env.enable and env.hot[code] then
-    return true
-  end
+  -- English hold words follow english/enable only; capture: none is the
+  -- Chinese switch (pure Windows top-out), so gmai → Gmail still works.
   if env.eng_enable and is_hold_prefix(env.hold, code) then
     return true
   end
-  if env.capture == "all" and env.enable and has_prefix(env.phrase, code) then
+  if env.capture == "none" or not env.enable then
+    return false
+  end
+  if env.hot[code] then
+    return true
+  end
+  if env.capture == "all" and has_prefix(env.phrase, code) then
     return true
   end
   return false
@@ -146,7 +149,7 @@ end
 
 -- After the gate: any phrase or English hold word that continues the input.
 local function continues(env, code)
-  if env.enable and has_prefix(env.phrase, code) then
+  if env.enable and env.capture ~= "none" and has_prefix(env.phrase, code) then
     return true
   end
   if env.eng_enable and is_hold_prefix(env.hold, code) then
@@ -211,7 +214,14 @@ local function processor_func(key, env)
   return kNoop
 end
 
--- Tag long abc segments so the native phrase / English translators run there only.
+-- Tag long abc segments so the native phrase / English translators run there
+-- only, and only when their switch is on. English starts at 4 letters.
+local function segmentor_init(env)
+  local config = env.engine.schema.config
+  env.enable = config_bool(config, "phrase_mix/enable", true)
+  env.eng_enable = config_bool(config, "english/enable", true)
+end
+
 local function segmentor_func(segmentation, env)
   if segmentation:empty() then
     return true
@@ -221,13 +231,20 @@ local function segmentor_func(segmentation, env)
     return true
   end
   local n = seg._end - seg.start
-  if n >= 3 then
-    seg.tags = seg.tags + Set({ "kinfx_phrase", "kinfx_en" })
+  local tags = {}
+  if env.enable and n >= 3 then
+    tags[#tags + 1] = "kinfx_phrase"
+  end
+  if env.eng_enable and n >= 4 then
+    tags[#tags + 1] = "kinfx_en"
+  end
+  if #tags > 0 then
+    seg.tags = seg.tags + Set(tags)
   end
   return true
 end
 
 return {
   processor = { init = processor_init, func = processor_func },
-  segmentor = { func = segmentor_func },
+  segmentor = { init = segmentor_init, func = segmentor_func },
 }
