@@ -381,6 +381,22 @@ def main():
     print(f"smart-vs-control diffs={len(diffs)} "
           f"(designed={len(designed)} unexpected={len(unexpected)})")
 
+    # association vs smart: the association only opens after an explicit one-char
+    # pick (digit/Enter) and is picked with Shift+digit. The comparator sequences
+    # never select a Chinese char by digit, so the app-visible text must be
+    # identical (the follow-up menu lives in the candidates, not the commit).
+    assoc_diffs = []
+    if "assoc" in results:
+        assoc = results["assoc"]
+        for seq in seqs:
+            a = assoc.get(seq)
+            s = smart.get(seq)
+            if a is None or s is None:
+                continue
+            if a != s:
+                assoc_diffs.append((seq, a[0], s[0], a[1], s[1]))
+        print(f"assoc-vs-smart diffs={len(assoc_diffs)}")
+
     # article replay
     article_zh_mismatch = 0
     article_en_miss = 0
@@ -427,7 +443,7 @@ def main():
         write_report(seqs, diffs, designed, unexpected, len(codes2), len(words),
                      len(unsafe), args)
 
-    sys.exit(1 if unexpected or article_zh_mismatch or article_en_miss else 0)
+    sys.exit(1 if unexpected or article_zh_mismatch or article_en_miss or assoc_diffs else 0)
 
 
 def write_report(seqs, diffs, designed, unexpected, n_codes, n_words, n_unsafe, args):

@@ -1,6 +1,17 @@
 # KINFX 中英混打輸入法 — STATUS
 
-**版本**：v0.4.1（2026-10-16）
+**版本**：v0.5.0（2026-10-16，開發中）
+
+## v0.5.0
+
+| 項目 | 狀態 |
+| --- | --- |
+| 細楷英文自由詞直接出（smart mode）：空白上屏安全詞、左 Shift 上屏短詞 | ✅ 離線（`tools/rimeh/accept.sh` 47 項） |
+| 英文同 Windows 速成碼分開，唔佔 1–9 格 | ✅ 離線 |
+| 聯想詞（揀完單字出跟尾詞，Shift+數字揀，同 Windows「聯想字」一樣） | ✅ 離線 |
+| 離線比對器 `typed`（逐鍵 app 文字）＋ `compare.py` | ✅ |
+| 真機驗收（小狼毫） | ⬜ 未做（本回合唔准碰 %APPDATA%\Rime） |
+| Linux CI smoke（英文 Space/Shift ＋ 聯想） | ⬜ 未跑（冇本機 C compiler，等 GitHub Actions） |
 
 ## v0.4.1
 
@@ -11,7 +22,7 @@
 | 補實測單碼 `a`（日曰） | ✅ |
 | 細楷英文 Shift 流程寫入 README／CONFIG／驗收清單 | ✅ |
 | Linux（Fcitx5 + gedit）505 字實打 byte-exact | ✅ 外部實測（Mac 側 VM，v0.4.0） |
-**顯示名**：KINFX 中英混打輸入法（repo slug `kinfx-ime`）
+|**顯示名**：KINFX 中英混打輸入法（repo slug `kinfx-ime`）|
 
 ## v0.4.0
 
@@ -40,11 +51,10 @@
 
 ## Next
 
-1. 關聯詞（上屏後顯示詞窗，同 Windows「聯想字」一樣）
-2. 真四欄候選格（而家 Tab 展開仍然用註釋顯示）
-3. macOS Squirrel
-4. 倉頡、注音、拼音方案
-5. 設定介面
+1. 真四欄候選格（而家 Tab 展開仍然用註釋顯示）
+2. macOS Squirrel
+3. 倉頡、注音、拼音方案
+4. 設定介面
 
 ## 已知限制
 

@@ -5,11 +5,12 @@
 | ID | 通過條件 | 最低棒 | 預設實作 |
 | --- | --- | --- | --- |
 | M0 | **全程零切換**夾英文（例「今日用 API 測試」）；`ascii_mode` 保持關閉 | **必須** | `recognizer` `uppercase`／email／url |
-| M1 | 細楷英文詞用左 Shift：Shift `startup` Shift `vd` 1 → startup好；`st` Shift `artup` Enter → startup（Windows）。Linux 用 Fcitx5 切輸入法，每詞 2 下 | **必須** | `Shift_L: inline_ascii`；`tools/rimeh/accept.sh`；持久英文 `Control+Shift+2` |
+| M1 | 細楷英文詞直接打：安全詞空白上屏（`hello`␣→ hello、`startup`␣→ startup）；短詞／唔安全詞用左 Shift（`of` Shift→ of）。`st` Shift `artup` Enter → startup（Windows） | **必須** | `english/mode: smart`；`tools/rimeh/accept.sh`；持久英文 `Control+Shift+2` |
 | M2 | 組字緩衝未清時可插入英文片段（如 `vd` 後打 `API`→`好API`） | 必須 | 同上 uppercase 路徑 |
 | M3 | 可選離開臨時英文後回速成 | 可選 | RIME inline_ascii 行為 |
 | M4 | Email／URL 唔被誤當形碼 | 應有 | `recognizer` patterns |
-| M5 | 小寫英詞：`gmai`→`Gmail`；`me`／`or`／`of` 唔出英詞 | **必須** | `table_translator@english` + `kinfx_capture.txt` 嘅 `+word`。見 `docs/PHRASE_MIX.md` |
+| M5 | 小寫英詞：`gmail`␣→`Gmail `、`the`␣→`the `；`me`／`or`／`of`（2 碼）空白唔出英詞，要左 Shift | **必須** | `english/space: safe` + `kinfx_en_unsafe.txt`。見 `docs/ENGLISH_MIX.md` |
+| A1 | 揀完單字出聯想詞（`hi7`→我，再出「同講望見…」），Shift+數字揀（`hi7` Shift+2 → 我講）；普通數字直打唔揀；空白翻頁吞咗；Esc／BackSpace／Enter／左 Shift 關閉唔刪字 | **必須** | `association/enable: true`；`tools/rimeh/accept.sh` |
 | P9 | 候選每頁 **9**、選字鍵 1–9；**每頁**次序跟 Windows 11 微軟速成（`vd` 第 2 頁第 1 個係嫻） | **必須** | `ms_quick_order.tsv`；`tools/rimeh/fullorder.sh` 658／658 |
 | W1 | `ofc` 1→人類、`ofc` 2→無錯、`ofca`→無錯、`ofch`→無錫、`lwm`→中國；`vd` `of` 3→好係（照 Windows 頂字） | **必須** | `kinfx_capture.txt` 留鍵；見 `docs/PHRASE_MIX.md` |
 | K1 | 有候選窗時 **空白＝翻頁**（`vd`+空白唔上屏「好」） | **必須** | `key_binder` `space → Page_Down` when `has_menu` |
@@ -23,8 +24,8 @@
 
 ## Headless
 
-`./scripts/smoke-linux.sh`（或 `./tests/run_smoke.sh`）含 M0／M2、每頁 9、Windows 次序（第 1、2 頁）、頂字、K1–K4（空白翻頁、Enter 選焦點、`vdAPI`、熱門環頁、Tab 展開），以及 W1／M5（`ofc`／`ofca`／`gmai`、短碼英詞保護）。GUI 視覺：`docs/desktop-verify.md`（**直列同四欄格仔需顯示器**）。
+`./scripts/smoke-linux.sh`（或 `./tests/run_smoke.sh`）含 M0／M2、每頁 9、Windows 次序（第 1、2 頁）、頂字、K1–K4（空白翻頁、Enter 選焦點、`vdAPI`、熱門環頁、Tab 展開），以及 W1／M5（`ofc`／`ofca`、短碼英詞保護）同 M1／A1（英文空白上屏、聯想詞 Shift+數字）。GUI 視覺：`docs/desktop-verify.md`（**直列同四欄格仔需顯示器**）。
 
-選字預設可改：`win_quick/space_pages: false` 恢復空白選焦點。見 `docs/CONFIG.md`。上屏後關聯詞唔喺本驗收。
+選字預設可改：`win_quick/space_pages: false` 恢復空白選焦點。見 `docs/CONFIG.md`。
 
-M5 用獨立 `lexicon/en`（SCOWL，唔係 rime-ice）。1–2 碼（包括 `me`／`or`／`of`）唔出英詞。大寫拉丁仍然係 M0 直出。Windows 離線驗收：`bash tools/rimeh/accept.sh`。
+M5 用獨立 `lexicon/en`（SCOWL，唔係 rime-ice）。1–2 碼（包括 `me`／`or`／`of`）空白唔出英詞。大寫拉丁仍然係 M0 直出。Windows 離線驗收：`bash tools/rimeh/accept.sh`。
