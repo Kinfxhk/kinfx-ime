@@ -24,6 +24,7 @@ schema:
   dependencies:
     - kinfx_phrase
     - kinfx_en
+    - kinfx_assoc
 
 switches:
   - name: ascii_mode
@@ -51,6 +52,9 @@ engine:
     # 第三碼預設照 Windows 頂字；常用詞前綴／英文詞前綴先留低組詞。
     - lua_processor@phrase_mix_keys
     - speller
+    # 揀完單字開聯想詞；再撳鍵處理聯想選單。要喺 punctuator 之前，
+    # 否則 Shift+digit 會被 punctuator 當標點上屏。
+    - lua_processor@assoc_keys
     - punctuator
     - selector
     - navigator
@@ -68,6 +72,7 @@ engine:
     - table_translator
     - table_translator@phrase
     - table_translator@english
+    - lua_translator@assoc_translator
     - reverse_lookup_translator
   filters:
     - simplifier
@@ -150,6 +155,9 @@ english:
 association:
   enable: true
   max: 36
+
+assoc_translator:
+  tag: kinfx_assoc
 
 abc_segmentor:
   extra_tags:
