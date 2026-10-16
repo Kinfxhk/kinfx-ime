@@ -257,23 +257,27 @@ local function space_func(key, env)
   if input == "" or not input:match("^[a-z]+$") then
     return kNoop
   end
+  -- Only take the English path while the letters are actively held as English
+  -- (kinfx_hold == "en"). After a split_commit the tail is a fresh Chinese
+  -- code with kinfx_hold cleared, so Space must page the phrase like Windows.
+  local held_en = ctx:get_property("kinfx_hold") == "en"
   if repr == "space" then
-    if space_allows(env, input) then
+    if held_en and space_allows(env, input) then
       env.engine:commit_text(word_text(env, input) .. " ")
       ctx:clear()
       return kAccepted
     end
-    if is_held_english(env, input) then
+    if held_en and is_held_english(env, input) then
       flush_windows(env, ctx, input)
     end
     return kNoop
   elseif repr == "comma" or repr == "period" then
-    if space_allows(env, input) then
+    if held_en and space_allows(env, input) then
       env.engine:commit_text(word_text(env, input))
       ctx:clear()
       return kNoop  -- punctuator commits the comma/period
     end
-    if is_held_english(env, input) then
+    if held_en and is_held_english(env, input) then
       flush_windows(env, ctx, input)
     end
     return kNoop

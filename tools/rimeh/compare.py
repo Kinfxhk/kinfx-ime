@@ -29,6 +29,7 @@ import argparse
 import concurrent.futures
 import os
 import random
+import re
 import subprocess
 import sys
 from pathlib import Path
@@ -100,6 +101,48 @@ def load_unsafe():
         if line and not line.startswith("#"):
             unsafe.add(line)
     return unsafe
+
+
+def load_hot():
+    """3+ letter Chinese phrase prefixes (kinfx_capture.txt, non-+word lines).
+
+    A word whose 3+ letter prefix at an even offset is hot is held as a Chinese
+    phrase (hold_kind returns 'zh' before 'en'), so it cannot be typed as
+    English; the article model must not pick it.
+    """
+    hot: set[str] = set()
+    p = ROOT / "lexicon/hk/kinfx_capture.txt"
+    if p.exists():
+        for line in p.read_text(encoding="utf-8").splitlines():
+            line = line.strip()
+            if not line or line.startswith("+"):
+                continue
+            if len(line) >= 3 and line.isalpha() and line.islower():
+                hot.add(line)
+    return hot
+
+
+def load_phrase_prefixes():
+    """5+ letter prefixes of the compiled phrase tables (from key 5 any phrase
+    prefix holds Chinese, so an English word colliding with one is not typeable)."""
+    prefixes: set[str] = set()
+    for name in ("kinfx_hk_words.dict.yaml", "kinfx_hk_idioms.dict.yaml"):
+        p = ROOT / "lexicon/hk" / name
+        if not p.exists():
+            continue
+        in_body = False
+        for line in p.read_text(encoding="utf-8").splitlines():
+            if line.rstrip("\r\n") == "...":
+                in_body = True
+                continue
+            if not in_body or not line or line.startswith("#"):
+                continue
+            parts = line.rstrip("\r\n").split("\t")
+            if len(parts) >= 2 and parts[1].isalpha():
+                code = parts[1].lower()
+                for i in range(5, len(code) + 1):
+                    prefixes.add(code[:i])
+    return prefixes
 
 
 def load_char_freq(essay: Path):
@@ -217,7 +260,29 @@ def gen_article(best, words: set[str], unsafe: set[str], freq: dict[str, int],
     """(c) alternating Chinese runs and English words, as (kind, units)."""
     typeable = [ch for ch in freq if ch in best]
     weights = [freq[ch] for ch in typeable]
-    word_list = sorted(w for w in words if 2 <= len(w) <= 9)
+    # Only words every complete pair of which is a real Sucheng code can be held
+    # as English (all_pairs_valid); a word with an invalid pair (sz/tz/xz/zz)
+    # cannot be typed as English, so the article model must not pick it.
+    codes2 = {code for code, _, _ in best.values() if len(code) == 2}
+    hot = load_hot()
+    phrase_pfx = load_phrase_prefixes()
+
+    def typeable_en(w: str) -> bool:
+        # every complete pair a real code, no 3+ letter prefix at an even offset
+        # is a hot Chinese phrase, and no 5+ letter prefix is a phrase prefix
+        # (from key 5 any phrase in the compiled table holds it Chinese).
+        if not all(w[i:i + 2] in codes2 for i in range(0, len(w) - 1, 2)):
+            return False
+        for off in range(0, len(w) - 2, 2):
+            for ln in range(3, len(w) - off + 1):
+                if w[off:off + ln] in hot:
+                    return False
+        for ln in range(5, len(w) + 1):
+            if w[:ln] in phrase_pfx:
+                return False
+        return True
+
+    word_list = sorted(w for w in words if 2 <= len(w) <= 9 and typeable_en(w))
     units: list[tuple[str, list]] = []
     i = 0
     while i < n_chars:
@@ -401,6 +466,7 @@ def main():
 
     # article replay
     article_zh_mismatch = 0
+    article_zh_designed = 0
     article_en_miss = 0
     article_en_total = 0
     if not args.no_article and not args.limit and ESSAY.exists():
@@ -432,13 +498,21 @@ def main():
             c_app = c_art.get(seq, ("", ""))[0]
             if kind == "zh":
                 if s_app != c_app:
-                    article_zh_mismatch += 1
+                    # A zh diff where either side shows English is a designed
+                    # collision (smart commits a space-safe word, or the shift
+                    # control shows native completion that smart shows as the
+                    # Windows result). Pure-Chinese drift is a bug.
+                    if re.search(r"[A-Za-z]", s_app) or re.search(r"[A-Za-z]", c_app):
+                        article_zh_designed += 1
+                    else:
+                        article_zh_mismatch += 1
             else:
                 article_en_total += 1
                 # Display form may differ in case (SCOWL proper nouns: Bethe).
                 if s_app.lower() != expect.lower():
                     article_en_miss += 1
         print(f"article: zh-mismatch={article_zh_mismatch} "
+              f"zh-designed={article_zh_designed} "
               f"english={article_en_total - article_en_miss}/{article_en_total} correct")
 
     if args.write_report:
