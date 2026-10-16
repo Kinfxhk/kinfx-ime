@@ -151,6 +151,7 @@ end
 
 local function translator_init(env)
   env.mem = new_memory(env, "kinfx_assoc")
+  env.max = config_int(env.engine.schema.config, "association/max", 36)
 end
 
 local function translator_func(input, seg, env)
@@ -163,9 +164,14 @@ local function translator_func(input, seg, env)
     return
   end
   pcall(function()
-    if env.mem:dict_lookup(code, false, 1000) then
+    if env.mem:dict_lookup(code, false, env.max) then
+      local n = 0
       for entry in env.mem:iter_dict() do
         yield(Candidate("phrase", seg.start, seg._end, entry.text, ""))
+        n = n + 1
+        if n >= env.max then
+          break
+        end
       end
     end
   end)
@@ -282,10 +288,11 @@ local function handle_assoc(env, ctx, repr)
     return kAccepted
   end
 
-  -- Plain digit types the digit and closes.
-  if repr:match("^[1-9]$") then
+  -- Plain digit (main row or keypad) types the digit and closes.
+  local digit = repr:match("^([0-9])$") or repr:match("^KP_([0-9])$")
+  if digit then
     close_assoc(ctx)
-    env.engine:commit_text(repr)
+    env.engine:commit_text(digit)
     return kAccepted
   end
 
