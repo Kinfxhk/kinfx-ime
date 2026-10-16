@@ -563,6 +563,9 @@ static int assert_phrase_mix(RimeApi* api, RimeSessionId sid) {
   ok = ok && commit_at_rank(api, sid, "ofch", 1, "無錫");
   /* Windows top-out text comes first when it is itself a word. */
   ok = ok && commit_at_rank(api, sid, "vdvd", 1, "好好");
+  /* Windows slots 8-9 on vd are 綑綵 (measured; not 網綜). */
+  ok = ok && commit_at_rank(api, sid, "vd", 8, "綑");
+  ok = ok && commit_at_rank(api, sid, "vd", 9, "綵");
 
   int r_gmail = first_page_rank(api, sid, "gmai", "Gmail");
   int r_gmail_up = first_page_rank(api, sid, "gmai", "GMAIL");

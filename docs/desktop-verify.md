@@ -30,7 +30,8 @@ Checklist：
 
 - [ ] Fcitx5 → 中州韻 → **KINFX 中英混打輸入法 · 速成**（`kinfx_quick`）
 - [ ] **零切換**：同一輸入流「今日用 API 測試」（大寫 API；唔按切英文）
-- [ ] 可選：Shift inline_ascii（若 Fcitx5 未搶 LShift）
+- [ ] **細楷英文詞**：左 Shift → `startup` → 左 Shift → `vd` 1，結果「startup好」（Windows：rime inline_ascii；Linux：Fcitx5 切輸入法，每詞 2 下）
+- [ ] Windows：打到一半撳 Shift：`st` 左 Shift `artup` Enter → startup
 - [ ] 粵拼：`nei5`／`ngo5`／`jyut6`
 - [ ] **候選每頁 9**、選字鍵 1–9（`hi` 第 1 係「凡」、`me` 第 5 係「夏」；「倉」唔喺 `or` 頭頁）
 - [ ] **候選窗視覺**（需顯示器）：編輯器頂／中／底行各打兩碼，核對 below＋edge flip

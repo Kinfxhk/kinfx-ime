@@ -6,7 +6,7 @@
 schema:
   schema_id: kinfx_phrase
   name: KINFX 詞庫（內部）
-  version: "0.4.0"
+  version: "0.4.1"
   description: kinfx_quick 用嘅詞庫表，唔使單獨揀。
 
 engine:
