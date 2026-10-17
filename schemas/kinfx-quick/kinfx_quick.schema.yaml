@@ -6,7 +6,7 @@
 schema:
   schema_id: kinfx_quick
   name: KINFX 中英混打輸入法 · 速成
-  version: "0.5.1"
+  version: "0.5.2"
   author:
     - KINFX
     - 速成規則／碼表源流見 NOTICE（rime-quick / rime-cangjie）
@@ -139,6 +139,13 @@ phrase:
 english:
   enable: true
   mode: smart
+  # 冇打字撳左 Shift：noop＝乜都唔做（預設，避免誤觸入咗底線英文模式）｜ascii＝librime 臨時英文
+  empty_shift: noop
+  # 唔喺詞表嘅英文（公司名、產品名）：英文開頭夠 hold_min 個字母之後，再留多 hold_extra 個；
+  # 7 個字母或以上（unknown_space_min）撳空白上屏，短啲撳左 Shift。0＝關。
+  hold_min: 4
+  hold_extra: 8
+  unknown_space_min: 7
   space: safe          # safe（逐詞安全表）| long（只限 5 字母以上）| off
   commit_key: Shift_L  # Linux：用 scripts/linux-free-left-shift.sh 解除 Fcitx5 熱鍵；唔建議 Caps_Lock
   dictionary: kinfx_en
@@ -185,6 +192,12 @@ menu:
 
 punctuator:
   import_preset: default
+  # 「/」直出半形 /（寫 code、網址、日期唔使揀）；「、」改由「\」一粒鍵直出。
+  # 上游預設：/ 同 \ 都係選單，「、」排第一。要返舊樣：custom 刪走呢兩行。
+  # 寫 code：Ctrl+. 切 ASCII 標點（同 Windows 一樣），所有符號變半形直出；再撳返中文標點。
+  half_shape:
+    "/": "/"
+    "\\": "、"
 
 # 有候選窗：空白／右＝下一頁，左＝上一頁。無候選窗唔命中，空白仍係確認上屏
 # （混打 preedit「好API」按空白會 commit）。Flex 關翻頁：win_quick/space_pages: false。
@@ -197,6 +210,8 @@ key_binder:
     - { when: has_menu, accept: Left, send: Page_Up }
     - { when: has_menu, accept: KP_Left, send: Page_Up }
     - { when: always, accept: Control+Shift+2, toggle: ascii_mode }
+    # Ctrl+. ＝中文／英文標點（Windows 微軟速成同一粒鍵）。狀態會記住。
+    - { when: always, accept: Control+period, toggle: ascii_punct }
 
 # express_editor 預設 Return = commit_raw_input（會上屏「vd」）。
 # confirm = 揀焦點候選；無候選窗時退回 Commit()，混打 Enter 仍上屏成文。

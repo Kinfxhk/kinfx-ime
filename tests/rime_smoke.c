@@ -419,6 +419,17 @@ static int assert_tab_expand(RimeApi* api, RimeSessionId sid) {
   int off = api->get_option(sid, "win_quick_expand");
   printf("tab-off option=%d (want 0)\n", off);
   ok = ok && !off;
+  /* v0.5.2: Esc ends the expand; no 〔展開〕 text in the preedit. */
+  api->clear_composition(sid);
+  api->simulate_key_sequence(sid, "of");
+  api->process_key(sid, XK_TAB, 0);
+  Snap c;
+  if (!snap_menu(api, sid, &c)) return 0;
+  int clean = strstr(c.preedit, "\xe5\xb1\x95\xe9\x96\x8b") == NULL; /* 展開 */
+  api->process_key(sid, 0xff1b, 0); /* Escape */
+  int after_esc = api->get_option(sid, "win_quick_expand");
+  printf("tab-esc preedit-clean=%d option-after-esc=%d (want 1, 0)\n", clean, after_esc);
+  ok = ok && clean && !after_esc;
   api->clear_composition(sid);
   return ok;
 }
@@ -624,6 +635,9 @@ static int assert_english_mix(RimeApi* api, RimeSessionId sid) {
   /* v0.5.1: a pending top-out (passion = 旨巨 + ion) must not let a Chinese
      phrase on the tail win over the whole English word. */
   ok = ok && commit_space(api, sid, "passion", "passion ");
+  /* v0.5.2: names list + unknown long words (company / product names). */
+  ok = ok && commit_space(api, sid, "wondershare", "Wondershare ");
+  ok = ok && commit_space(api, sid, "wonderxyz", "wonderxyz ");
   printf("english-mix space/shift:%s\n", ok ? "PASS" : "FAIL");
   return ok;
 }
@@ -643,7 +657,8 @@ static int assert_association(RimeApi* api, RimeSessionId sid) {
   /* v0.5.1: punctuation and Space after a pick close the list and type
      (period was swallowed as Page_Down by key_binder). Collect every commit. */
   const struct { const char* keys; const char* want; } after[] = {
-    {"vd1.", "好。"}, {"hi7,", "我，"}, {"vd1 ", "好 "}, {NULL, NULL}};
+    {"vd1.", "好。"}, {"hi7,", "我，"}, {"vd1 ", "好 "}, {"vd1/", "好/"},
+    {"/", "/"}, {NULL, NULL}};
   for (int i = 0; after[i].keys; ++i) {
     char got[256] = {0};
     api->clear_composition(sid);
