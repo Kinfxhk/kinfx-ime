@@ -53,6 +53,12 @@
 - L6：505 字文章重打，期望 byte-exact
 - 唔使再測 L5（Caps Lock 已改為唔建議）
 
+## 自動化提示（2026-10-17 VM 驗收）
+
+- 空白上屏英文已帶尾隨空格；計劃檔英文詞後唔好再加空白 token。
+- 開始前執行 `fcitx5-remote -s rime`（新 input context 有時係 keyboard-us）。
+- v0.5.1 驗收結果：「。」9/9、passion、短詞左 Shift、505 字文章全形標點一致、去空格後 453/453、30 個英詞全中。
+
 ## 交回格式
 
 每項寫：實際結果、同期望差幾多、Fcitx5 左 Shift 有冇切走輸入法。報告放 repo root
