@@ -572,6 +572,9 @@ static int commit_shift_tap(RimeApi* api, RimeSessionId sid, const char* seq,
 static int assert_top_keeps_char(RimeApi* api, RimeSessionId sid) {
   api->clear_composition(sid);
   drain_commit(api, sid);
+  /* v0.5.4: vd + z is an English start (VD...) that breaks at z, so the Left
+     Shift rescue parks 好 until the next key; 1 then sends 好 and z stays
+     composing, the same text v0.5.3 gave. */
   if (!api->simulate_key_sequence(sid, "vdz")) return 0;
   RIME_STRUCT(RimeContext, ctx);
   if (!api->get_context(sid, &ctx)) return 0;
@@ -583,11 +586,11 @@ static int assert_top_keeps_char(RimeApi* api, RimeSessionId sid) {
          ctx.menu.num_candidates);
   int page_ok = ctx.menu.page_size == 9;
   api->free_context(&ctx);
-  /* 頂字 commits 好 before the remainder menu; preedit is then only z. */
+  if (!api->simulate_key_sequence(sid, "1")) return 0;
   char commit[128];
   int committed = take_commit(api, sid, commit, sizeof commit);
-  printf("topchar vdz commit='%s'\n", committed ? commit : "");
-  int ok = page_ok && committed && strstr(commit, "好") != NULL;
+  printf("topchar vdz1 commit='%s'\n", committed ? commit : "");
+  int ok = page_ok && committed && strncmp(commit, "好", strlen("好")) == 0;
   api->clear_composition(sid);
   drain_commit(api, sid);
   return ok;

@@ -45,6 +45,7 @@ ORDER_TSV = ROOT / "schemas/kinfx-quick/ms_quick_order.tsv"
 SINGLE_TSV = ROOT / "schemas/kinfx-quick/win_quick_top9.tsv"
 EN_DICT = ROOT / "lexicon/en/kinfx_en.dict.yaml"
 NAMES_DICT = ROOT / "lexicon/en/kinfx_names.dict.yaml"  # v0.5.4 brand names
+HAND_NAMES = ROOT / "lexicon/en/kinfx_en_names.txt"  # v0.5.2 hand list (Acer, OpenAI)
 UNSAFE = ROOT / "lexicon/en/kinfx_en_unsafe.txt"
 ESSAY = Path(os.environ.get("APPDATA", "")) / "Rime/essay-cantonese.txt"
 REPORT = ROOT / "docs/eval/V05_COMPARE.md"
@@ -258,12 +259,27 @@ def load_hold_words() -> list[str]:
     return out
 
 
+def hand_names() -> dict[str, str]:
+    """code -> display of kinfx_en_names.txt (Display<TAB>code or a bare code)."""
+    out: dict[str, str] = {}
+    for line in HAND_NAMES.read_text(encoding="utf-8").splitlines():
+        line = line.rstrip("\r\n")
+        if not line or line.startswith("#"):
+            continue
+        parts = line.split("\t")
+        code = parts[-1].strip()
+        if re.fullmatch(r"[a-z][a-z0-9]*", code):
+            out[code] = parts[0] if len(parts) > 1 else code
+    return out
+
+
 def space_words(unsafe: set[str]) -> set[str]:
     """Words Space commits (mirrors english_mix.lua space_text): 3+ letters,
     not unsafe, and a lowercase entry exists or the word is a +hold extra."""
     texts = en_texts()
     extras = set(load_hold_words())
     names = set(ges.load_words(NAMES_DICT)) if NAMES_DICT.exists() else set()
+    names |= set(hand_names())
     return {w for w, ts in texts.items()
             if len(w) >= 3 and w not in unsafe and (w in ts or w in extras or w in names)}
 
@@ -494,6 +510,8 @@ def en_texts() -> dict[str, set[str]]:
             parts = line.rstrip("\r\n").split("\t")
             if len(parts) >= 2:
                 out.setdefault(parts[1], set()).add(parts[0])
+    for code, text in hand_names().items():
+        out.setdefault(code, set()).add(text)
     return out
 
 

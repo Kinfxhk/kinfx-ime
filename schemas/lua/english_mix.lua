@@ -150,10 +150,13 @@ end
 -- Run state, shared by the processor and the hint filter (one Lua state).
 -- known: length of the longest prefix of raw that is a kinfx_en prefix.
 -- raw longer than known = an unknown word held on (wondershare, kubernetes).
-local S = { raw = "", pending = "", tracking = false, guard = false, known = 0 }
+-- known_en: the same length counted on kinfx_en + kinfx_en_names.txt only
+-- (v0.5.3). Every Space path uses known_en, so kinfx_names prefixes (gior of
+-- Giordano) lengthen the hold but never let Space take a Chinese run (giorj).
+local S = { raw = "", pending = "", tracking = false, guard = false, known = 0, known_en = 0 }
 
 local function reset()
-  S.raw, S.pending, S.tracking, S.known = "", "", false, 0
+  S.raw, S.pending, S.tracking, S.known, S.known_en = "", "", false, 0, 0
 end
 
 -- v0.5.4 Left Shift rescue. When a run that started as an English / name
@@ -175,7 +178,18 @@ end
 
 local function flush(env)
   local text = S.pending
+  local was = S.tracking
   reset()
+  -- letters mode: the menu still carries the whole run as its preedit (aaka
+  -- while the input is ka); rebuild it now that the run is gone
+  if was and env.letters then
+    local ctx = env.engine.context
+    if ctx:is_composing() then
+      S.guard = true
+      pcall(function() ctx:refresh_non_confirmed_composition() end)
+      S.guard = false
+    end
+  end
   if text == "" then
     return
   end
@@ -348,7 +362,9 @@ end
 -- letters once the word is long enough that Chinese typing rarely ends there.
 local unknown_len_ok
 local function unknown_space_ok(env, ctx)
-  return env.space_mode ~= "off" and #S.raw > S.known and env.unknown_space_min > 0
+  return env.space_mode ~= "off" and #S.raw > S.known_en and env.unknown_space_min > 0
+    and env.hold_min > 0 and S.known_en >= env.hold_min
+    and #S.raw <= S.known_en + env.hold_extra
     and unknown_len_ok(env, #S.raw) and not chinese_held(ctx)
 end
 
@@ -357,7 +373,7 @@ end
 -- gen_english_space.build(): all such 5-letter prefixes together change
 -- 0.001 Chinese Space presses per 10,000 characters, 6-letter 0.008, 7+ 0.
 local function prefix_space_ok(env, ctx)
-  return env.space_mode ~= "off" and #S.raw >= 5 and S.known == #S.raw
+  return env.space_mode ~= "off" and #S.raw >= 5 and S.known_en == #S.raw
     and not chinese_held(ctx)
 end
 
@@ -479,15 +495,18 @@ local function fini(env)
 end
 
 local function start_run(ctx, ch)
-  S.tracking, S.raw, S.pending, S.known = true, ch, "", 1
+  S.tracking, S.raw, S.pending, S.known, S.known_en = true, ch, "", 1, 1
   set_input(ctx, ch)
 end
 
 -- May the run take letter ch? A kinfx_en prefix, or an unknown word that
 -- started as a long enough English prefix (hold_min) and is still short.
-local function is_prefix(env, raw)
+local function en_prefix(env, raw)
   return pm.has_prefix(env.en_mem, raw) or env.name_prefix[raw]
-    or pm.has_prefix(env.names_mem, raw)
+end
+
+local function is_prefix(env, raw)
+  return en_prefix(env, raw) or pm.has_prefix(env.names_mem, raw)
 end
 
 local function can_extend(env, raw)
@@ -510,6 +529,9 @@ local function extend(env, ctx, ch)
   S.raw = raw -- before set_input, so the hint filter sees it
   if known and S.known == #raw - 1 then
     S.known = #raw
+  end
+  if S.known_en == #raw - 1 and en_prefix(env, raw) then
+    S.known_en = #raw
   end
   return v041_letter(env, ctx, ch)
 end
@@ -812,6 +834,7 @@ function process(key, env)
       -- Everything committed so far is final; the letters still composing
       -- start at a Windows code boundary, so track them as a possible word.
       S.tracking, S.raw, S.pending, S.known = true, rest, "", #rest
+      S.known_en = en_prefix(env, rest) and #rest or 0
     end
     return kAccepted
   end
