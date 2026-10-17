@@ -150,6 +150,10 @@ hel{Shift_L}{Shift+colon}{Shift_L}{Shift+Release+Shift_L}	反中：
 {Shift_L}{Shift+colon}{Shift+Release+Shift_L}hel{Shift_L}{Release+Shift_L}	：hel
 hi7{Shift_L}{Release+Shift_L}hel{Shift_L}{Release+Shift_L}	我hel
 vdhe{Caps_Lock}	好[Caps_Lock]
+vd{apostrophe}	好'
+vd{Shift_L}{Shift+underscore}{Shift+Release+Shift_L}	好_
+{Shift_L}{Shift+quotedbl}{Shift+Release+Shift_L}	"
+vd,	好，
 tool{minus}calling{space}	tool-calling·
 json{minus}schema{space}	JSON-schema·
 abac{minus}{Return}	明顯
