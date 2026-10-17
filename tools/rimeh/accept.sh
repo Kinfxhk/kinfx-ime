@@ -106,6 +106,7 @@ while IFS=$'\t' read -r k want; do
 done <<<"$CASES"
 printf '%s\n' "$OUT" | grep '^BENCH' | sed 's/^/     /'
 # v0.5.1 app-visible text (rimeh `typed`): passthrough keys count. "·" = space.
+# Keep hello{Caps_Lock} last: Caps_Lock leaves ascii_mode on in rimeh (no Caps light).
 TYPED_CASES=$(cat <<'EOF'
 vd1.	好。
 hi7.	我。
@@ -149,7 +150,6 @@ hel{Shift_L}{Shift+Release+Shift_L}	hel
 hel{Shift_L}{Shift+colon}{Shift_L}{Shift+Release+Shift_L}	反中：
 {Shift_L}{Shift+colon}{Shift+Release+Shift_L}hel{Shift_L}{Release+Shift_L}	：hel
 hi7{Shift_L}{Release+Shift_L}hel{Shift_L}{Release+Shift_L}	我hel
-hello{Caps_Lock}	反川
 vd{apostrophe}	好'
 vd{Shift_L}{Shift+underscore}{Shift+Release+Shift_L}	好_
 {Shift_L}{Shift+quotedbl}{Shift+Release+Shift_L}	"
@@ -172,6 +172,7 @@ hel{Control+c}	反c
 {Control+period}vd;hi7,{Control+period}	好;我,
 {Shift_L}{Release+Shift_L}vd1	好
 {Control+period}vd1,{period}{slash}{semicolon}{Control+period}vd1,	好,./;好，
+hello{Caps_Lock}	反川
 EOF
 )
 {
