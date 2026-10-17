@@ -157,6 +157,8 @@ morton{space}1	仄啦俐
 giorj{space}1	去合十
 j{space}1	十
 vda1	好日
+gg{Shift_L}{Release+Shift_L}	gg
+wp{Shift_L}{Release+Shift_L}	wp
 defau{space}	defau·
 json{space}	JSON·
 lol{Shift_L}{Release+Shift_L}	lol
