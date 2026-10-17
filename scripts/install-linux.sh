@@ -71,6 +71,7 @@ cp -a "$ROOT/schemas/kinfx-quick/kinfx_en.schema.yaml" "$TARGET/"
 cp -a "$ROOT/schemas/kinfx-quick/kinfx_assoc.schema.yaml" "$TARGET/"
 cp -a "$ROOT/lexicon/hk/kinfx_capture.txt" "$TARGET/"
 cp -a "$ROOT/lexicon/en/kinfx_en_unsafe.txt" "$TARGET/"
+cp -a "$ROOT/lexicon/en/kinfx_en_names.txt" "$TARGET/"
 cp -a "$ROOT/schemas/kinfx-jyutping/kinfx_jyutping.schema.yaml" "$TARGET/"
 # Phrase / English tables stay licensed under lexicon/NOTICE. Flat copy: rime
 # compiles dictionary names from the user-data directory, not from subfolders.

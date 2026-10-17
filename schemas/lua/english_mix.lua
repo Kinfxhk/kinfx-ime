@@ -23,6 +23,14 @@ local pm = require("phrase_mix").helpers
 local kAccepted = 1
 local kNoop = 2
 
+local function config_int(config, path, default)
+  local v = config:get_int(path)
+  if v == nil then
+    return default
+  end
+  return v
+end
+
 local function config_str(config, path, default)
   local v = config:get_string(path)
   if v == nil or v == "" then
@@ -61,6 +69,40 @@ local function load_unsafe()
     fh:close()
   end
   return unsafe_cache
+end
+
+-- Product / company names (kinfx_en_names.txt: "Display<TAB>code", a few
+-- hundred lines). Most are missing from SCOWL, so their letters would top out
+-- as Chinese. A small Lua set of names and their prefixes (a few thousand
+-- short strings) is fine for the heap; the big English table stays native.
+local names_cache, name_prefix_cache = nil, nil
+local function load_names()
+  if names_cache then
+    return names_cache, name_prefix_cache
+  end
+  names_cache, name_prefix_cache = {}, {}
+  local path = user_file("kinfx_en_names.txt")
+  local fh = path and io.open(path, "r")
+  if fh then
+    for line in fh:lines() do
+      line = line:gsub("\r$", "")
+      if line ~= "" and line:sub(1, 1) ~= "#" then
+        local text, code = line:match("^([^\t]+)\t([a-z][a-z0-9]*)%s*$")
+        if not code then
+          code = line:match("^([a-z][a-z0-9]*)%s*$")
+          text = code
+        end
+        if code then
+          names_cache[code] = text
+          for i = 1, #code do
+            name_prefix_cache[code:sub(1, i)] = true
+          end
+        end
+      end
+    end
+    fh:close()
+  end
+  return names_cache, name_prefix_cache
 end
 
 -- Display text for an exact English code: the lowercase entry when the table
@@ -106,20 +148,16 @@ local function close_assoc(ctx)
 end
 
 -- Run state, shared by the processor and the hint filter (one Lua state).
-local S = { raw = "", pending = "", tracking = false, guard = false }
+-- known: length of the longest prefix of raw that is a kinfx_en prefix.
+-- raw longer than known = an unknown word held on (wondershare, kubernetes).
+local S = { raw = "", pending = "", tracking = false, guard = false, known = 0 }
 
 local function reset()
-  S.raw, S.pending, S.tracking = "", "", false
+  S.raw, S.pending, S.tracking, S.known = "", "", false, 0
 end
 
--- Drop our caret hint from the current segment (Space paging keeps prompts).
-local function clear_hint(ctx)
-  local comp = ctx.composition
-  local seg = comp and not comp:empty() and comp:back() or nil
-  if seg and seg.prompt and seg.prompt:find("^ .*[\226]") and
-     (seg.prompt:find("⇧", 1, true) or seg.prompt:find("␣", 1, true)) then
-    seg.prompt = ""
-  end
+-- Older builds put the hint in seg.prompt; nothing to clear now.
+local function clear_hint(_ctx)
 end
 
 local function flush(env)
@@ -251,6 +289,9 @@ local KEYCODE = { Shift_L = 0xffe1, Shift_R = 0xffe2, Caps_Lock = 0xffe5 }
 -- such as Gmail. Proper nouns only through Left Shift; they collide with
 -- Chinese more and are rarely typed lowercase on purpose.
 local function space_text(env, raw)
+  if env.names[raw] then
+    return env.names[raw]
+  end
   local text, lower = word_text(env.en_mem, raw)
   if not text then
     return nil
@@ -259,6 +300,13 @@ local function space_text(env, raw)
     return text
   end
   return nil
+end
+
+-- An unknown word (raw ran past every kinfx_en prefix): Space commits the raw
+-- letters once the word is long enough that Chinese typing rarely ends there.
+local function unknown_space_ok(env, ctx)
+  return #S.raw > S.known and env.unknown_space_min > 0
+    and #S.raw >= env.unknown_space_min and not chinese_held(ctx)
 end
 
 local function read_env(env)
@@ -273,6 +321,17 @@ local function read_env(env)
   env.commit_code = KEYCODE[env.commit_key] or 0xffe1
   env.en_mem = pm.new_memory(env, "kinfx_en")
   env.unsafe = load_unsafe()
+  env.names, env.name_prefix = load_names()
+  -- english/empty_shift: noop (default; a Left Shift tap with nothing typed
+  -- does nothing) | ascii (librime inline_ascii: switch to English).
+  env.empty_shift = config_str(config, "english/empty_shift", "noop")
+  -- english/hold_min: once an English prefix of this many letters breaks,
+  -- keep holding up to hold_extra more letters as an unknown word (company /
+  -- product names). 0 = off. Chinese output is still v0.4.1 for every key
+  -- except Space / Left Shift on such a run.
+  env.hold_min = config_int(config, "english/hold_min", 4)
+  env.hold_extra = config_int(config, "english/hold_extra", 8)
+  env.unknown_space_min = config_int(config, "english/unknown_space_min", 7)
   local _, hold = pm.load_capture()
   env.hold = hold
   env.hold_set = {}
@@ -317,8 +376,53 @@ local function fini(env)
 end
 
 local function start_run(ctx, ch)
-  S.tracking, S.raw, S.pending = true, ch, ""
+  S.tracking, S.raw, S.pending, S.known = true, ch, "", 1
   set_input(ctx, ch)
+end
+
+-- May the run take letter ch? A kinfx_en prefix, or an unknown word that
+-- started as a long enough English prefix (hold_min) and is still short.
+local function can_extend(env, raw)
+  if pm.has_prefix(env.en_mem, raw) or env.name_prefix[raw] then
+    return true, true
+  end
+  if env.hold_min > 0 and S.known >= env.hold_min
+     and #raw <= S.known + env.hold_extra then
+    return true, false
+  end
+  return false, false
+end
+
+local function extend(env, ctx, ch)
+  local raw = S.raw .. ch
+  local ok, known = can_extend(env, raw)
+  if not ok or not (ctx.input or ""):match("^[a-z]*$") then
+    return false
+  end
+  S.raw = raw -- before set_input, so the hint filter sees it
+  if known and S.known == #raw - 1 then
+    S.known = #raw
+  end
+  return v041_letter(env, ctx, ch)
+end
+
+-- Backspace inside a held run: drop the last letter and rebuild the run, so a
+-- typo in an English word does not commit the held Chinese top-outs.
+local function backspace(env, ctx)
+  local raw = S.raw:sub(1, -2)
+  reset()
+  S.guard = true
+  ctx:clear()
+  S.guard = false
+  if raw == "" then
+    return
+  end
+  start_run(ctx, raw:sub(1, 1))
+  for i = 2, #raw do
+    if not extend(env, ctx, raw:sub(i, i)) then
+      break
+    end
+  end
 end
 
 local function func(key, env)
@@ -367,7 +471,8 @@ local function func(key, env)
     local tap = env.shift_down
     env.shift_down = false
     if tap and S.tracking and S.raw ~= "" then
-      commit_word(env, ctx, S.raw) -- the raw letters replace the held top-outs
+      -- the raw letters (or a listed name: openai -> OpenAI) replace the held top-outs
+      commit_word(env, ctx, env.names[S.raw] or S.raw)
       return kAccepted
     end
     local input = ctx.input or ""
@@ -375,7 +480,27 @@ local function func(key, env)
       commit_word(env, ctx, input) -- letters left after a Windows commit
       return kAccepted
     end
-    return kNoop -- no letters: ascii_composer keeps its inline_ascii toggle
+    -- Anything else being composed (uppercase / digits / a punctuation menu,
+    -- e.g. 好API, or an inline-English run): commit what is shown and stay
+    -- in Chinese. Letting ascii_composer run here turned the composition into
+    -- an underlined inline-English run that only Enter or Esc could leave
+    -- (Enter then committed the raw code, vdAPI instead of 好API).
+    if tap and input ~= "" then
+      local text = ctx:get_commit_text()
+      flush(env)
+      commit_word(env, ctx, text)
+      if ctx:get_option("ascii_mode") then
+        ctx:set_option("ascii_mode", false)
+      end
+      return kAccepted
+    end
+    -- Nothing typed: a stray tap must not switch to English (it looked like
+    -- a stuck mode). english/empty_shift: ascii keeps the librime toggle.
+    if tap and input == "" and env.empty_shift ~= "ascii"
+       and not ctx:get_option("ascii_mode") then
+      return kAccepted
+    end
+    return kNoop
   end
   if key:release() then
     return kNoop
@@ -388,12 +513,16 @@ local function func(key, env)
   local plain = not (key:ctrl() or key:alt() or key:super())
   local input = ctx.input or ""
 
+  if plain and repr == "BackSpace" and S.tracking and S.raw ~= "" then
+    backspace(env, ctx)
+    return kAccepted
+  end
+
   if plain and repr:match("^[a-z]$") then
     if S.tracking then
       local raw = S.raw .. repr
-      if pm.has_prefix(env.en_mem, raw) and input:match("^[a-z]*$") then
-        S.raw = raw -- before set_input, so the hint filter sees it
-        if v041_letter(env, ctx, repr) then
+      if can_extend(env, raw) and input:match("^[a-z]*$") then
+        if extend(env, ctx, repr) then
           return kAccepted
         end
         flush(env)
@@ -424,10 +553,10 @@ local function func(key, env)
     end
     local rest = ctx.input or ""
     flush(env)
-    if rest:match("^[a-z]+$") and pm.has_prefix(env.en_mem, rest) then
+    if rest:match("^[a-z]+$") and (pm.has_prefix(env.en_mem, rest) or env.name_prefix[rest]) then
       -- Everything committed so far is final; the letters still composing
       -- start at a Windows code boundary, so track them as a possible word.
-      S.tracking, S.raw, S.pending = true, rest, ""
+      S.tracking, S.raw, S.pending, S.known = true, rest, "", #rest
     end
     return kAccepted
   end
@@ -436,8 +565,16 @@ local function func(key, env)
     return kNoop
   end
   clear_hint(ctx)
-  if plain and (repr == "space" or repr == "comma" or repr == "period")
-     and space_allowed(env, S.raw) and not chinese_held(ctx) then
+  local endkey = plain and (repr == "space" or repr == "comma" or repr == "period")
+  if endkey and unknown_space_ok(env, ctx) then
+    if repr == "space" then
+      commit_word(env, ctx, S.raw .. " ")
+      return kAccepted
+    end
+    commit_word(env, ctx, S.raw)
+    return kNoop
+  end
+  if endkey and space_allowed(env, S.raw) and not chinese_held(ctx) then
     local text = space_text(env, S.raw)
     if text then
       if repr == "space" then
@@ -459,22 +596,28 @@ local function filter_init(env)
 end
 
 local function filter_func(input, env)
+  -- The hint rides on the first candidate's comment, never on seg.prompt:
+  -- a prompt is drawn inside the inline preedit, and clients that commit the
+  -- preedit (Fcitx5 on focus change / IM switch) wrote it into the document.
+  local hint = nil
   if env.smart and S.tracking and #S.raw >= 2 then
     local ctx = env.engine.context
-    local comp = ctx.composition
-    local seg = comp and not comp:empty() and comp:back() or nil
-    if seg then
-      local mark = "⇧"
-      if space_allowed(env, S.raw) and not chinese_held(ctx)
-         and space_text(env, S.raw) then
-        mark = "␣"
-      end
-      local pre = S.pending ~= "" and ("‹" .. S.pending .. "›") or ""
-      seg.prompt = " " .. pre .. mark .. S.raw
+    local mark = "⇧"
+    if (space_allowed(env, S.raw) and not chinese_held(ctx)
+        and space_text(env, S.raw)) or unknown_space_ok(env, ctx) then
+      mark = "␣"
     end
+    local pre = S.pending ~= "" and (S.pending .. " ") or ""
+    hint = pre .. mark .. S.raw
   end
   for cand in input:iter() do
-    yield(cand)
+    if hint then
+      local c = cand.comment or ""
+      yield(ShadowCandidate(cand, cand.type, cand.text, c ~= "" and (c .. " " .. hint) or hint))
+      hint = nil
+    else
+      yield(cand)
+    end
   end
 end
 

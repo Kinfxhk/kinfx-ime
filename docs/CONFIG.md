@@ -58,6 +58,19 @@
 | 持久英文 | `Control+Shift+2` 切換 `ascii_mode` |
 | 一定要切先打英文 | 清空 `recognizer/patterns/uppercase` |
 
+## v0.5.2 新開關
+
+| 開關 | 預設 | 作用 |
+| --- | --- | --- |
+| `english/empty_shift` | `noop` | 冇打字撳左 Shift：`noop` 乜都唔做；`ascii` 照 librime 切臨時英文（v0.5.1） |
+| `english/hold_min` | `4` | 英文開頭夠呢個字母數之後，詞表冇嘅字都繼續留住；`0` 關 |
+| `english/hold_extra` | `8` | 上面留住最多再多幾多個字母 |
+| `english/unknown_space_min` | `7` | 詞表冇嘅字，幾多個字母或以上先可以撳空白上屏（短啲用左 Shift） |
+| `punctuator/half_shape` `/`、`\` | `/`、「、」 | `/` 直出；「、」由 `\` 出 |
+| Ctrl+. | — | 切中英文標點（`ascii_punct`），寫 code 用 |
+
+公司名／產品名表：`lexicon/en/kinfx_en_names.txt`（「顯示字<Tab>細楷碼」）。安裝後喺 Rime 用戶目錄，改完重新部署。
+
 ## 自動化測試注意
 
 - **空白上屏英文會自帶一個空格**：`startup` 空白 → `startup `，嗰下空白已經用咗。測試計劃打完英文詞唔好再加一個空白，否則會變雙空格。左 Shift 上屏（`of` 左 Shift → `of`）就冇空格，要空格先再撳空白。
