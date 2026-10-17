@@ -6,7 +6,7 @@
 schema:
   schema_id: kinfx_quick
   name: KINFX 中英混打輸入法 · 速成
-  version: "0.5.2"
+  version: "0.5.3"
   author:
     - KINFX
     - 速成規則／碼表源流見 NOTICE（rime-quick / rime-cangjie）
@@ -97,7 +97,8 @@ ascii_composer:
 
 speller:
   alphabet: zyxwvutsrqponmlkjihgfedcba
-  delimiter: " ;'"
+  # 只用空白做分隔：「;」「'」照 Windows 頂字再出標點（vd; → 好；）。上游預設 " ;'"
+  delimiter: " "
   max_code_length: 2
   auto_select: false
 
@@ -141,11 +142,19 @@ english:
   mode: smart
   # 冇打字撳左 Shift：noop＝乜都唔做（預設，避免誤觸入咗底線英文模式）｜ascii＝librime 臨時英文
   empty_shift: noop
-  # 唔喺詞表嘅英文（公司名、產品名）：英文開頭夠 hold_min 個字母之後，再留多 hold_extra 個；
-  # 7 個字母或以上（unknown_space_min）撳空白上屏，短啲撳左 Shift。0＝關。
+  # 唔喺詞表嘅英文（公司名、識別字）：英文開頭夠 hold_min 個字母之後，再留多 hold_extra 個；
+  # 5 個字母或以上（unknown_space_min）撳空白上屏（6 個字母除外：三對速成碼，空白係翻頁），
+  # 其餘撳左 Shift。英文詞嘅開頭（const、async）5 個字母起都可以撳空白。0＝關。
   hold_min: 4
   hold_extra: 8
-  unknown_space_min: 7
+  unknown_space_min: 5
+  # 打緊字撳 Ctrl+C／V／X：clear＝收起輸入（擺住嘅中文照上屏，字母唔要），快捷鍵交返程式；
+  # keep＝v0.5.2（Ctrl+V 翻頁、Ctrl+C 冇反應）
+  clipboard: clear
+  # 英文詞後面打「-」：word＝英文詞加半形 -，下一段照打（tool-calling）｜off＝v0.5.2
+  hyphen: word
+  # 預編輯顯示：letters＝顯示打咗嘅字母（of、hello）｜radicals＝速成字根（人火，v0.5.2）
+  preedit: letters
   space: safe          # safe（逐詞安全表）| long（只限 5 字母以上）| off
   commit_key: Shift_L  # Linux：用 scripts/linux-free-left-shift.sh 解除 Fcitx5 熱鍵；唔建議 Caps_Lock
   dictionary: kinfx_en

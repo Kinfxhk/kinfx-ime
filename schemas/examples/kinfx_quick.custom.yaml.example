@@ -24,6 +24,9 @@ patch:
   # long = 空白只上屏 5 字或以上嘅詞
   # off  = 空白永遠唔上屏英文（都要左 Shift）
   # "english/space": long
+  # "english/preedit": radicals        # 預編輯顯示速成字根（人火），預設顯示字母（of）
+  # "english/hyphen": off              # 英文詞後面嘅 - 唔接駁
+  # "english/clipboard": keep          # Ctrl+C／V／X 照 v0.5.2
   # "english/commit_key": Caps_Lock   # 唔建議：Linux XKB 會切大寫（2026-10-17 實測）
   # "association/space": page         # 揀字後空白翻聯想頁（Windows）；預設 type＝打空格
 
