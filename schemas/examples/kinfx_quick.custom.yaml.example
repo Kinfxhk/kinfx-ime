@@ -24,7 +24,8 @@ patch:
   # long = 空白只上屏 5 字或以上嘅詞
   # off  = 空白永遠唔上屏英文（都要左 Shift）
   # "english/space": long
-  # "english/commit_key": Caps_Lock   # 左 Shift 改做 Caps Lock（Linux/Fcitx5）
+  # "english/commit_key": Caps_Lock   # 唔建議：Linux XKB 會切大寫（2026-10-17 實測）
+  # "association/space": page         # 揀字後空白翻聯想頁（Windows）；預設 type＝打空格
 
   # ========== 聯想詞（docs/STATUS.md）==========
   # 揀完單字出跟尾詞，Shift+數字揀。預設開。
