@@ -133,6 +133,17 @@ startup{BackSpace}{BackSpace}up{space}	startup·
 of{BackSpace}{BackSpace}vd1	好
 wondershare{space}	Wondershare·
 gitlab{space}	GitLab·
+adsense{space}	AdSense·
+godaddy{Shift_L}{Release+Shift_L}	GoDaddy
+zendesk{comma}	Zendesk，
+cpanel{space}	cPanel·
+zdrav{Shift_L}{Release+Shift_L}	zdrav
+etsy{Shift_L}{Release+Shift_L}	etsy
+zdrav1	。啪女
+zdrav{space}1	。啪女
+adse{space}1	杲馺
+adsens1	杲尿乃
+zdravo{BackSpace}{Shift_L}{Release+Shift_L}	。啪v
 kubernetes{space}	Kubernetes·
 openai{space}	OpenAI·
 word{space}	word·

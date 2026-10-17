@@ -6,7 +6,7 @@
 schema:
   schema_id: kinfx_quick
   name: KINFX 中英混打輸入法 · 速成
-  version: "0.5.3"
+  version: "0.5.4"
   author:
     - KINFX
     - 速成規則／碼表源流見 NOTICE（rime-quick / rime-cangjie）
@@ -24,6 +24,7 @@ schema:
   dependencies:
     - kinfx_phrase
     - kinfx_en
+    - kinfx_names
     - kinfx_assoc
 
 switches:
@@ -148,6 +149,11 @@ english:
   hold_min: 4
   hold_extra: 8
   unknown_space_min: 5
+  # v0.5.4 左 Shift 補救：開頭 rescue_min 個字母係英文／品牌名開頭，之後斷咗都再留 rescue_extra
+  # 個字母，撳左 Shift 就照字母上屏（adsense、zdrav）。空白、數字、其他鍵照 Windows 出中文，
+  # 只係頂字遲啲先上屏。0＝關（v0.5.3）。品牌名表：kinfx_names（Wikidata，約 5 千個）。
+  rescue_min: 2
+  rescue_extra: 8
   # 打緊字撳 Ctrl+C／V／X：clear＝收起輸入（擺住嘅中文照上屏，字母唔要），快捷鍵交返程式；
   # keep＝v0.5.2（Ctrl+V 翻頁、Ctrl+C 冇反應）
   clipboard: clear

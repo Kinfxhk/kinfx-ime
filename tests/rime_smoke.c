@@ -645,6 +645,9 @@ static int assert_english_mix(RimeApi* api, RimeSessionId sid) {
   ok = ok && commit_space(api, sid, "tool{minus}calling", "tool-calling ");
   ok = ok && commit_space(api, sid,
       "https{Shift_L}{Shift+colon}{Shift+Release+Shift_L}//x.com", "https://x.com ");
+  /* v0.5.4: kinfx_names (Wikidata brands) and the Left Shift rescue. */
+  ok = ok && commit_space(api, sid, "adsense", "AdSense ");
+  ok = ok && commit_shift_tap(api, sid, "zdrav", "zdrav");
   printf("english-mix space/shift:%s\n", ok ? "PASS" : "FAIL");
   return ok;
 }

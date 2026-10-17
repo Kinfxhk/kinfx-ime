@@ -2,7 +2,7 @@
 
 香港繁體速成輸入法，中英混打唔使切換模式。速成候選次序**逐頁跟 Windows 11 微軟速成**，另外補齊港字、常用詞、英文詞同聯想詞。引擎用 [librime](https://github.com/rime/librime)：Windows 11 由 [小狼毫（Weasel）](https://github.com/rime/weasel) 載入，Linux 用 Fcitx5。
 
-**最新版本：v0.5.3**（2026-10-18）· [所有版本同更新紀錄](https://github.com/Kinfxhk/kinfx-ime/releases)
+**最新版本：v0.5.4**（2026-10-18）· [所有版本同更新紀錄](https://github.com/Kinfxhk/kinfx-ime/releases)
 
 ## 實測
 
@@ -33,6 +33,8 @@ Linux v0.5.1 嗰次唔係 byte-exact，原因係測試計劃喺英文詞後面�
 | `of` 左 Shift | `of`（冇空格） |
 | `vd` `API` | 好API（大寫直出） |
 | `wondershare` 空白 | `Wondershare `（公司名） |
+| `adsense` 空白 | `AdSense `（品牌名表，v0.5.4） |
+| `zdrav` 左 Shift | `zdrav`（詞表冇、打到一半變咗中文嘅字，v0.5.4） |
 | `/` | /（直出，唔使揀） |
 | `\` | 、 |
 | `hi` 7 `Shift+2` | 我講（聯想詞） |
@@ -59,7 +61,8 @@ Linux v0.5.1 嗰次唔係 byte-exact，原因係測試計劃喺英文詞後面�
 | 英文詞後面跟標點 | 打完撳標點 | `the` `,` → `the，` |
 | 2 字母短詞（of、to、on、or…） | 打完撳一下**左 Shift** | `of` 左 Shift → `of` |
 | 空白唔上屏嘅詞（容易同中文撞嘅短詞、少見詞，例如 door） | 打完撳一下左 Shift | `door` 左 Shift → `door` |
-| 公司名、產品名（Wondershare、GitLab、OpenAI…） | 打完撳空白或者左 Shift | `openai`␣ → `OpenAI ` |
+| 公司名、產品名、網站名（Wondershare、GitLab、AdSense、GoDaddy…） | 打完撳空白或者左 Shift | `openai`␣ → `OpenAI `、`adsense`␣ → `AdSense ` |
+| 打到一半變咗中文嘅英文字（`zdrav`、`etsy`） | 打完撳一下左 Shift（v0.5.4 補救） | `zdrav` 左 Shift → `zdrav` |
 | 詞表冇嘅英文字、英文詞開頭（const、async） | 5 個字母或以上撳空白（6 個字母除外，空白係速成翻頁）；短啲撳左 Shift | `const`␣ → `const ` |
 | 連字號英文（tool-calling） | 直接打 `-` | `tool-calling`␣ → `tool-calling ` |
 | 打錯字 | Backspace 退一個字母，再打 | `hellp` ⌫ `o`␣ → `hello ` |
@@ -68,7 +71,9 @@ Linux v0.5.1 嗰次唔係 byte-exact，原因係測試計劃喺英文詞後面�
 
 - **v0.5.1 起，用空白上屏英文會自帶一個空格**：`startup` 空白 → `startup `，嗰下空白已經用咗，唔使再撳。用左 Shift 上屏就冇空格。
 - 邊啲詞可以用空白上屏，由「安全詞表」決定：用 SCOWL 詞表，逐個詞計佢同速成中文撞車嘅機會，撞得多嘅（約 350 個，主要係 2–4 字母詞）就唔畀空白上屏。詳情見 `docs/ENGLISH_MIX.md`。
-- 公司名同產品名喺 `lexicon/en/kinfx_en_names.txt`（v0.5.2 有 333 個，格式「顯示字<Tab>細楷碼」，可以自己加）。
+- 公司名同產品名喺 `lexicon/en/kinfx_en_names.txt`（格式「顯示字<Tab>細楷碼」，可以自己加，呢個表優先）。
+- v0.5.4 加咗品牌／網站名表 `lexicon/en/kinfx_names.dict.yaml`：由 Wikidata（CC0）抽出軟件、網站、網上服務、公司、品牌名，約 5 千個（`scripts/gen_names.py`）。部署時編譯成原生表，唔會令打字變慢。
+- **左 Shift 補救（v0.5.4）**：英文字打到一半，詞表再冇字咁樣開頭，輸入法照 Windows 頂字出中文，但會先擺住，等你下一粒鍵。撳一下左 Shift，就將成串字母照打出嚟（`zdrav`）；撳空白、數字或者其他鍵，結果同 v0.5.3 一樣係中文。代價：呢種情況下中文會遲一兩粒鍵先上屏。`"english/rescue_min": 0` 關。
 - 唔喺詞表嘅英文字：英文開頭夠 4 個字母之後，輸入法會繼續留住（最多再多 8 個字母），等你撳空白或者左 Shift（`english/hold_min`）。
 - 冇打字時撳左 Shift 唔會再入英文模式（v0.5.1 會入一個有底線、好難離開嘅模式）。
 - 如果撳嘅係英文以外嘅鍵，擺住嘅中文照 Windows 上屏，結果同冇英文功能時一樣（見上面「實測」）。
@@ -173,6 +178,7 @@ Fcitx5 預設用左 Shift 切輸入法，librime 收唔到嗰下 Shift，所以 
 | 空白揀字而唔係翻頁 | `"win_quick/space_pages": false` |
 | 冇打字撳左 Shift 切臨時英文（v0.5.1 行為） | `"english/empty_shift": ascii` |
 | 唔留住詞表冇嘅英文字 | `"english/hold_min": 0` |
+| 關左 Shift 補救（中文即刻上屏，v0.5.3 行為） | `"english/rescue_min": 0` |
 | 預編輯顯示速成字根（人火）而唔係字母（of） | `"english/preedit": radicals` |
 | `/` 返做選單（、 / ／ ÷） | custom 入面刪走 `punctuator/half_shape` 嗰兩行 |
 
@@ -200,6 +206,10 @@ Windows 實機自動化驗收（41 項）同 Linux VM 實打嘅結果，見上�
 ## 版本
 
 [GitHub Releases](https://github.com/Kinfxhk/kinfx-ime/releases) 有每個版本嘅更新紀錄同 Windows 安裝包。
+
+**v0.5.4（2026-10-18）**：品牌名同左 Shift 補救。
+- 新增品牌／網站名表（Wikidata，約 5 千個）：`adsense` 空白 → `AdSense `、`godaddy` → `GoDaddy`、`zendesk` → `Zendesk`。
+- 英文字打到一半變咗中文（詞表冇嗰個字），撳一下左 Shift 就照字母打出（`zdrav`）。冇撳左 Shift，結果同 v0.5.3 一樣（`"english/rescue_min": 0` 關）。
 
 **v0.5.3（2026-10-18）**：打 code／網址修正。
 - 撳住 Shift 打 `:` `_` `^` `!` 等符號唔再被當成「左 Shift 上屏英文」吞咗；`https://x.com` 可以直接打。
@@ -248,7 +258,7 @@ Windows 實機自動化驗收（41 項）同 Linux VM 實打嘅結果，見上�
 
 ## English
 
-KINFX is a Hong Kong Traditional Chinese Sucheng (Quick) IME on librime. It runs inside Weasel on Windows 11 and inside Fcitx5 on Linux. Latest: **v0.5.3** (2026-10-18); see [Releases](https://github.com/Kinfxhk/kinfx-ime/releases).
+KINFX is a Hong Kong Traditional Chinese Sucheng (Quick) IME on librime. It runs inside Weasel on Windows 11 and inside Fcitx5 on Linux. Latest: **v0.5.4** (2026-10-18); see [Releases](https://github.com/Kinfxhk/kinfx-ime/releases).
 
 **What it does**
 - Candidate order matches Windows 11 Microsoft Quick on every page: all 658 two-letter codes were captured on Windows 11 Pro 26H2 (build 26300) and match 658/658.
@@ -261,6 +271,8 @@ KINFX is a Hong Kong Traditional Chinese Sucheng (Quick) IME on librime. It runs
 - Linux (2026-10-17, Ubuntu 26.04, Fcitx5 5.1.19, librime 1.16.1, gedit, kernel-level key replay): a 505-character mixed article came out with every full-width punctuation mark identical, 453/453 characters identical after removing spaces, and all 30 English words correct. The remaining difference was an extra space in the test plan, not the IME. v0.4.0 typed the same article byte-exact.
 - The English feature does not change Chinese output: 0 changes over 1.9 million key sequences compared with v0.4.1 (offline).
 - No Linux latency number has been measured yet.
+
+**v0.5.4** adds a brand / website names table (`kinfx_names`, about 5,000 names from Wikidata, CC0, compiled natively): `adsense`␣ → `AdSense `, `godaddy` → `GoDaddy`. It also adds the Left Shift rescue: when an English word breaks into Chinese halfway (the word is in no list, e.g. `zdrav`), a Left Shift tap types the letters; any other key gives the v0.5.3 Chinese, only later by a key or two (`english/rescue_min: 0` turns it off).
 
 **v0.5.3 fixes** (coding / URLs): a Shift held for a symbol (`:` `_` `^` `!`) is no longer read as the Left Shift English commit, so `https://x.com` types as is; `www.` `https:` `ftp:` `mailto:` starts stay a URL; English word starts and unknown words commit on Space from 5 letters (not 6: three Sucheng pairs, Space pages); a hyphen after an English word joins (`tool-calling`, `english/hyphen: off` restores v0.5.2); Ctrl+C / V / X while composing close the composition and reach the app (`english/clipboard: keep`); the preedit shows the typed letters (`of`, the whole `hello`) instead of Sucheng radicals (`english/preedit: radicals` restores them); `;` and `'` top out like Windows (`vd;` → 好；); `'` `"` `_` type half-width as measured on Windows 11 Microsoft Quick, other Chinese punctuation stays full-width; 141 tech terms and acronyms added to the names list. Windows real-machine acceptance 54/54.
 

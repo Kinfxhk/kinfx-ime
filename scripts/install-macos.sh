@@ -23,7 +23,7 @@ fi
 
 echo "Installing KINFX schemas → $TARGET"
 for f in kinfx_quick.schema.yaml kinfx_quick.dict.yaml kinfx_phrase.schema.yaml \
-         kinfx_en.schema.yaml kinfx_assoc.schema.yaml; do
+         kinfx_en.schema.yaml kinfx_names.schema.yaml kinfx_assoc.schema.yaml; do
   cp "$ROOT/schemas/kinfx-quick/$f" "$TARGET/"
 done
 # Flat copy: rime compiles dictionaries from the user dir, not subfolders.
@@ -31,7 +31,7 @@ for f in kinfx_quick_phrase.dict.yaml kinfx_hk_words.dict.yaml kinfx_hk_idioms.d
          kinfx_assoc.dict.yaml kinfx_capture.txt; do
   cp "$ROOT/lexicon/hk/$f" "$TARGET/"
 done
-for f in kinfx_en.dict.yaml kinfx_en_unsafe.txt kinfx_en_names.txt; do
+for f in kinfx_en.dict.yaml kinfx_names.dict.yaml kinfx_en_unsafe.txt kinfx_en_names.txt; do
   cp "$ROOT/lexicon/en/$f" "$TARGET/"
 done
 cp "$ROOT/schemas/rime.lua" "$TARGET/rime.lua"
@@ -76,7 +76,7 @@ fi
 # to load punctuation / key_bindings presets.
 echo "Deploying: rime_deployer --build"
 "$SQ/Contents/MacOS/rime_deployer" --build "$TARGET" "$SHARED"
-for b in kinfx_quick.table.bin kinfx_quick_phrase.table.bin kinfx_en.table.bin kinfx_assoc.table.bin; do
+for b in kinfx_quick.table.bin kinfx_quick_phrase.table.bin kinfx_en.table.bin kinfx_names.table.bin kinfx_assoc.table.bin; do
   [[ -s "$TARGET/build/$b" ]] || { echo "ERROR: build/$b missing" >&2; exit 1; }
 done
 grep -m1 'version:' "$TARGET/build/kinfx_quick.schema.yaml"

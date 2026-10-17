@@ -61,7 +61,8 @@ def load_words(path: Path) -> list[str]:
     return sorted(words)
 
 
-def build(order_tsv: Path, single_tsv: Path, essay: Path, en_dict: Path, max_len: int):
+def build(order_tsv: Path, single_tsv: Path, essay: Path, en_dict: Path, max_len: int,
+          extra_dicts: tuple[Path, ...] = ()):
     order: dict[str, list[str]] = {}
     read_order(order_tsv, order, True)
     read_order(single_tsv, order, False)
@@ -129,7 +130,7 @@ def build(order_tsv: Path, single_tsv: Path, essay: Path, en_dict: Path, max_len
         walk(0, None, 1.0)
         return out * 1e4
 
-    words = [w for w in load_words(en_dict) if len(w) <= max_len]
+    words = sorted({w for d in (en_dict, *extra_dicts) for w in load_words(d) if len(w) <= max_len})
     rates = {w: rate(w) for w in words}
     # Every two-letter English word that is a real Sucheng code must be unsafe:
     # Space on a two-letter code pages the Chinese menu, so committing English
@@ -148,12 +149,15 @@ def main() -> None:
     ap.add_argument("--order", type=Path, default=ROOT / "schemas/kinfx-quick/ms_quick_order.tsv")
     ap.add_argument("--single", type=Path, default=ROOT / "schemas/kinfx-quick/win_quick_top9.tsv")
     ap.add_argument("--en-dict", type=Path, default=ROOT / "lexicon/en/kinfx_en.dict.yaml")
+    ap.add_argument("--names-dict", type=Path, default=ROOT / "lexicon/en/kinfx_names.dict.yaml",
+                    help="v0.5.4 brand names, rated like SCOWL words (missing file = skipped)")
     ap.add_argument("--threshold", type=float, default=0.01,
                     help="max collisions per 10k Chinese chars for Space to commit the word")
     ap.add_argument("--max-len", type=int, default=10)
     ap.add_argument("--out", type=Path, default=ROOT / "lexicon/en/kinfx_en_unsafe.txt")
     args = ap.parse_args()
-    rates = build(args.order, args.single, args.essay_cantonese, args.en_dict, args.max_len)
+    extra = (args.names_dict,) if args.names_dict and args.names_dict.exists() else ()
+    rates = build(args.order, args.single, args.essay_cantonese, args.en_dict, args.max_len, extra)
     unsafe = sorted(w for w, r in rates.items() if r > args.threshold)
     kept = sum(r for w, r in rates.items() if r <= args.threshold)
     long_unsafe = [w for w in unsafe if len(w) >= 5]
@@ -164,7 +168,7 @@ def main() -> None:
         f"# Space more than {args.threshold} times per 10,000 characters (model in the script).",
         f"# Words checked: {len(rates)}; listed: {len(unsafe)} ({len(long_unsafe)} of 5+ letters).",
         f"# Expected Space changes left for all other words: {kept:.3f} per 10,000 characters.",
-        "# Word list: SCOWL (lexicon/NOTICE). Weights: rime-cantonese essay (CC BY 4.0).",
+        "# Word list: SCOWL + kinfx_names (Wikidata, CC0) (lexicon/NOTICE). Weights: rime-cantonese essay (CC BY 4.0).",
     ]
     args.out.write_text("\n".join(header + unsafe) + "\n", encoding="utf-8", newline="\n")
     print(f"wrote {args.out}: {len(unsafe)} unsafe of {len(rates)}; residual {kept:.3f}/10k; "
