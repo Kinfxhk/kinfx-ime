@@ -49,13 +49,22 @@ if [[ -f "$DC" ]] && grep -q 'schema: *kinfx_quick' "$DC"; then
   echo "  default.custom.yaml already lists kinfx_quick (kept)"
 elif [[ -f "$DC" ]]; then
   cp "$DC" "$DC.bak-$(date +%Y%m%d-%H%M%S)"
-  if grep -qE '^[[:space:]]+"?schema_list"?:' "$DC"; then
-    awk '{print} /^[[:space:]]+"?schema_list"?:[[:space:]]*$/ && !done {print "    - schema: kinfx_quick"; done=1}' "$DC" > "$DC.tmp"
+  # A block list key (schema_list: or "schema_list/+":, comment allowed) gets one
+  # more item; otherwise an append key goes under patch:. One regex for both.
+  LIST_RE='^[[:space:]]+"?schema_list(/[+])?"?:[[:space:]]*(#.*)?$'
+  if grep -qE "$LIST_RE" "$DC"; then
+    awk -v re="$LIST_RE" '{print} $0 ~ re && !done {print "    - schema: kinfx_quick"; done=1}' "$DC" > "$DC.tmp"
+  elif grep -qE '^[[:space:]]+"?schema_list(/[+])?"?:' "$DC"; then
+    echo "ERROR: $DC has an inline schema_list; add '- schema: kinfx_quick' by hand" >&2; exit 1
   elif grep -q '^patch:' "$DC"; then
     awk '{print} /^patch:/ && !done {print "  \"schema_list/+\":"; print "    - schema: kinfx_quick"; done=1}' "$DC" > "$DC.tmp"
   else
-    { cat "$DC"; printf 'patch:\n  "schema_list/+":\n    - schema: kinfx_quick\n'; } > "$DC.tmp"
+    { cat "$DC"; printf 'patch:
+  "schema_list/+":
+    - schema: kinfx_quick
+'; } > "$DC.tmp"
   fi
+  grep -q 'schema: *kinfx_quick' "$DC.tmp" || { echo "ERROR: could not add kinfx_quick to $DC" >&2; rm -f "$DC.tmp"; exit 1; }
   mv "$DC.tmp" "$DC"
   echo "  added kinfx_quick to default.custom.yaml (backup kept)"
 else
