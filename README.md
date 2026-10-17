@@ -63,7 +63,8 @@ Linux v0.5.1 嗰次唔係 byte-exact，原因係測試計劃喺英文詞後面�
 | 空白唔上屏嘅詞（容易同中文撞嘅短詞、少見詞，例如 door） | 打完撳一下左 Shift | `door` 左 Shift → `door` |
 | 公司名、產品名、網站名（Wondershare、GitLab、AdSense、GoDaddy…） | 打完撳空白或者左 Shift | `openai`␣ → `OpenAI `、`adsense`␣ → `AdSense ` |
 | 打到一半變咗中文嘅英文字（`zdrav`、`etsy`） | 打完撳一下左 Shift（v0.5.4 補救） | `zdrav` 左 Shift → `zdrav` |
-| 詞表冇嘅英文字、英文詞開頭（const、async） | 5 個字母或以上撳空白（6 個字母除外，空白係速成翻頁）；短啲撳左 Shift | `const`␣ → `const ` |
+| 英文詞開頭（const、async） | 5 個字母或以上撳空白（6 個字母除外，空白係速成翻頁）；短啲撳左 Shift | `const`␣ → `const ` |
+| 詞表冇嘅英文字 | 7 個字母或以上撳空白；短啲撳左 Shift | `wonderxyz`␣ → `wonderxyz ` |
 | 連字號英文（tool-calling） | 直接打 `-` | `tool-calling`␣ → `tool-calling ` |
 | 打錯字 | Backspace 退一個字母，再打 | `hellp` ⌫ `o`␣ → `hello ` |
 | 大寫開頭、email、URL | 直接打 | `Startup`、`a@b.com`、`www.x.com`、`https://x.com` |
@@ -214,7 +215,7 @@ Windows 實機自動化驗收（41 項）同 Linux VM 實打嘅結果，見上�
 **v0.5.3（2026-10-18）**：打 code／網址修正。
 - 撳住 Shift 打 `:` `_` `^` `!` 等符號唔再被當成「左 Shift 上屏英文」吞咗；`https://x.com` 可以直接打。
 - `www.`、`https:`、`ftp:`、`mailto:` 開頭會保留做網址。
-- 英文詞開頭（const、async、function）同詞表冇嘅字 5 個字母起撳空白上屏（v0.5.2 要 7 個）。
+- 英文詞開頭（const、async、function）5 個字母起撳空白上屏（6 個字母除外；v0.5.2 要 7 個）。詞表冇嘅字照舊 7 個。
 - 英文詞後面打 `-` 接駁（tool-calling、JSON-schema），中文照 Windows（`english/hyphen: off` 還原）。
 - 打緊字撳 Ctrl+C／V／X 收起輸入，快捷鍵交返程式。
 - 預編輯改為顯示打咗嘅字母（`of`，唔再係字根 `人火`）；英文詞顯示成個（`hello`）。要字根：`"english/preedit": radicals`。

@@ -18,7 +18,7 @@
 | --- | --- |
 | Shift 符號（`:` `_` `^` `!` `"`）：撳住 Shift 打符號唔當英文上屏 tap | ✅ 修正（Windows 實機 `好：`、`https://x.com`） |
 | URL：`www.` `https:` `http:` `ftp:` `mailto:` `file:` 開頭保留做網址 | ✅ 修正 |
-| 英文詞開頭／未知字 5 個字母起空白上屏（6 字母除外） | ✅ 修正（`const␣`、`async␣`） |
+| 英文詞開頭 5 個字母起空白上屏（6 字母除外）；未知字照舊 7 個（5 個會撞中文：`giorj`␣） | ✅ 修正（`const␣`、`async␣`） |
 | 連字號：英文詞後 `-` 接駁（`english/hyphen`） | ✅ 新增 |
 | Ctrl+C／V／X 打緊字：收起輸入（`english/clipboard`） | ✅ 新增 |
 | `;` `'` 唔再做速成分隔符：`vd;` → 好； | ✅ 修正 |

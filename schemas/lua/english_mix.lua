@@ -369,12 +369,12 @@ local function unknown_space_ok(env, ctx)
 end
 
 -- A held prefix of an English word (const, async, defau…) that is not a word
--- itself: Space commits the letters from 5 on. Measured with
--- gen_english_space.build(): all such 5-letter prefixes together change
--- 0.001 Chinese Space presses per 10,000 characters, 6-letter 0.008, 7+ 0.
+-- itself: Space commits the letters from 5 on, except 6. Six letters are three
+-- full Sucheng pairs where Space pages the Chinese menu (compare.py v0.5.4:
+-- morton / popper / imprim Space 1 typed the letters instead of 仄啦俐 …).
 local function prefix_space_ok(env, ctx)
-  return env.space_mode ~= "off" and #S.raw >= 5 and S.known_en == #S.raw
-    and not chinese_held(ctx)
+  return env.space_mode ~= "off" and #S.raw >= 5 and #S.raw ~= 6
+    and S.known_en == #S.raw and not chinese_held(ctx)
 end
 
 -- Unknown words after a 4-letter English start: lengths 5 and 7+ only.
@@ -430,7 +430,8 @@ local function read_env(env)
   -- except Space / Left Shift on such a run.
   env.hold_min = config_int(config, "english/hold_min", 4)
   env.hold_extra = config_int(config, "english/hold_extra", 8)
-  env.unknown_space_min = config_int(config, "english/unknown_space_min", 5)
+  -- 7 (v0.5.2): at 5, giorj Space (去合 + j Space) typed giorj (article replay).
+  env.unknown_space_min = config_int(config, "english/unknown_space_min", 7)
   -- english/rescue_min (v0.5.4): a run whose first rescue_min letters are an
   -- English / name prefix stays held for up to rescue_extra more letters even
   -- after it stops being one, so a Left Shift tap still types the letters
