@@ -156,6 +156,19 @@ local function reset()
   S.raw, S.pending, S.tracking, S.known = "", "", false, 0
 end
 
+-- v0.5.4 Left Shift rescue. When a run that started as an English / name
+-- prefix (rescue_min letters) breaks, the normal v0.5.3 path below keeps
+-- running unchanged, but whatever it commits is parked in R.defer instead of
+-- reaching the app. R.raw collects every letter since the run started.
+-- A Left Shift tap then types R.raw (zdrav) unless the normal path holds a
+-- complete word (vd + of -> 好of). Any other key commits R.defer first, so
+-- the app text equals v0.5.3 for every key sequence without that tap.
+local R = { alive = false, raw = "", defer = "", cap = 0 }
+
+local function rescue_drop()
+  R.alive, R.raw, R.defer, R.cap = false, "", "", 0
+end
+
 -- Older builds put the hint in seg.prompt; nothing to clear now.
 local function clear_hint(_ctx)
 end
@@ -163,6 +176,20 @@ end
 local function flush(env)
   local text = S.pending
   reset()
+  if text == "" then
+    return
+  end
+  if R.alive then
+    R.defer = R.defer .. text
+  else
+    env.engine:commit_text(text)
+  end
+end
+
+-- End the rescue the v0.5.3 way: the parked commits reach the app now.
+local function rescue_end(env)
+  local text = R.defer
+  rescue_drop()
   if text ~= "" then
     env.engine:commit_text(text)
   end
@@ -298,6 +325,10 @@ local function space_text(env, raw)
   if env.names[raw] then
     return env.names[raw]
   end
+  local name = word_text(env.names_mem, raw) -- kinfx_names (adsense -> AdSense)
+  if name then
+    return name
+  end
   if text and env.hold_set[raw] then
     return text
   end
@@ -310,7 +341,7 @@ local function shift_text(env, raw)
   if lower then
     return text
   end
-  return env.names[raw] or raw
+  return env.names[raw] or (word_text(env.names_mem, raw)) or raw
 end
 
 -- An unknown word (raw ran past every kinfx_en prefix): Space commits the raw
@@ -370,6 +401,8 @@ local function read_env(env)
   env.commit_key = config_str(config, "english/commit_key", "Shift_L")
   env.commit_code = KEYCODE[env.commit_key] or 0xffe1
   env.en_mem = pm.new_memory(env, "kinfx_en")
+  -- v0.5.4: brand / website names (kinfx_names, ~5k, native table).
+  env.names_mem = pm.new_memory(env, "kinfx_names")
   env.unsafe = load_unsafe()
   env.names, env.name_prefix = load_names()
   -- english/empty_shift: noop (default; a Left Shift tap with nothing typed
@@ -382,6 +415,14 @@ local function read_env(env)
   env.hold_min = config_int(config, "english/hold_min", 4)
   env.hold_extra = config_int(config, "english/hold_extra", 8)
   env.unknown_space_min = config_int(config, "english/unknown_space_min", 5)
+  -- english/rescue_min (v0.5.4): a run whose first rescue_min letters are an
+  -- English / name prefix stays held for up to rescue_extra more letters even
+  -- after it stops being one, so a Left Shift tap still types the letters
+  -- (adsense, zdrav). Space, digits and every other key give the v0.4.1
+  -- Chinese, so only the timing changes: the top-outs wait for that key.
+  -- 0 = off (v0.5.3).
+  env.rescue_min = config_int(config, "english/rescue_min", 2)
+  env.rescue_extra = config_int(config, "english/rescue_extra", 8)
   -- english/clipboard: clear (default) = Ctrl+C / Ctrl+V / Ctrl+X close the
   -- composition (held top-outs are sent, letters dropped like Esc) and reach
   -- the app | keep = v0.5.2 (Ctrl+V paged the menu, Ctrl+C did nothing).
@@ -410,9 +451,10 @@ local function init(env)
   -- A candidate picked with the mouse commits without a key event: send the
   -- pending top-outs first (grouped slots run before the engine's own).
   env.commit_conn = ctx.commit_notifier:connect(function(_)
-    if not S.guard and S.pending ~= "" then
-      local text = S.pending
+    if not S.guard and (S.pending ~= "" or R.defer ~= "") then
+      local text = R.defer .. S.pending
       reset()
+      rescue_drop()
       env.engine:commit_text(text)
     end
   end, 0)
@@ -420,6 +462,9 @@ local function init(env)
   env.update_conn = ctx.update_notifier:connect(function(c)
     if not S.guard and (c.input or "") == "" then
       reset()
+      if R.alive then
+        rescue_end(env)
+      end
     end
   end)
 end
@@ -440,8 +485,13 @@ end
 
 -- May the run take letter ch? A kinfx_en prefix, or an unknown word that
 -- started as a long enough English prefix (hold_min) and is still short.
+local function is_prefix(env, raw)
+  return pm.has_prefix(env.en_mem, raw) or env.name_prefix[raw]
+    or pm.has_prefix(env.names_mem, raw)
+end
+
 local function can_extend(env, raw)
-  if pm.has_prefix(env.en_mem, raw) or env.name_prefix[raw] then
+  if is_prefix(env, raw) then
     return true, true
   end
   if env.hold_min > 0 and S.known >= env.hold_min
@@ -497,7 +547,65 @@ local function is_symbol(kc)
              or (kc >= 0x61 and kc <= 0x7a))
 end
 
+local function word_known(env, raw)
+  return word_text(env.en_mem, raw) ~= nil or env.names[raw] ~= nil
+    or word_text(env.names_mem, raw) ~= nil
+end
+
+local process -- the v0.5.3 key handler, below
+
 local function func(key, env)
+  local kc = key.keycode
+  if not R.alive then
+    local r = process(key, env)
+    -- the rescue started on this key; kNoop lets the speller commit next,
+    -- so the parked text has to reach the app before it
+    if R.alive and r ~= kAccepted then
+      rescue_end(env)
+    end
+    return r
+  end
+  local repr = key:repr()
+  local plain = not (key:ctrl() or key:alt() or key:super())
+  if key:release() or kc == env.commit_code then
+    -- Left Shift tap: the rescue wins unless the normal path holds a word.
+    if kc == env.commit_code and key:release() and env.shift_down and not env.shift_used
+       and not (S.tracking and S.raw ~= "" and word_known(env, S.raw)) then
+      env.shift_down, env.shift_used = false, false
+      local text = R.raw
+      rescue_drop()
+      commit_word(env, env.engine.context, text)
+      return kAccepted
+    end
+    if kc == env.commit_code and key:release() then
+      local text = R.defer
+      rescue_drop()
+      if text ~= "" then
+        env.engine:commit_text(text)
+      end
+    end
+    return process(key, env)
+  end
+  if plain and repr:match("^[a-z]$") then
+    R.raw = R.raw .. repr
+    local r = process(key, env)
+    -- kNoop lets the speller commit after us: the parked text must go first.
+    if r ~= kAccepted or #R.raw > R.cap then
+      rescue_end(env)
+    end
+    return r
+  end
+  -- shortcut: Backspace ends the rescue like any other key (v0.5.3 text);
+  -- replaying the run needs the speller's top-out, upgrade if users ask.
+  -- A bare modifier press (Shift_R before Shift+;) keeps the rescue.
+  if kc >= 0xffe1 and kc <= 0xffee and kc ~= 0xffe5 and kc ~= 0xffe6 then
+    return process(key, env)
+  end
+  rescue_end(env)
+  return process(key, env)
+end
+
+function process(key, env)
   local ctx = env.engine.context
   local repr = key:repr()
   -- Compare keycodes, not repr: Weasel sends "Shift+Shift_L" for the press
@@ -674,6 +782,10 @@ local function func(key, env)
       -- The English prefix broke: send the held top-outs now (v0.4.1 had
       -- committed them already) and fall through, so this letter can still
       -- start a new English run at a code boundary.
+      if env.rescue_min > 0 and not R.alive and S.known >= env.rescue_min then
+        R.alive, R.raw, R.defer = true, raw, ""
+        R.cap = S.known + env.rescue_extra
+      end
       flush(env)
     end
     if input == "" then
@@ -696,7 +808,7 @@ local function func(key, env)
     end
     local rest = ctx.input or ""
     flush(env)
-    if rest:match("^[a-z]+$") and (pm.has_prefix(env.en_mem, rest) or env.name_prefix[rest]) then
+    if rest:match("^[a-z]+$") and is_prefix(env, rest) then
       -- Everything committed so far is final; the letters still composing
       -- start at a Windows code boundary, so track them as a possible word.
       S.tracking, S.raw, S.pending, S.known = true, rest, "", #rest
@@ -781,7 +893,8 @@ local function filter_func(input, env)
         or prefix_space_ok(env, ctx) then
       mark = "␣"
     end
-    local pre = S.pending ~= "" and (S.pending .. " ") or ""
+    local held = R.defer .. S.pending
+    local pre = held ~= "" and (held .. " ") or ""
     -- The preedit already shows the letters in letters mode; keep only the mark.
     hint = pre .. mark .. (env.letters and "" or S.raw)
   end

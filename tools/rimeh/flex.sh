@@ -38,6 +38,7 @@ NONE='  "phrase_mix/capture": none'
 NOEN='  "english/enable": false'
 ESHIFT='  "english/empty_shift": ascii'
 NOHOLD='  "english/hold_min": 0'
+NORESCUE='  "english/rescue_min": 0'
 CLIPKEEP='  "english/clipboard": keep'
 HYOFF='  "english/hyphen": off'
 RADICALS='  "english/preedit": radicals'
@@ -78,6 +79,8 @@ check spaceoff "$SPACEOFF" "wonderxyz1" "囚子河⺀"   # unknown words follow 
 check eshift "$ESHIFT" "{Shift_L}{Release+Shift_L}vd1" ""   # ascii mode: keys pass through to the app (nothing committed)
 # english/hold_min: 0 = no unknown-word hold (v0.5.1 behaviour)
 check nohold "$NOHOLD" "wonderxyz1" "囚子河⺀"
+# english/rescue_min: 0 = v0.5.3 (zdrav breaks into Chinese at d, Left Shift keeps only rav)
+check norescue "$NORESCUE" "zdrav{Shift_L}{Release+Shift_L}" "。rav"
 # english/clipboard: keep = v0.5.2 (Ctrl+V pages the menu)
 check clipkeep "$CLIPKEEP" "vd{Control+v}" ""
 # english/hyphen: off = v0.5.2 (hyphen after an English word goes to the punctuator)

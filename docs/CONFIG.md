@@ -77,6 +77,15 @@
 | `english/hyphen` | `word` | 英文詞後面打 `-` 接駁（`tool-calling`）；`off` 交返標點（v0.5.2） |
 | `english/clipboard` | `clear` | 打緊字撳 Ctrl+C／V／X：收起輸入，快捷鍵交返程式；`keep` 照 v0.5.2 |
 
+## v0.5.4 新開關
+
+| 開關 | 預設 | 作用 |
+| --- | --- | --- |
+| `english/rescue_min` | `2` | 左 Shift 補救：開頭夠呢個字母數係英文／品牌名開頭，之後斷咗都繼續留住，撳左 Shift 照字母上屏（`adsense`、`zdrav`）；空白／數字照 Windows 出中文。`0` 關（v0.5.3） |
+| `english/rescue_extra` | `8` | 上面最多再留幾多個字母 |
+
+品牌／網站名表（v0.5.4）：`lexicon/en/kinfx_names.dict.yaml`，由 `scripts/gen_names.py` 喺 Wikidata（CC0）生成，部署時編譯成原生表 `kinfx_names`（唔入 Lua heap）。手寫名表 `kinfx_en_names.txt` 優先。
+
 公司名／產品名表：`lexicon/en/kinfx_en_names.txt`（「顯示字<Tab>細楷碼」）。安裝後喺 Rime 用戶目錄，改完重新部署。
 
 ## 自動化測試注意

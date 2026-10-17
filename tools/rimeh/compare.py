@@ -44,6 +44,7 @@ SHARED = "C:/Program Files/Rime/weasel-0.17.4/data"
 ORDER_TSV = ROOT / "schemas/kinfx-quick/ms_quick_order.tsv"
 SINGLE_TSV = ROOT / "schemas/kinfx-quick/win_quick_top9.tsv"
 EN_DICT = ROOT / "lexicon/en/kinfx_en.dict.yaml"
+NAMES_DICT = ROOT / "lexicon/en/kinfx_names.dict.yaml"  # v0.5.4 brand names
 UNSAFE = ROOT / "lexicon/en/kinfx_en_unsafe.txt"
 ESSAY = Path(os.environ.get("APPDATA", "")) / "Rime/essay-cantonese.txt"
 REPORT = ROOT / "docs/eval/V05_COMPARE.md"
@@ -87,6 +88,8 @@ def load_order():
 
 def load_english():
     words = ges.load_words(EN_DICT)  # set of lowercase English words
+    if NAMES_DICT.exists():
+        words = sorted(set(words) | set(ges.load_words(NAMES_DICT)))
     prefixes: set[str] = set()
     for w in words:
         for i in range(2, len(w) + 1):
@@ -260,8 +263,9 @@ def space_words(unsafe: set[str]) -> set[str]:
     not unsafe, and a lowercase entry exists or the word is a +hold extra."""
     texts = en_texts()
     extras = set(load_hold_words())
+    names = set(ges.load_words(NAMES_DICT)) if NAMES_DICT.exists() else set()
     return {w for w, ts in texts.items()
-            if len(w) >= 3 and w not in unsafe and (w in ts or w in extras)}
+            if len(w) >= 3 and w not in unsafe and (w in ts or w in extras or w in names)}
 
 
 def english_keys(word: str, space_ok: set[str]) -> str:
@@ -477,16 +481,19 @@ def chinese_changed(control_app: str, smart_app: str) -> bool:
 def en_texts() -> dict[str, set[str]]:
     """code -> every display text kinfx_en has for it (Gmail, gmail, ...)."""
     out: dict[str, set[str]] = {}
-    body = False
-    for line in EN_DICT.read_text(encoding="utf-8").splitlines():
-        if line.startswith("..."):
-            body = True
+    for path in (EN_DICT, NAMES_DICT):
+        if not path.exists():
             continue
-        if not body or not line or line.startswith("#"):
-            continue
-        parts = line.rstrip("\r\n").split("\t")
-        if len(parts) >= 2:
-            out.setdefault(parts[1], set()).add(parts[0])
+        body = False
+        for line in path.read_text(encoding="utf-8").splitlines():
+            if line.startswith("..."):
+                body = True
+                continue
+            if not body or not line or line.startswith("#"):
+                continue
+            parts = line.rstrip("\r\n").split("\t")
+            if len(parts) >= 2:
+                out.setdefault(parts[1], set()).add(parts[0])
     return out
 
 
