@@ -58,6 +58,12 @@
 | 持久英文 | `Control+Shift+2` 切換 `ascii_mode` |
 | 一定要切先打英文 | 清空 `recognizer/patterns/uppercase` |
 
+## 自動化測試注意
+
+- **空白上屏英文會自帶一個空格**：`startup` 空白 → `startup `，嗰下空白已經用咗。測試計劃打完英文詞唔好再加一個空白，否則會變雙空格。左 Shift 上屏（`of` 左 Shift → `of`）就冇空格，要空格先再撳空白。
+- **揀字後第一下空白係打空格**（`association/space: type`），唔會翻聯想頁。
+- **Fcitx5**：重啟或者開新視窗時，輸入法有時會返去 `keyboard-us`。自動化開始前先執行 `fcitx5-remote -s rime`。
+
 ## Fcitx5 同左 Shift
 
 Fcitx5 預設用左 Shift 切輸入法，rime 收唔到。大部分英文詞用空白上屏，唔受影響；但短詞（`of`、`to`）要左 Shift，喺預設 Fcitx5 上面撳落去會切走輸入法，`of` 變返中文（伙）。

@@ -11,7 +11,8 @@
 | `passion` 拆字（`pass` 前面已頂字，尾段 `ion` 撞中文詞語）：前面有待上屏頂字時，英文詞成串優先 | ✅ 修正 |
 | 「多」出「夀」：本機 `ni` 3＝多、`gi` 第 33 個＝夀，同 Windows 實測一致；VM 計劃檔按鍵要再對 | 🟡 待 VM 重測 |
 | `vd1␣␣`Shift+1：預設（type）＝「好  」再 `!`；`association/space: page` 時＝好笑。聯想表係 essay-cantonese 頻率，唔係 Windows 聯想次序 | 🟡 已知差異 |
-| Linux 左 Shift：`scripts/linux-free-left-shift.sh` 移除 Fcitx5 Shift_L 熱鍵；Caps Lock 改為唔建議 | ✅ 文件／腳本 |
+| Linux 左 Shift：`scripts/linux-free-left-shift.sh` 移除 Fcitx5 Shift_L 熱鍵；Caps Lock 改為唔建議 | ✅ Linux VM 實測 |
+| Linux VM（Fcitx5 5.1.19 + gedit）v0.5.1 驗收：「。」9/9、passion、`of`＋左 Shift、505 字文章去空格後 453/453、30 個英詞 | ✅ 外部實測 |
 
 
 ## v0.5.0
