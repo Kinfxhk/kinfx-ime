@@ -78,6 +78,7 @@ static class KeyTab {
             case "Right": return 0xff53;
             case "Shift_L": return 0xffe1;
             case "Shift_R": return 0xffe2;
+            case "Caps_Lock": return 0xffe5;
             // Shifted digits (US layout) = 1..9
             case "exclam": return 0x21;
             case "at": return 0x40;
