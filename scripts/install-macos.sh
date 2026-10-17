@@ -41,19 +41,26 @@ done
 # v0.4 dropped the Lua-heap lexicon loaders. Remove stale copies.
 rm -f "$TARGET/lua/melt_eng.lua" "$TARGET/lua/lexicon_index.lua"
 
-# schema_list: keep the user's own default.custom.yaml if it already lists us.
+# schema_list: add kinfx_quick without replacing Squirrel's list or other patches.
+# "schema_list/+" appends to the shipped list; an existing schema_list patch gets
+# one more item. A copy of the old file is kept as default.custom.yaml.bak-*.
 DC="$TARGET/default.custom.yaml"
 if [[ -f "$DC" ]] && grep -q 'schema: *kinfx_quick' "$DC"; then
   echo "  default.custom.yaml already lists kinfx_quick (kept)"
+elif [[ -f "$DC" ]]; then
+  cp "$DC" "$DC.bak-$(date +%Y%m%d-%H%M%S)"
+  if grep -qE '^[[:space:]]+"?schema_list"?:' "$DC"; then
+    awk '{print} /^[[:space:]]+"?schema_list"?:[[:space:]]*$/ && !done {print "    - schema: kinfx_quick"; done=1}' "$DC" > "$DC.tmp"
+  elif grep -q '^patch:' "$DC"; then
+    awk '{print} /^patch:/ && !done {print "  \"schema_list/+\":"; print "    - schema: kinfx_quick"; done=1}' "$DC" > "$DC.tmp"
+  else
+    { cat "$DC"; printf 'patch:\n  "schema_list/+":\n    - schema: kinfx_quick\n'; } > "$DC.tmp"
+  fi
+  mv "$DC.tmp" "$DC"
+  echo "  added kinfx_quick to default.custom.yaml (backup kept)"
 else
-  [[ -f "$DC" ]] && cp "$DC" "$DC.bak-$(date +%Y%m%d-%H%M%S)"
-  cat > "$DC" <<'EOF'
-# KINFX: schema list (earlier file kept as default.custom.yaml.bak-*)
-patch:
-  schema_list:
-    - schema: kinfx_quick
-EOF
-  echo "  wrote default.custom.yaml (schema_list: kinfx_quick)"
+  printf '# KINFX: add the schema to the Squirrel list\npatch:\n  "schema_list/+":\n    - schema: kinfx_quick\n' > "$DC"
+  echo "  wrote default.custom.yaml (schema_list/+: kinfx_quick)"
 fi
 
 # Two-arg form: one-arg --build reuses the user dir as shared data and fails
