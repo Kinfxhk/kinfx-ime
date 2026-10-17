@@ -43,6 +43,7 @@ ai2	C:時
 mk1	C:天
 rr9	C:唔
 vd	M:好|她|妹|紆|巢|媒|彙|綑|綵
+j	M:十
 hi	M:凡|么|丟|夙|舟|卵|我|私|的
 of	M:伙|你|係|偽|氮|焦|無|絛|僚
 h	M:竹|丿
@@ -154,6 +155,7 @@ async{space}	async·
 consts{space}	欲乃
 morton{space}1	仄啦俐
 giorj{space}1	去合十
+j{space}1	十
 defau{space}	defau·
 json{space}	JSON·
 lol{Shift_L}{Release+Shift_L}	lol
