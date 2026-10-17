@@ -518,6 +518,20 @@ local function func(key, env)
     env.assoc_tap = false
     -- Shift+; / Shift+- / Shift+6 …: releasing that Shift is not an English commit tap.
     env.shift_used = env.shift_down
+    if kc == 0xffe2 then
+      env.rshift_down, env.rshift_used = true, false
+    elseif env.rshift_down then
+      env.rshift_used = true
+    end
+  end
+  -- Right Shift used as a modifier (Shift_R + ;): ascii_composer's Shift_R
+  -- commit_text would fire on the release and commit the raw code (vd:).
+  if kc == 0xffe2 and key:release() then
+    local used = env.rshift_down and env.rshift_used
+    env.rshift_down, env.rshift_used = false, false
+    if used then
+      return kAccepted
+    end
   end
 
   if not key:release() then
@@ -538,7 +552,14 @@ local function func(key, env)
     -- clients dropped; committing it here works the same everywhere.
     local cseg = ctx.composition and not ctx.composition:empty() and ctx.composition:back()
     local in_url = cseg and (cseg:has_tag("url") or cseg:has_tag("email") or cseg:has_tag("uppercase"))
-    local url_start = S.tracking and kc < 0x80 and URL_START[S.raw .. string.char(kc)]
+    local url_start = S.tracking and kc < 0x80 and URL_START[S.raw .. string.char(kc)]
+    -- Space on a URL / email: commit it plus a space, like an English word
+    -- (www.x.com + Space typed www.x.com with no space).
+    if repr == "space" and not S.tracking and env.smart and cseg
+       and (cseg:has_tag("url") or cseg:has_tag("email")) then
+      commit_word(env, ctx, (ctx.input or "") .. " ")
+      return kAccepted
+    end
     if ctx:get_option("ascii_punct") and not ctx:get_option("ascii_mode") and not in_url
        and not url_start
        and not (key:ctrl() or key:alt() or key:super()) and is_symbol(kc) then
@@ -675,6 +696,11 @@ local function func(key, env)
   end
 
   if not S.tracking then
+    return kNoop
+  end
+  -- A bare modifier press (Shift_R / Control / Alt before Shift+; …) is not an
+  -- end key: keep the held run, or https + Shift_R + : committed 升花.
+  if (kc >= 0xffe1 and kc <= 0xffee) then
     return kNoop
   end
   clear_hint(ctx)
