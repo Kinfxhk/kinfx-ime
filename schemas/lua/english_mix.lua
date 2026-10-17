@@ -511,16 +511,18 @@ local function func(key, env)
       env.assoc_tap = true
     elseif env.assoc_tap and assoc_active(ctx) then
       env.assoc_tap = false
+      -- this release never reaches the commit-key handler: end the Shift state here
+      env.shift_down, env.shift_used = false, false
       close_assoc(ctx)
       return kAccepted
     end
   elseif not key:release() then
     env.assoc_tap = false
     -- Shift+; / Shift+- / Shift+6 …: releasing that Shift is not an English commit tap.
-    if env.shift_down then
+    if env.shift_down and kc ~= env.commit_code then
       env.shift_used = true
     end
-    if kc == 0xffe2 then
+    if kc == 0xffe2 and kc ~= env.commit_code then
       if not env.rshift_down then
         env.rshift_used = false
       end
@@ -531,7 +533,7 @@ local function func(key, env)
   end
   -- Right Shift used as a modifier (Shift_R + ;): ascii_composer's Shift_R
   -- commit_text would fire on the release and commit the raw code (vd:).
-  if kc == 0xffe2 and key:release() then
+  if kc == 0xffe2 and kc ~= env.commit_code and key:release() then
     local used = env.rshift_down and env.rshift_used
     env.rshift_down, env.rshift_used = false, false
     if used then
@@ -707,7 +709,8 @@ local function func(key, env)
   end
   -- A bare modifier press (Shift_R / Control / Alt before Shift+; …) is not an
   -- end key: keep the held run, or https + Shift_R + : committed 升花.
-  if (kc >= 0xffe1 and kc <= 0xffee) then
+  -- Caps_Lock (0xffe5, schema action clear) still flushes (Bugbot).
+  if kc >= 0xffe1 and kc <= 0xffee and kc ~= 0xffe5 and kc ~= 0xffe6 then
     return kNoop
   end
   clear_hint(ctx)
