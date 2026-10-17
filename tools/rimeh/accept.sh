@@ -148,6 +148,8 @@ https{Shift_L}{Shift+colon}{Shift+Release+Shift_L}//x.com{space}	https://x.com·
 hel{Shift_L}{Shift+Release+Shift_L}	hel
 hel{Shift_L}{Shift+colon}{Shift_L}{Shift+Release+Shift_L}	反中：
 {Shift_L}{Shift+colon}{Shift+Release+Shift_L}hel{Shift_L}{Release+Shift_L}	：hel
+hi7{Shift_L}{Release+Shift_L}hel{Shift_L}{Release+Shift_L}	我hel
+vdhe{Caps_Lock}	好[Caps_Lock]
 tool{minus}calling{space}	tool-calling·
 json{minus}schema{space}	JSON-schema·
 abac{minus}{Return}	明顯
