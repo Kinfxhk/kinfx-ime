@@ -80,7 +80,8 @@ Linux v0.5.1 嗰次唔係 byte-exact，原因係測試計劃喺英文詞後面�
 | `/` | 直接撳，出半形 /（v0.5.2 起唔使揀） |
 | 「、」 | 撳 `\` |
 | 全部符號半形（寫 code：`( ) ; : ' " , .` 等） | 撳 **Ctrl+.** 切英文標點，再撳一次返中文標點（同 Windows 微軟速成一樣）。狀態會記住 |
-| `:` `_` `^` 等 Shift 符號 | 照平時撳住 Shift 打；撳住 Shift 打符號唔會當英文上屏（v0.5.3 修正） |
+| `'` `"` `_` | 直接出半形（v0.5.3 起，同 Windows 微軟速成實測一樣） |
+| `:` `^` 等 Shift 符號 | 照平時撳住 Shift 打；撳住 Shift 打符號唔會當英文上屏（v0.5.3 修正） |
 | 打緊字撳 Ctrl+C／V／X | 收起輸入，快捷鍵交返程式（`english/clipboard: keep` 還原 v0.5.2） |
 
 ## 聯想詞
@@ -208,6 +209,7 @@ Windows 實機自動化驗收（41 項）同 Linux VM 實打嘅結果，見上�
 - 打緊字撳 Ctrl+C／V／X 收起輸入，快捷鍵交返程式。
 - 預編輯改為顯示打咗嘅字母（`of`，唔再係字根 `人火`）；英文詞顯示成個（`hello`）。要字根：`"english/preedit": radicals`。
 - `;`、`'` 照 Windows 頂字再出標點（`vd;` → 好；）。
+- `'`、`"`、`_` 出半形（Windows 11 微軟速成實測一樣），其他中文標點照舊全形。
 - 名表加 140 個科技詞同縮寫（JSON、API、Linux…）；同時修正一個 v0.5.3 開發中出現、令名表大寫失效嘅次序錯誤。
 
 **v0.5.2（2026-10-17）**：用戶親測回報。
@@ -260,7 +262,7 @@ KINFX is a Hong Kong Traditional Chinese Sucheng (Quick) IME on librime. It runs
 - The English feature does not change Chinese output: 0 changes over 1.9 million key sequences compared with v0.4.1 (offline).
 - No Linux latency number has been measured yet.
 
-**v0.5.3 fixes** (coding / URLs): a Shift held for a symbol (`:` `_` `^` `!`) is no longer read as the Left Shift English commit, so `https://x.com` types as is; `www.` `https:` `ftp:` `mailto:` starts stay a URL; English word starts and unknown words commit on Space from 5 letters (not 6: three Sucheng pairs, Space pages); a hyphen after an English word joins (`tool-calling`, `english/hyphen: off` restores v0.5.2); Ctrl+C / V / X while composing close the composition and reach the app (`english/clipboard: keep`); the preedit shows the typed letters (`of`, the whole `hello`) instead of Sucheng radicals (`english/preedit: radicals` restores them); `;` and `'` top out like Windows (`vd;` → 好；); 141 tech terms and acronyms added to the names list. Windows real-machine acceptance 54/54.
+**v0.5.3 fixes** (coding / URLs): a Shift held for a symbol (`:` `_` `^` `!`) is no longer read as the Left Shift English commit, so `https://x.com` types as is; `www.` `https:` `ftp:` `mailto:` starts stay a URL; English word starts and unknown words commit on Space from 5 letters (not 6: three Sucheng pairs, Space pages); a hyphen after an English word joins (`tool-calling`, `english/hyphen: off` restores v0.5.2); Ctrl+C / V / X while composing close the composition and reach the app (`english/clipboard: keep`); the preedit shows the typed letters (`of`, the whole `hello`) instead of Sucheng radicals (`english/preedit: radicals` restores them); `;` and `'` top out like Windows (`vd;` → 好；); `'` `"` `_` type half-width as measured on Windows 11 Microsoft Quick, other Chinese punctuation stays full-width; 141 tech terms and acronyms added to the names list. Windows real-machine acceptance 54/54.
 
 **v0.5.2 fixes** (user report): `/` types `/` directly and `\` types 、; Ctrl+. toggles ASCII punctuation for code; the Tab expand label no longer sits in the preedit (it leaked into documents) and Esc ends it; Backspace inside an English word removes one letter instead of committing the held Chinese; a Left Shift tap with nothing typed no longer enters inline English; company / product names (`lexicon/en/kinfx_en_names.txt`, 333 entries) and unknown long words are held instead of being split into Chinese.
 

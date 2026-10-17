@@ -12,6 +12,7 @@
 | 連字號：英文詞後 `-` 接駁（`english/hyphen`） | ✅ 新增 |
 | Ctrl+C／V／X 打緊字：收起輸入（`english/clipboard`） | ✅ 新增 |
 | `;` `'` 唔再做速成分隔符：`vd;` → 好； | ✅ 修正 |
+| `'` `"` `_` 出半形（Windows 11 微軟速成實測：`'`→' `_`→_ `"`→"）；，。：照舊全形 | ✅ 修正（Linux 報 `好‘`、`——`） |
 | 名表 +141（科技詞、縮寫） | ✅ 新增 |
 | 預編輯顯示字母（`of`／成個 `hello`），唔再係字根；`english/preedit: radicals` 還原 | ✅ 新增（Windows 實機截圖確認） |
 | `hello` Esc／Ctrl+C 仍會將已頂字嘅中文上屏（Windows 行為：頂咗字就已經上屏） | 🟡 跟 Windows，冇改 |
