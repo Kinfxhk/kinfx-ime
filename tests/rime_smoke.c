@@ -644,7 +644,7 @@ static int assert_english_mix(RimeApi* api, RimeSessionId sid) {
   ok = ok && commit_space(api, sid, "const", "const ");
   ok = ok && commit_space(api, sid, "tool{minus}calling", "tool-calling ");
   ok = ok && commit_space(api, sid,
-      "https{Shift_L}{Shift+colon}{Shift+Release+Shift_L}//x.com", "https://x.com");
+      "https{Shift_L}{Shift+colon}{Shift+Release+Shift_L}//x.com", "https://x.com ");
   printf("english-mix space/shift:%s\n", ok ? "PASS" : "FAIL");
   return ok;
 }

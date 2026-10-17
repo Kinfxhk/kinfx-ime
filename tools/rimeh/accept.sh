@@ -146,6 +146,8 @@ lol{Shift_L}{Release+Shift_L}	lol
 https{Shift_L}{Shift+colon}{Shift+Release+Shift_L}//x.com{space}	https://x.com·
 {Control+period}{Shift_L}{Shift+colon}{Shift+Release+Shift_L}{Shift_L}{Shift+underscore}{Shift+Release+Shift_L}{Shift_L}{Shift+asciicircum}{Shift+Release+Shift_L}{Control+period}	:_^
 hel{Shift_L}{Shift+Release+Shift_L}	hel
+hel{Shift_L}{Shift+colon}{Shift_L}{Shift+Release+Shift_L}	反中：
+{Shift_L}{Shift+colon}{Shift+Release+Shift_L}hel{Shift_L}{Release+Shift_L}	：hel
 tool{minus}calling{space}	tool-calling·
 json{minus}schema{space}	JSON-schema·
 abac{minus}{Return}	明顯
