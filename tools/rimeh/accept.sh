@@ -128,6 +128,8 @@ wondershare{space}	Wondershare·
 gitlab{space}	GitLab·
 kubernetes{space}	Kubernetes·
 openai{space}	OpenAI·
+word{space}	word·
+apple{space}	apple·
 wonderxyz{space}	wonderxyz·
 {Shift_L}{Release+Shift_L}vd1	好
 {Control+period}vd1,{period}{slash}{semicolon}{Control+period}vd1,	好,./;好，

@@ -57,6 +57,7 @@ check long "$LONG" "startup{space}" "startup "
 # space off = Space never commits English
 check spaceoff "$SPACEOFF" "the{space}" "芽"
 check spaceoff "$SPACEOFF" "startup{space}" "屏昭羌"
+check spaceoff "$SPACEOFF" "wonderxyz1" "囚子河⺀"   # unknown words follow english/space too
 # english/empty_shift: ascii = v0.5.1 (empty Shift tap switches to English); default noop types 好
 check eshift "$ESHIFT" "{Shift_L}{Release+Shift_L}vd1" ""   # ascii mode: keys pass through to the app (nothing committed)
 # english/hold_min: 0 = no unknown-word hold (v0.5.1 behaviour)

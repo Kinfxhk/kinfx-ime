@@ -289,23 +289,34 @@ local KEYCODE = { Shift_L = 0xffe1, Shift_R = 0xffe2, Caps_Lock = 0xffe5 }
 -- such as Gmail. Proper nouns only through Left Shift; they collide with
 -- Chinese more and are rarely typed lowercase on purpose.
 local function space_text(env, raw)
+  local text, lower = word_text(env.en_mem, raw)
+  -- An ordinary lowercase word stays lowercase (word, apple, edge); the
+  -- names list only supplies the form for codes without one (openai -> OpenAI).
+  if lower then
+    return text
+  end
   if env.names[raw] then
     return env.names[raw]
   end
-  local text, lower = word_text(env.en_mem, raw)
-  if not text then
-    return nil
-  end
-  if lower or env.hold_set[raw] then
+  if text and env.hold_set[raw] then
     return text
   end
   return nil
 end
 
+-- Left Shift form: same rule (lowercase word first, then the names list).
+local function shift_text(env, raw)
+  local text, lower = word_text(env.en_mem, raw)
+  if lower then
+    return text
+  end
+  return env.names[raw] or raw
+end
+
 -- An unknown word (raw ran past every kinfx_en prefix): Space commits the raw
 -- letters once the word is long enough that Chinese typing rarely ends there.
 local function unknown_space_ok(env, ctx)
-  return #S.raw > S.known and env.unknown_space_min > 0
+  return env.space_mode ~= "off" and #S.raw > S.known and env.unknown_space_min > 0
     and #S.raw >= env.unknown_space_min and not chinese_held(ctx)
 end
 
@@ -472,7 +483,7 @@ local function func(key, env)
     env.shift_down = false
     if tap and S.tracking and S.raw ~= "" then
       -- the raw letters (or a listed name: openai -> OpenAI) replace the held top-outs
-      commit_word(env, ctx, env.names[S.raw] or S.raw)
+      commit_word(env, ctx, shift_text(env, S.raw))
       return kAccepted
     end
     local input = ctx.input or ""
