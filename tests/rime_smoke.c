@@ -664,7 +664,7 @@ static int assert_association(RimeApi* api, RimeSessionId sid) {
   /* v0.5.1: punctuation and Space after a pick close the list and type
      (period was swallowed as Page_Down by key_binder). Collect every commit. */
   const struct { const char* keys; const char* want; } after[] = {
-    {"vd1.", "好。"}, {"hi7,", "我，"}, {"vd1 ", "好 "}, {"vd1/", "好/"},
+    {"vd1.", "好。"}, {"hi7,", "我，"}, {"vd1 ", "好 "}, {"vd1/", "好/"}, {"vd'", "好'"}, {"vd1'", "好'"},
     {"/", "/"}, {NULL, NULL}};
   for (int i = 0; after[i].keys; ++i) {
     char got[256] = {0};
