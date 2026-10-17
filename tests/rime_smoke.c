@@ -572,25 +572,26 @@ static int commit_shift_tap(RimeApi* api, RimeSessionId sid, const char* seq,
 static int assert_top_keeps_char(RimeApi* api, RimeSessionId sid) {
   api->clear_composition(sid);
   drain_commit(api, sid);
-  /* v0.5.4: vd + z is an English start (VD...) that breaks at z, so the Left
-     Shift rescue parks 好 until the next key; 1 then sends 好 and z stays
-     composing, the same text v0.5.3 gave. */
-  if (!api->simulate_key_sequence(sid, "vdz")) return 0;
+  /* v0.5.4: vd + a. z had only pinyin reverse-lookup candidates, gone since
+     225493f (Windows Quick lists none for z). VD is an English start that
+     breaks at a, so the Left Shift rescue parks 好 until the next key; 1 then
+     sends 好日, the same text v0.5.3 gave. */
+  if (!api->simulate_key_sequence(sid, "vda")) return 0;
   RIME_STRUCT(RimeContext, ctx);
   if (!api->get_context(sid, &ctx)) return 0;
   const char* pre = ctx.composition.preedit ? ctx.composition.preedit : "";
   const char* first = "";
   if (ctx.menu.num_candidates > 0 && ctx.menu.candidates[0].text)
     first = ctx.menu.candidates[0].text;
-  printf("topchar vdz preedit=%s first=%s num=%d\n", pre, first,
+  printf("topchar vda preedit=%s first=%s num=%d\n", pre, first,
          ctx.menu.num_candidates);
   int page_ok = ctx.menu.page_size == 9;
   api->free_context(&ctx);
   if (!api->simulate_key_sequence(sid, "1")) return 0;
   char commit[128];
   int committed = take_commit(api, sid, commit, sizeof commit);
-  printf("topchar vdz1 commit='%s'\n", committed ? commit : "");
-  int ok = page_ok && committed && strncmp(commit, "好", strlen("好")) == 0;
+  printf("topchar vda1 commit='%s'\n", committed ? commit : "");
+  int ok = page_ok && committed && strcmp(commit, "好日") == 0;
   api->clear_composition(sid);
   drain_commit(api, sid);
   return ok;
