@@ -517,9 +517,14 @@ local function func(key, env)
   elseif not key:release() then
     env.assoc_tap = false
     -- Shift+; / Shift+- / Shift+6 …: releasing that Shift is not an English commit tap.
-    env.shift_used = env.shift_down
+    if env.shift_down then
+      env.shift_used = true
+    end
     if kc == 0xffe2 then
-      env.rshift_down, env.rshift_used = true, false
+      if not env.rshift_down then
+        env.rshift_used = false
+      end
+      env.rshift_down = true
     elseif env.rshift_down then
       env.rshift_used = true
     end
@@ -590,8 +595,11 @@ local function func(key, env)
 
   -- Left Shift tap: press, then release with no other key in between.
   if kc == env.commit_code and not key:release() then
+    -- an auto-repeat while Shift is held keeps the used flag (Bugbot)
+    if not env.shift_down then
+      env.shift_used = false
+    end
     env.shift_down = true
-    env.shift_used = false
     return kNoop
   end
   if kc == env.commit_code and key:release() then
@@ -639,7 +647,6 @@ local function func(key, env)
   if key:release() then
     return kNoop
   end
-  env.shift_down = false
   if ctx:get_option("ascii_mode") then
     return kNoop
   end
