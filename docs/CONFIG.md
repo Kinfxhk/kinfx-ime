@@ -65,7 +65,7 @@
 | `english/empty_shift` | `noop` | 冇打字撳左 Shift：`noop` 乜都唔做；`ascii` 照 librime 切臨時英文（v0.5.1） |
 | `english/hold_min` | `4` | 英文開頭夠呢個字母數之後，詞表冇嘅字都繼續留住；`0` 關 |
 | `english/hold_extra` | `8` | 上面留住最多再多幾多個字母 |
-| `english/unknown_space_min` | `5`（v0.5.2 係 `7`） | 詞表冇嘅字，幾多個字母或以上先可以撳空白上屏（6 個字母除外；短啲用左 Shift） |
+| `english/unknown_space_min` | `7`（v0.5.3 開發版試過 `5`，撞中文，改返） | 詞表冇嘅字，幾多個字母或以上先可以撳空白上屏（短啲用左 Shift） |
 | `punctuator/half_shape` `/`、`\` | `/`、「、」 | `/` 直出；「、」由 `\` 出 |
 | Ctrl+. | — | 切中英文標點（`ascii_punct`），寫 code 用 |
 

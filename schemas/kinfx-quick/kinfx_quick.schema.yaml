@@ -144,11 +144,11 @@ english:
   # 冇打字撳左 Shift：noop＝乜都唔做（預設，避免誤觸入咗底線英文模式）｜ascii＝librime 臨時英文
   empty_shift: noop
   # 唔喺詞表嘅英文（公司名、識別字）：英文開頭夠 hold_min 個字母之後，再留多 hold_extra 個；
-  # 5 個字母或以上（unknown_space_min）撳空白上屏（6 個字母除外：三對速成碼，空白係翻頁），
-  # 其餘撳左 Shift。英文詞嘅開頭（const、async）5 個字母起都可以撳空白。0＝關。
+  # 7 個字母或以上（unknown_space_min）撳空白上屏，其餘撳左 Shift。英文詞嘅開頭（const、async）
+  # 5 個字母起都可以撳空白，6 個字母除外（三對速成碼，空白係翻頁）。0＝關。
   hold_min: 4
   hold_extra: 8
-  unknown_space_min: 5
+  unknown_space_min: 7
   # v0.5.4 左 Shift 補救：開頭 rescue_min 個字母係英文／品牌名開頭，之後斷咗都再留 rescue_extra
   # 個字母，撳左 Shift 就照字母上屏（adsense、zdrav）。空白、數字、其他鍵照 Windows 出中文，
   # 只係頂字遲啲先上屏。0＝關（v0.5.3）。品牌名表：kinfx_names（Wikidata，約 5 千個）。
