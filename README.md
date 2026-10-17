@@ -2,7 +2,7 @@
 
 香港繁體速成輸入法，可以中英混打，唔使切換模式。速成候選次序**逐頁跟 Windows 11 微軟速成**，另外補齊港字、常用詞同英文詞。引擎用 [librime](https://github.com/rime/librime)：Windows 11 由 [小狼毫（Weasel）](https://github.com/rime/weasel) 載入，Linux 用 Fcitx5。
 
-**最新版本：v0.5.0**
+**最新版本：v0.5.1**
 
 ## 特點
 
@@ -47,6 +47,8 @@ sudo apt install fcitx5 fcitx5-rime librime-bin librime-plugin-lua \
 ```
 
 Fcitx5 設定 → 加入「中州韻」→ 揀「KINFX 中英混打輸入法 · 速成」。
+
+短詞英文（`of`、`to`）要用左 Shift，但 Fcitx5 預設用左 Shift 切輸入法。執行 `./scripts/linux-free-left-shift.sh` 解除（`--undo` 還原），切輸入法改用 Ctrl+Space。見 docs/CONFIG.md。
 
 ## 打法速查
 

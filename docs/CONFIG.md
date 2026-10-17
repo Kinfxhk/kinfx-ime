@@ -53,10 +53,22 @@
 | 模式 | 做法 |
 | --- | --- |
 | 零切換（預設） | 細楷英文詞直接打，空白上屏（`hello`␣→ hello）。安全詞表唔畀上屏嘅（短詞、少見詞）就撳一下左 Shift 上屏。大寫、email、URL 直出 |
-| 短詞（`of`、`to`、`on`…） | 打到一半撳一下左 Shift：已打字母變英文（`of` Shift → of） |
+| 短詞（`of`、`to`、`on`…） | 打到一半撳一下左 Shift：已打字母變英文（`of` Shift → of）。Linux 要先解除 Fcitx5 左 Shift 熱鍵（見下） |
+| 揀字後嘅空白／標點 | `vd` 1 之後撳空白＝打空格，撳 `.`＝「。」（會關聯想詞）。想同 Windows 一樣（空白翻聯想頁）：`association/space: page` |
 | 持久英文 | `Control+Shift+2` 切換 `ascii_mode` |
 | 一定要切先打英文 | 清空 `recognizer/patterns/uppercase` |
 
 ## Fcitx5 同左 Shift
 
-Fcitx5 預設用左 Shift 切輸入法，所以 rime 收唔到。v0.5 smart mode 大部分英文詞用空白上屏（唔使 Shift）；只有短詞（`of`、`to`）要左 Shift，喺 Fcitx5 上面就變咗「撳一下切英文鍵盤 → 打 → 撳一下返」，每個短詞 2 下。想要同 Windows 一樣，喺 `fcitx5-configtool` 解除左 Shift 嘅切換熱鍵（或者改用 Caps Lock）。
+Fcitx5 預設用左 Shift 切輸入法，rime 收唔到。大部分英文詞用空白上屏，唔受影響；但短詞（`of`、`to`）要左 Shift，喺預設 Fcitx5 上面撳落去會切走輸入法，`of` 變返中文（伙）。
+
+**建議：解除 Fcitx5 左 Shift 熱鍵。**
+
+```bash
+./scripts/linux-free-left-shift.sh          # 由 TriggerKeys／AltTriggerKeys 移除 Shift_L（Ctrl+Space 保留），備份後重啟 Fcitx5
+./scripts/linux-free-left-shift.sh --undo   # 還原
+```
+
+2026-10-17 Linux VM（Fcitx5 5.1.19）實測（嗰次兩組熱鍵全部清空）：`of` + 左 Shift → of，輸入法保持 rime。腳本只移除 Shift_L，切輸入法仍可用 Ctrl+Space 或者托盤選單。
+
+**唔建議 `english/commit_key: Caps_Lock`（Linux）**：同一次實測，XKB 嘅 Caps Lock 切換攔唔到，之後全部變大寫（hello → HELLO），`of` 亦冇上屏。
