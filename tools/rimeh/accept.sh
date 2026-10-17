@@ -96,5 +96,38 @@ while IFS=$'\t' read -r k want; do
   else fail=$((fail+1)); echo "FAIL $k → got [$got] want [$exp]"; fi
 done <<<"$CASES"
 printf '%s\n' "$OUT" | grep '^BENCH' | sed 's/^/     /'
+# v0.5.1 app-visible text (rimeh `typed`): passthrough keys count. "·" = space.
+TYPED_CASES=$(cat <<'EOF'
+vd1.	好。
+hi7.	我。
+ofc1.	人類。
+vd1,	好，
+vd1{question}	好？
+vd1{colon}	好：
+vd1{minus}	好-
+vd1{space}startup{space}	好·startup·
+hi9{space}startup{space}	的·startup·
+startup{space}	startup·
+passion{space}	passion·
+rr1passion{space}	呂passion·
+abac{comma}	明顯，
+abac{space}1	明顯
+vd1{exclam}	好似
+hi7{space}{space}	我··
+vdni3	好多人
+of{space}	
+EOF
+)
+{
+  echo "schema kinfx_quick"
+  while IFS=$'\t' read -r k _; do [ -n "$k" ] && echo "typed $k"; done <<<"$TYPED_CASES"
+} > "$U/typed.txt"
+TOUT=$("$ROOT/tools/rimeh/rimeh.exe" "$SHARED" "$(cygpath -m "$U")" --no-deploy < "$U/typed.txt" 2>/dev/null | tr -d '\r')
+while IFS=$'\t' read -r k want; do
+  [ -z "$k" ] && continue
+  got=$(printf '%s\n' "$TOUT" | awk -F'\t' -v k="$k" '$1=="TYPED" && $2==k {print $3; exit}' | sed 's/ /·/g')
+  if [ "$got" = "$want" ]; then pass=$((pass+1)); echo "OK   typed $k → $got"
+  else fail=$((fail+1)); echo "FAIL typed $k → got [$got] want [$want]"; fi
+done <<<"$TYPED_CASES"
 echo "PASS $pass/$((pass+fail))"
 [ "$fail" -eq 0 ]

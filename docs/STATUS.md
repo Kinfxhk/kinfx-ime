@@ -1,6 +1,18 @@
 # KINFX 中英混打輸入法 — STATUS
 
-**版本**：v0.5.0（2026-10-17）
+**版本**：v0.5.1（2026-10-17）
+
+## v0.5.1（Linux VM 實測修正）
+
+| 項目 | 狀態 |
+| --- | --- |
+| 揀字後打「.」唔上屏（key_binder 將 period 當翻頁）：而家關聯想詞再打「。」；`-` `?` `:` `;` 等同樣 | ✅ 修正 |
+| 揀字後空白被聯想詞吞咗，英文詞前冇空格：預設 `association/space: type`（打空格）；`page`＝Windows 翻聯想頁 | ✅ 修正 |
+| `passion` 拆字（`pass` 前面已頂字，尾段 `ion` 撞中文詞語）：前面有待上屏頂字時，英文詞成串優先 | ✅ 修正 |
+| 「多」出「夀」：本機 `ni` 3＝多、`gi` 第 33 個＝夀，同 Windows 實測一致；VM 計劃檔按鍵要再對 | 🟡 待 VM 重測 |
+| `vd1␣␣`Shift+1：預設（type）＝「好  」再 `!`；`association/space: page` 時＝好笑。聯想表係 essay-cantonese 頻率，唔係 Windows 聯想次序 | 🟡 已知差異 |
+| Linux 左 Shift：`scripts/linux-free-left-shift.sh` 移除 Fcitx5 Shift_L 熱鍵；Caps Lock 改為唔建議 | ✅ 文件／腳本 |
+
 
 ## v0.5.0
 

@@ -42,4 +42,4 @@ Checklist：
 
 ## Fcitx5 LShift
 
-見 `docs/CONFIG.md`：預設混打**唔依賴** LShift；系統搶鍵時改用大寫拉丁或改綁定。
+Fcitx5 預設左 Shift 切輸入法，短詞英文（`of` + 左 Shift）會失效。執行 `scripts/linux-free-left-shift.sh` 後重測：`of` + 左 Shift → of，輸入法唔切走。唔好用 Caps Lock 代替（XKB 會切大寫）。

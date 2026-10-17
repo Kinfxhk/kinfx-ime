@@ -88,6 +88,15 @@ static class KeyTab {
             case "ampersand": return 0x26;
             case "asterisk": return 0x2a;
             case "parenleft": return 0x28;
+            case "minus": return 0x2d;
+            case "equal": return 0x3d;
+            case "semicolon": return 0x3b;
+            case "colon": return 0x3a;
+            case "question": return 0x3f;
+            case "slash": return 0x2f;
+            case "apostrophe": return 0x27;
+            case "quotedbl": return 0x22;
+            case "Page_Down": return 0xff56;
             default: return -1;
         }
     }
@@ -107,6 +116,14 @@ static class KeyTab {
             case "ampersand": return "&";
             case "asterisk": return "*";
             case "parenleft": return "(";
+            case "minus": return "-";
+            case "equal": return "=";
+            case "semicolon": return ";";
+            case "colon": return ":";
+            case "question": return "?";
+            case "slash": return "/";
+            case "apostrophe": return "'";
+            case "quotedbl": return "\"";
             default: return null;
         }
     }

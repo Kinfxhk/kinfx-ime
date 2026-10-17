@@ -6,7 +6,7 @@
 schema:
   schema_id: kinfx_quick
   name: KINFX 中英混打輸入法 · 速成
-  version: "0.5.0"
+  version: "0.5.1"
   author:
     - KINFX
     - 速成規則／碼表源流見 NOTICE（rime-quick / rime-cangjie）
@@ -140,7 +140,7 @@ english:
   enable: true
   mode: smart
   space: safe          # safe（逐詞安全表）| long（只限 5 字母以上）| off
-  commit_key: Shift_L  # Linux 可改 Caps_Lock
+  commit_key: Shift_L  # Linux：用 scripts/linux-free-left-shift.sh 解除 Fcitx5 熱鍵；唔建議 Caps_Lock
   dictionary: kinfx_en
   tag: kinfx_en
   enable_completion: true
@@ -154,6 +154,8 @@ english:
 association:
   enable: true
   max: 36
+  # 揀字後第一下空白：type＝關聯想再打空格（中英混打順）｜page＝Windows（翻聯想頁、吞咗）
+  space: type
 
 assoc_translator:
   tag: kinfx_assoc

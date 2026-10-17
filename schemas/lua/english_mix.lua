@@ -198,6 +198,12 @@ end
 -- A Chinese phrase is held (the menu leads with a Chinese phrase for 3+
 -- letters). Chinese wins there: Space and punctuation behave like v0.4.1.
 local function chinese_held(ctx)
+  -- Only a phrase that spans the whole letter run counts. When top-outs are
+  -- already pending (passion: 旨巨 + ion → 之隔…), the Chinese phrase covers the
+  -- tail only and the run as a whole is the English word.
+  if S.pending ~= "" then
+    return false
+  end
   local input = ctx.input or ""
   if #input < 3 or not ctx:has_menu() then
     return false
@@ -227,6 +233,18 @@ local function commit_word(env, ctx, text)
   env.engine:commit_text(text)
 end
 
+-- Keys that close the association list and then type themselves. Shift+digit
+-- symbols (exclam at numbersign ... parenleft) pick from the list instead, and
+-- equal stays a page key.
+local ASSOC_PUNCT = {
+  period = true, comma = true, minus = true, semicolon = true, colon = true,
+  question = true, slash = true, apostrophe = true, quotedbl = true,
+  bracketleft = true, bracketright = true, braceleft = true, braceright = true,
+  backslash = true, bar = true, grave = true, asciitilde = true,
+  underscore = true, plus = true, less = true, greater = true,
+  parenright = true,
+}
+
 local KEYCODE = { Shift_L = 0xffe1, Shift_R = 0xffe2, Caps_Lock = 0xffe5 }
 
 -- Space may commit this word: a common (lowercase) word, or a listed extra
@@ -248,6 +266,9 @@ local function read_env(env)
   local on = pm.config_bool(config, "english/enable", true)
   env.smart = on and config_str(config, "english/mode", "smart") == "smart"
   env.space_mode = config_str(config, "english/space", "safe")
+  -- association/space: type (Space closes the list and types a space) | page
+  -- (Windows: Space pages the list and is swallowed).
+  env.assoc_space = config_str(config, "association/space", "type")
   env.commit_key = config_str(config, "english/commit_key", "Shift_L")
   env.commit_code = KEYCODE[env.commit_key] or 0xffe1
   env.en_mem = pm.new_memory(env, "kinfx_en")
@@ -319,6 +340,18 @@ local function func(key, env)
     end
   elseif not key:release() then
     env.assoc_tap = false
+  end
+
+  -- Association list open (after a one-character pick). key_binder runs
+  -- before assoc_keys and maps period to Page_Down whenever a menu shows, so a
+  -- full stop typed after a Chinese pick was swallowed as paging. Close the
+  -- list first; the key then reaches key_binder with no menu and types.
+  if not key:release() and assoc_active(ctx) and
+     not (key:ctrl() or key:alt() or key:super()) then
+    if ASSOC_PUNCT[repr] or (repr == "space" and env.assoc_space == "type") then
+      close_assoc(ctx)
+      return kNoop
+    end
   end
 
   if not env.smart then

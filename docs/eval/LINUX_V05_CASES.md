@@ -42,6 +42,17 @@
 - `ofc1` → 人類（詞語上屏，唔出聯想）
 - `vd1` 空白 空白 Shift+1 → 好＋第 2 頁第 1 個聯想（如 Windows `vd1␣␣Shift+1` → 好過）
 
+## v0.5.1 重測重點（2026-10-17 報告跟進）
+
+- 先執行 `scripts/linux-free-left-shift.sh`（只移除 Shift_L 熱鍵，Ctrl+Space 保留），再測 L1／L4。
+- R1：`vd` 1 `.` → 好。；`hi` 7 `.` → 我。；`ofc` 1 `.` → 人類。
+- R2：`vd` 1 空白 `startup` 空白 → `好 startup `（英詞前後空格各一）
+- R3：`passion` 空白 → `passion `；`rr` 1 `passion` 空白 → `呂passion `
+- R4：`ni` 3 → 多（Windows `ni` 第 3 個）；`vdni` 3 → 好多人。如果仍然出「夀」，請記低嗰一刻實際按鍵（夀＝`gi` 第 33 個）
+- R5：預設 `association/space: type`：`vd` 1 空白 空白 → `好  `。`association/space: page` 時 `vd` 1 空白 空白 Shift+1 → 好笑（KINFX 聯想表用 essay-cantonese 頻率，唔係 Windows 聯想次序）
+- L6：505 字文章重打，期望 byte-exact
+- 唔使再測 L5（Caps Lock 已改為唔建議）
+
 ## 交回格式
 
 每項寫：實際結果、同期望差幾多、Fcitx5 左 Shift 有冇切走輸入法。報告放 repo root

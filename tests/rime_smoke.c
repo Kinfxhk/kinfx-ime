@@ -621,6 +621,9 @@ static int assert_english_mix(RimeApi* api, RimeSessionId sid) {
   ok = ok && commit_space(api, sid, "startup", "startup ");
   /* 2-letter word needs Left Shift (Space pages the Sucheng menu). */
   ok = ok && commit_shift_tap(api, sid, "of", "of");
+  /* v0.5.1: a pending top-out (passion = 旨巨 + ion) must not let a Chinese
+     phrase on the tail win over the whole English word. */
+  ok = ok && commit_space(api, sid, "passion", "passion ");
   printf("english-mix space/shift:%s\n", ok ? "PASS" : "FAIL");
   return ok;
 }
@@ -635,6 +638,41 @@ static int assert_association(RimeApi* api, RimeSessionId sid) {
   printf("assoc 'hi7{Shift+exclam}' → '%s' (want 我 + suffix)\n",
          committed ? commit : "");
   int ok = committed && strstr(commit, "我") != NULL && strcmp(commit, "我") != 0;
+  api->clear_composition(sid);
+  drain_commit(api, sid);
+  /* v0.5.1: punctuation and Space after a pick close the list and type
+     (period was swallowed as Page_Down by key_binder). Collect every commit. */
+  const struct { const char* keys; const char* want; } after[] = {
+    {"vd1.", "好。"}, {"hi7,", "我，"}, {"vd1 ", "好 "}, {NULL, NULL}};
+  for (int i = 0; after[i].keys; ++i) {
+    char got[256] = {0};
+    api->clear_composition(sid);
+    drain_commit(api, sid);
+    for (const char* k = after[i].keys; *k; ++k) {
+      api->process_key(sid, (unsigned char)*k, 0);
+      char part[128];
+      if (take_commit(api, sid, part, sizeof part))
+        strncat(got, part, sizeof got - strlen(got) - 1);
+    }
+    /* A passed-through space is typed by the app, not committed. */
+    int want_space = after[i].keys[strlen(after[i].keys) - 1] == ' ';
+    char want[64];
+    snprintf(want, sizeof want, "%s", after[i].want);
+    if (want_space) want[strlen(want) - 1] = 0;
+    int good = strcmp(got, want) == 0;
+    if (want_space) {
+      RIME_STRUCT(RimeContext, cx);
+      int composing = 0;
+      if (api->get_context(sid, &cx)) {
+        composing = cx.composition.length > 0 || cx.menu.num_candidates > 0;
+        api->free_context(&cx);
+      }
+      good = good && !composing;
+    }
+    printf("assoc-after '%s' → '%s' (want '%s')%s\n", after[i].keys, got,
+           after[i].want, good ? "" : " FAIL");
+    ok = ok && good;
+  }
   api->clear_composition(sid);
   drain_commit(api, sid);
   return ok;
