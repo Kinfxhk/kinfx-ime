@@ -54,6 +54,11 @@ trademark of Google LLC) plus scriptwriting and voiceover. Those rows are
 project data. They do not change the SCOWL license of the rest of
 kinfx_en.dict.yaml.
 
+lexicon/en/kinfx_names.dict.yaml (v0.5.4) lists brand, product and website
+names from Wikidata English labels and aliases, produced by scripts/gen_names.py.
+Wikidata data is CC0 1.0 (https://creativecommons.org/publicdomain/zero/1.0/).
+The names are trademarks of their owners and appear only as typing targets.
+
 lexicon/en/kinfx_en_unsafe.txt is a derived subset (English words Space must
 not commit) produced by scripts/gen_english_space.py from the SCOWL list and
 essay-cantonese.txt weights. Same SCOWL terms as kinfx_en.dict.yaml; the

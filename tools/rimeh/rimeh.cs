@@ -78,6 +78,7 @@ static class KeyTab {
             case "Right": return 0xff53;
             case "Shift_L": return 0xffe1;
             case "Shift_R": return 0xffe2;
+            case "Caps_Lock": return 0xffe5;
             // Shifted digits (US layout) = 1..9
             case "exclam": return 0x21;
             case "at": return 0x40;
@@ -97,6 +98,19 @@ static class KeyTab {
             case "apostrophe": return 0x27;
             case "quotedbl": return 0x22;
             case "Page_Down": return 0xff56;
+            case "parenright": return 0x29;
+            case "underscore": return 0x5f;
+            case "plus": return 0x2b;
+            case "bracketleft": return 0x5b;
+            case "bracketright": return 0x5d;
+            case "braceleft": return 0x7b;
+            case "braceright": return 0x7d;
+            case "backslash": return 0x5c;
+            case "bar": return 0x7c;
+            case "grave": return 0x60;
+            case "asciitilde": return 0x7e;
+            case "less": return 0x3c;
+            case "greater": return 0x3e;
             default: return -1;
         }
     }
@@ -124,7 +138,23 @@ static class KeyTab {
             case "slash": return "/";
             case "apostrophe": return "'";
             case "quotedbl": return "\"";
-            default: return null;
+            case "parenright": return ")";
+            case "underscore": return "_";
+            case "plus": return "+";
+            case "bracketleft": return "[";
+            case "bracketright": return "]";
+            case "braceleft": return "{";
+            case "braceright": return "}";
+            case "backslash": return "\\";
+            case "bar": return "|";
+            case "grave": return "`";
+            case "asciitilde": return "~";
+            case "less": return "<";
+            case "greater": return ">";
+            default:
+                // a single lowercase/uppercase letter, digit or the punctuation
+                // above typed as itself (name = the character)
+                return null;
         }
     }
 }
@@ -203,8 +233,9 @@ static class P {
         mask = mods;
         if (name.Length == 1) {
             char c = name[0];
-            if ((c >= 'a' && c <= 'z') || (c >= '0' && c <= '9') || c == ' ' ||
-                c == ',' || c == '.') {
+            // Any printable ASCII typed as itself (A-Z arrive with Shift held
+            // on a real keyboard; librime matches on the keysym either way).
+            if (c >= 0x20 && c < 0x7f && !(tok.Length > 1 && plus >= 0 && c == '+')) {
                 keycode = (int)c;
                 printable = name;
                 return true;

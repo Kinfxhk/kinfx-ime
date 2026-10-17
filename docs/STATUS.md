@@ -1,6 +1,33 @@
 # KINFX 中英混打輸入法 — STATUS
 
-**版本**：v0.5.2（2026-10-17）
+**版本**：v0.5.4（2026-10-18）
+
+## v0.5.4（品牌名、左 Shift 補救）
+
+| 項目 | 狀態 |
+| --- | --- |
+| 品牌／網站名表 `kinfx_names`（Wikidata CC0，約 5 千個，原生表）：`adsense`␣ → AdSense、`godaddy` → GoDaddy | ✅ 新增 |
+| 左 Shift 補救：英文字打到一半斷咗，撳左 Shift 照字母上屏（`zdrav`、`etsy`）；其他鍵結果同 v0.5.3 | ✅ 新增（`english/rescue_min: 0` 關） |
+| 品牌名入空白安全計算（`gen_english_space.py --names-dict`）：多 11 個唔畀空白上屏 | ✅ |
+| 補救期間撳 Backspace：照 v0.5.3（擺住嘅中文上屏） | 🟡 未做補救重播 |
+| 2–3 字母縮寫（`msn`、`rss`、`sms`）撳空白 | ⬜ 冇改（本身係速成碼，空白係翻頁）；用左 Shift |
+
+## v0.5.3（打 code／網址）
+
+| 項目 | 狀態 |
+| --- | --- |
+| Shift 符號（`:` `_` `^` `!` `"`）：撳住 Shift 打符號唔當英文上屏 tap | ✅ 修正（Windows 實機 `好：`、`https://x.com`） |
+| URL：`www.` `https:` `http:` `ftp:` `mailto:` `file:` 開頭保留做網址 | ✅ 修正 |
+| 英文詞開頭／未知字 5 個字母起空白上屏（6 字母除外） | ✅ 修正（`const␣`、`async␣`） |
+| 連字號：英文詞後 `-` 接駁（`english/hyphen`） | ✅ 新增 |
+| Ctrl+C／V／X 打緊字：收起輸入（`english/clipboard`） | ✅ 新增 |
+| `;` `'` 唔再做速成分隔符：`vd;` → 好； | ✅ 修正 |
+| `'` `"` `_` 出半形（Windows 11 微軟速成實測：`'`→' `_`→_ `"`→"）；，。：照舊全形 | ✅ 修正（Linux 報 `好‘`、`——`） |
+| 名表 +141（科技詞、縮寫） | ✅ 新增 |
+| 預編輯顯示字母（`of`／成個 `hello`），唔再係字根；`english/preedit: radicals` 還原 | ✅ 新增（Windows 實機截圖確認） |
+| `hello` Esc／Ctrl+C 仍會將已頂字嘅中文上屏（Windows 行為：頂咗字就已經上屏） | 🟡 跟 Windows，冇改 |
+| camelCase（`getUserById`）頭 3 個細楷仍然頂字 | ⬜ 未做；用左 Shift：`get` 左 Shift `UserById` |
+| 2 字母英文撳空白（`gg`、`of`） | ⬜ 未做（空白係速成翻頁）；用左 Shift |
 
 ## v0.5.2（用戶親測回報）
 
