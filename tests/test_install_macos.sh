@@ -7,7 +7,7 @@ check() { # name setup-content expect-grep...
   local name="$1" content="$2"; shift 2
   local W; W=$(mktemp -d /tmp/kxdc.XXXX); mkdir -p "$W/ud"
   [ -n "$content" ] && printf '%s' "$content" > "$W/ud/default.custom.yaml"
-  RIME_USER_DIR="$W/ud" "$SRC/scripts/install-macos.sh" --no-reload > "$W/log" 2>&1
+  RIME_USER_DIR="$W/ud" bash "$SRC/scripts/install-macos.sh" --no-reload > "$W/log" 2>&1
   local rc=$? ok=1
   for pat in "$@"; do grep -qE -- "$pat" "$W/ud/default.custom.yaml" || { ok=0; echo "  missing [$pat]"; }; done
   local n; n=$(grep -c 'schema: *kinfx_quick' "$W/ud/default.custom.yaml")
@@ -23,4 +23,12 @@ check patch-other $'patch:\n  "menu/page_size": 9\n' '"menu/page_size": 9' '"sch
 check own-list $'patch:\n  schema_list:\n    - schema: luna_pinyin\n' 'schema: luna_pinyin' 'schema_list:'
 check no-patch $'# empty comment only\n' '"schema_list/\+":'
 check already $'patch:\n  schema_list:\n    - schema: kinfx_quick\n    - schema: cangjie5\n' 'schema: cangjie5'
+check append-key $'patch:
+  "schema_list/+":
+    - schema: cangjie5
+' 'schema: cangjie5'
+check list-comment $'patch:
+  schema_list: # mine
+    - schema: luna_pinyin
+' 'schema: luna_pinyin'
 echo "PASS $pass/$((pass+fail))"
