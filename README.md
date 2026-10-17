@@ -1,24 +1,85 @@
 # KINFX 中英混打輸入法
 
-香港繁體速成輸入法，可以中英混打，唔使切換模式。速成候選次序**逐頁跟 Windows 11 微軟速成**，另外補齊港字、常用詞同英文詞。引擎用 [librime](https://github.com/rime/librime)：Windows 11 由 [小狼毫（Weasel）](https://github.com/rime/weasel) 載入，Linux 用 Fcitx5。
+香港繁體速成輸入法，中英混打唔使切換模式。速成候選次序**逐頁跟 Windows 11 微軟速成**，另外補齊港字、常用詞、英文詞同聯想詞。引擎用 [librime](https://github.com/rime/librime)：Windows 11 由 [小狼毫（Weasel）](https://github.com/rime/weasel) 載入，Linux 用 Fcitx5。
 
-**最新版本：v0.5.1**
+**最新版本：v0.5.1**（2026-10-17）· [所有版本同更新紀錄](https://github.com/Kinfxhk/kinfx-ime/releases)
+
+## 實測
+
+| 項目 | 結果 | 版本／日期／環境 |
+| --- | --- | --- |
+| 速成候選次序 | 658 個兩碼，每頁每格同 Windows 一致：**658／658** | 2026-10-15～16 喺 Windows 11 Pro 26H2（build 26300）微軟速成用 `tools/mscapture` 讀出全表；每次發佈用 `fullorder.sh` 再對 |
+| Windows 實機打字 | 自動化驗收 **41／41**（逐粒鍵打入真視窗） | v0.5.1，2026-10-17，小狼毫 0.17.4 |
+| Linux 實機打字 | 505 字中英混合文章：全形標點全部一致（，17　、2　。9　：2　「1　」1），去掉空格後 **453／453** 字一致，**30 個英文詞全部正確** | v0.5.1，2026-10-17，Ubuntu 26.04、Fcitx5 5.1.19、fcitx5-rime（librime 1.16.1）、gedit，kernel-level 按鍵重播 |
+| Linux 實機打字（舊版） | 同一篇文章 **byte-exact 505／505** | v0.4.0，2026-10-16，同上環境 |
+| 英文功能有冇改到中文 | 190 萬組按鍵（全部兩碼＋兩碼、三段連打抽樣），同冇英文功能嘅 v0.4.1 比：**中文改變 0** | v0.5.1，`tools/rimeh/compare.py`，離線 |
+| 每粒鍵用時（Windows） | 約 **0.1 ms**：`vd`（2 粒鍵）0.20 ms；16 粒鍵 2.1 ms；`thequickbrownfox`＋空白（17 粒鍵）2.1 ms（中位數） | v0.5.1，2026-10-17，`tools/rimeh` 離線，用小狼毫 0.17.4 嘅 rime.dll。舊版 v0.3 約 70 ms |
+| 每粒鍵用時（Linux） | 未有量度數字；實機打 505 字文章冇掉鍵 | — |
+
+Linux v0.5.1 嗰次唔係 byte-exact，原因係測試計劃喺英文詞後面多加咗一個空白。v0.5.1 用空白上屏英文已經自帶空格（見下面「打英文」），所以變咗雙空格，唔係輸入法打錯字。
+
+## 打法速查
+
+| 輸入 | 結果 |
+| --- | --- |
+| `vd` 1 | 好 |
+| `vd` 空白 1 | 嫻（第 2 頁第 1 個，同 Windows） |
+| `vd` `of` 3 | 好係（第 3 碼照 Windows 頂字） |
+| `ofc` 1 | 人類 |
+| `ofca` 1 | 無錯 |
+| `hioa` 1 | 我會 |
+| `vd` 1 `.` | 好。 |
+| `startup` 空白 | `startup `（英文＋一個空格） |
+| `of` 左 Shift | `of`（冇空格） |
+| `vd` `API` | 好API（大寫直出） |
+| `hi` 7 `Shift+2` | 我講（聯想詞） |
+| `nei5`（粵拼方案） | 你 |
 
 ## 特點
 
-- **候選次序同 Windows 一樣**：658 個兩碼全部喺 Windows 11 Pro 實測，每頁每格逐格比對過，658／658 一致（見 `docs/WIN_QUICK_RANK.md`）。
-- **打字唔 lag**：每粒鍵約 0.1–0.2 ms（英文延遲頂字計埋），舊版 v0.3 要約 70 ms（離線測量）。
+- **候選次序同 Windows 一樣**：658 個兩碼逐格對過（見 `docs/WIN_QUICK_RANK.md`）。
 - **港字齊**：㗎、嘅、𠻹、𨋢 等 Windows 冇嘅字，排喺 Windows 候選之後，唔會郁到 Windows 原本嘅位置。
-- **連打順**：第 3 碼照 Windows 頂字上屏。只有打出嚟係常用詞先會留住等你揀，例如：
-  - `ofc` → 人類、無錯
-  - `ofca` → 無錯
-  - `lwm` → 中國
-  - 冇詞接得落去就照 Windows 上屏（`vd` `of` `3` → 好係）。
-- **細楷英文直接打**：任何英文詞空白上屏（`hello`␣→ hello、`the`␣→ the），短詞用左 Shift（`of` Shift → of）。唔會佔速成嗰 1–9 格。
-- **聯想詞**：揀完單字出跟尾詞，Shift+數字揀（`hi7` 揀「我」→ `Shift+2` 揀「講」→ 我講），同 Windows「聯想字」一樣。
+- **連打順**：第 3 碼照 Windows 頂字上屏。只有打出嚟係常用詞先會留住等你揀，例如 `ofc` → 人類、無錯；`lwm` → 中國。冇詞接得落去就照 Windows 上屏。
+- **細楷英文直接打**：見下面「打英文」。英文唔會佔速成嗰 1–9 格。
+- **聯想詞**：揀完單字出跟尾詞，見下面「聯想詞」。
 - **選字同 Windows**：每頁 9 個、直列；空白翻頁；1–9／Enter 選字；Tab 展開；第 1 頁按左開「常用熱門」。
 - **候選窗**：正黑體、圓角、淺陰影，淺色／深色跟系統。
 - **粵拼**：有聲調（`nei5` → 你）。
+
+## 打英文
+
+速成碼同英文字母重疊（676 個兩字母組合入面 658 個係速成碼），所以輸入法要分辨你打緊中文定英文。做法：打字母時，如果仲有可能係英文詞，就先擺住中文頂字嘅結果，等下一粒鍵決定。
+
+| 情況 | 做法 | 結果 |
+| --- | --- | --- |
+| 一般細楷英文詞 | 打完撳空白 | `startup`␣ → `startup `、`the`␣ → `the ` |
+| 英文詞後面跟標點 | 打完撳標點 | `the` `,` → `the，` |
+| 2 字母短詞（of、to、on、or…） | 打完撳一下**左 Shift** | `of` 左 Shift → `of` |
+| 空白唔上屏嘅詞（容易同中文撞嘅短詞、少見詞，例如 door） | 打完撳一下左 Shift | `door` 左 Shift → `door` |
+| 大寫開頭、email、URL | 直接打 | `Startup`、`a@b.com`、`www.x.com` |
+| 打長段英文 | `Ctrl+Shift+2` 切英文模式，再撳一次返中文 | — |
+
+- **v0.5.1 起，用空白上屏英文會自帶一個空格**：`startup` 空白 → `startup `，嗰下空白已經用咗，唔使再撳。用左 Shift 上屏就冇空格。
+- 邊啲詞可以用空白上屏，由「安全詞表」決定：用 SCOWL 詞表，逐個詞計佢同速成中文撞車嘅機會，撞得多嘅（約 350 個，主要係 2–4 字母詞）就唔畀空白上屏。詳情見 `docs/ENGLISH_MIX.md`。
+- 如果撳嘅係英文以外嘅鍵，擺住嘅中文照 Windows 上屏，結果同冇英文功能時一樣（見上面「實測」）。
+
+## 聯想詞
+
+揀完一個單字（用數字或者 Enter）之後，會出跟尾詞。
+
+| 輸入 | 結果 |
+| --- | --- |
+| `hi` 7 | 我，同時出聯想：同 講 望 見… |
+| `hi` 7 `Shift+1` | 我同 |
+| `hi` 7 `Shift+2` | 我講 |
+| `hi` 7 1 | 我1（普通數字照打數字，關聯想） |
+| `hi` 7 空白 | `我 `（預設：空白關聯想，再打一個空格） |
+| `hi` 7 `.` | 我。（標點關聯想，照打） |
+| `hi` 7 再打字母 | 關聯想，開始打新字 |
+| `ofc` 1 | 人類（揀詞語唔出聯想） |
+
+- 想同 Windows 一樣，揀字後撳空白係翻聯想頁：設 `"association/space": page`。
+- 聯想詞次序跟粵語語料（essay-cantonese）字頻，唔係 Windows 聯想詞次序。
 
 ## Windows 11 安裝
 
@@ -40,47 +101,40 @@ powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\install-windows.ps
 
 ## Linux（Fcitx5）安裝
 
-```bash
-sudo apt install fcitx5 fcitx5-rime librime-bin librime-plugin-lua \
-  rime-data-cangjie5 rime-data-jyut6ping3 rime-essay rime-prelude rime-data-luna-pinyin
-./scripts/install-linux.sh
-```
+### 首次安裝 checklist
 
-Fcitx5 設定 → 加入「中州韻」→ 揀「KINFX 中英混打輸入法 · 速成」。
+1. 裝套件：
 
-短詞英文（`of`、`to`）要用左 Shift，但 Fcitx5 預設用左 Shift 切輸入法。執行 `./scripts/linux-free-left-shift.sh` 解除（`--undo` 還原），切輸入法改用 Ctrl+Space。見 docs/CONFIG.md。
+   ```bash
+   sudo apt install fcitx5 fcitx5-rime librime-bin librime-plugin-lua \
+     rime-data-cangjie5 rime-data-jyut6ping3 rime-essay rime-prelude rime-data-luna-pinyin
+   ```
 
-## 打法速查
+2. 裝 KINFX：`./scripts/install-linux.sh`（複製方案、部署、設定直列候選）。
+3. Fcitx5 設定 → 加入「中州韻」→ 揀「KINFX 中英混打輸入法 · 速成」。
+4. 解放左 Shift：`./scripts/linux-free-left-shift.sh`（見下面）。
+5. 試打：`of` 左 Shift → `of`；`startup` 空白 → `startup `；`vd` 1 `.` → 好。
 
-| 輸入 | 結果 |
-| --- | --- |
-| `vd` 1 | 好 |
-| `vd` 空白 1 | 嫻（第 2 頁第 1 個，同 Windows） |
-| `vd` `of` 3 | 好係（Windows 頂字） |
-| `ofc` 1 | 人類 |
-| `ofca` 1 | 無錯 |
-| `hioa` 1 | 我會 |
-| `vd` `API` 空白 | 好API |
-| `hello` 空白 | hello |
-| `of` 左 Shift | of |
-| `hi7` `Shift+2` | 我講（聯想） |
-| `nei5`（粵拼） | 你 |
+### 左 Shift（短英文詞要用）
 
-## 打英文
+Fcitx5 預設用左 Shift 切輸入法，librime 收唔到嗰下 Shift，所以 `of` 撳左 Shift 會切走輸入法，結果變咗中文「伙」。
 
-v0.5 smart mode：細楷英文詞直接打，大部分用空白上屏。速成碼同英文字母重疊（676 個兩字母組合入面 658 個係速成碼），所以 2 字母短詞要左 Shift 先出到英文。
+`./scripts/linux-free-left-shift.sh` 會：
 
-| 情況 | 做法 | 成本 |
-| --- | --- | --- |
-| 一般細楷英文詞 | 直接打，空白上屏：`hello`␣→ hello、`startup`␣→ startup | 0 次切換 |
-| 2 字母短詞（of、to、on、or…） | 打兩個字母，撳一下**左 Shift**：`of` Shift → of | 1 下 |
-| 空白唔上屏嘅詞（少見／有歧義） | 打完成個詞，撳左 Shift 上屏 | 1 下 |
-| 大寫開頭、email、URL | 直接打：`Startup`、`a@b.com`、`www.x.com` | 0 次切換 |
-| 打長段英文 | `Ctrl+Shift+2` 切英文模式，再撳一次返中文 | — |
+- 喺 `~/.config/fcitx5/config` 嘅 TriggerKeys／AltTriggerKeys **只移除 `Shift_L`**，其他切換鍵（例如 Ctrl+Space）保留。
+- 改之前備份做 `config.kinfx-backup`，改完重啟 Fcitx5。
+- 之後左 Shift 就用嚟上屏英文；切輸入法用 Ctrl+Space 或者托盤選單。
+- 還原：`./scripts/linux-free-left-shift.sh --undo`。
 
-空白上屏係「安全詞表」（SCOWL 字頻篩選）：會同速成碼撞車嘅短詞、或者太生僻嘅詞，空白唔會上屏，改用左 Shift。詳情見 `docs/ENGLISH_MIX.md`。
+2026-10-17 Linux VM 實測：執行之後 `of` 左 Shift → `of`，輸入法保持喺 rime。
 
-打英文期間，頂字嘅中文會擺住等你決定；撳其他鍵就照 Windows 上屏，打中文結果唔變。
+## 已知限制
+
+- **Linux 唔好用 Caps Lock 做上屏鍵**（`english/commit_key: Caps_Lock`）：XKB 照樣會切大寫鎖定，之後全部變大寫（hello → HELLO），而且 `of` 冇上屏（2026-10-17 Linux VM 實測）。請用左 Shift 加 `linux-free-left-shift.sh`。
+- **Fcitx5 開新視窗有時會返去英文鍵盤（keyboard-us）**：平時睇托盤圖示就知道；做自動化測試之前，先執行 `fcitx5-remote -s rime`。
+- **揀字後撳標點或者空白，會先關聯想詞**：v0.5.0 時「。」會被聯想選單當成翻頁鍵食咗，v0.5.1 已修正。而家聯想詞開住時撳標點或者空白，會先關聯想再打出嚟。
+- **聯想詞次序唔係 Windows 次序**：見上面「聯想詞」。
+- **2 字母短英文詞一定要撳左 Shift**：佢哋本身係速成碼（`of`＝伙），而空白要留嚟翻頁。
 
 ## 設定
 
@@ -91,7 +145,9 @@ v0.5 smart mode：細楷英文詞直接打，大部分用空白上屏。速成�
 | 純 Windows 頂字，唔出詞 | `"phrase_mix/capture": none` |
 | 關掉英文詞 | `"english/enable": false` |
 | 英文改返 v0.4.1（只限 extras.tsv 字） | `"english/mode": "shift"` |
+| 空白只上屏 5 個字母或以上嘅英文詞 | `"english/space": long` |
 | 關掉聯想詞 | `"association/enable": false` |
+| 揀字後空白翻聯想頁（Windows） | `"association/space": page` |
 | 空白揀字而唔係翻頁 | `"win_quick/space_pages": false` |
 
 ## 方案
@@ -103,15 +159,29 @@ v0.5 smart mode：細楷英文詞直接打，大部分用空白上屏。速成�
 
 ## 測試
 
-| 指令 | 內容 |
-| --- | --- |
-| `bash tools/rimeh/accept.sh` | Windows，離線 47 項，用已安裝嘅小狼毫 rime.dll |
-| `bash tools/rimeh/fullorder.sh` | 658 個碼逐格同 Windows 比對 |
-| `bash tools/rimeh/flex.sh` | 設定開關（英文 mode/space、聯想、詞語）20 項 |
-| `python tools/rimeh/compare.py` | 逐鍵 app 文字離線比對（smart 對 control、聯想對 smart） |
-| `pwsh -File scripts/test-windows-rime.ps1` | 安裝／卸載腳本 |
-| `python tests/test_gen_quick_dict.py`<br>`python tests/test_gen_quick_phrases.py`<br>`python tests/test_gen_assoc.py`<br>`python tests/test_gen_english_space.py` | 碼表／聯想／英文詞表生成器 |
-| `./scripts/smoke-linux.sh` | Linux／CI headless smoke |
+| 指令 | 內容 | v0.5.1 結果 |
+| --- | --- | --- |
+| `bash tools/rimeh/accept.sh` | Windows 離線（用已安裝小狼毫嘅 rime.dll）：選字、頂字、詞語、英文、聯想、效能。包括 v0.5.1 新加嘅揀字後打「.」、`passion` 空白、空白上屏自帶空格 | 76／76 |
+| `bash tools/rimeh/fullorder.sh` | 658 個碼逐格同 Windows 比對 | 658／658 |
+| `bash tools/rimeh/flex.sh` | 設定開關（英文 mode／space、聯想、詞語） | 22／22 |
+| `python tools/rimeh/compare.py --assoc` | 190 萬組按鍵，同 v0.4.1 比中文結果 | 中文改變 0 |
+| `./scripts/smoke-linux.sh` | Linux／CI headless（Debian librime）：候選次序、頂字、英文、聯想、揀字後標點、`passion` | GitHub Actions 通過 |
+| `pwsh -File scripts/test-windows-rime.ps1` | 安裝／卸載腳本 | 0 failure |
+| `python tests/test_gen_quick_dict.py`<br>`python tests/test_gen_quick_phrases.py`<br>`python tests/test_gen_assoc.py`<br>`python tests/test_gen_english_space.py` | 碼表／詞語／聯想／英文詞表生成器 | 4／4 |
+
+Windows 實機自動化驗收（41 項）同 Linux VM 實打嘅結果，見上面「實測」。
+
+## 版本
+
+[GitHub Releases](https://github.com/Kinfxhk/kinfx-ime/releases) 有每個版本嘅更新紀錄同 Windows 安裝包。
+
+**v0.5.1（2026-10-17）**：跟進 Linux VM 實測嘅修正。
+- 揀字後打「.」會出「。」（之前被聯想選單食咗）；`-`、`?`、`:` 等同樣。
+- 揀字後撳空白會打空格，英文詞前面唔再冇空格。
+- `passion` 唔再被拆做中文。
+- 新增 `scripts/linux-free-left-shift.sh`。
+
+**v0.5.0（2026-10-17）**：細楷英文直接打（空白／左 Shift）、聯想詞。
 
 ## 目錄
 
@@ -121,7 +191,7 @@ v0.5 smart mode：細楷英文詞直接打，大部分用空白上屏。速成�
 | `schemas/kinfx-jyutping/` | 粵拼方案 |
 | `schemas/lua/` | 選字（`win_quick.lua`）、詞語留鍵（`phrase_mix.lua`）、英文混打（`english_mix.lua`）、聯想（`assoc.lua`） |
 | `lexicon/` | 港詞、四字詞、聯想詞、英文詞（各自授權） |
-| `scripts/` | 安裝、卸載、生成碼表 |
+| `scripts/` | 安裝、卸載、生成碼表、Linux 左 Shift |
 | `tools/mscapture/` | 讀取 Windows 微軟速成候選次序 |
 | `tools/rimeh/` | 離線測試同效能量度 |
 | `docs/` | 詳細文件 |
@@ -134,4 +204,22 @@ v0.5 smart mode：細楷英文詞直接打，大部分用空白上屏。速成�
 
 ## English
 
-KINFX is a Hong Kong Traditional Chinese Sucheng (Quick) IME on librime. On Windows 11 it runs inside Weasel; on Linux it runs inside Fcitx5. v0.5 follows the Windows 11 Microsoft Quick candidate order on every page (all 658 two-letter codes measured and matching 658/658), holds keys only for common phrases (`ofc` → 人類), commits lowercase English words on Space with a safe-word list (Left Shift for short words), and opens Windows-style association words after a single-character pick. Measured offline, a two-letter code takes about 0.2 ms and a long English word about 0.2 ms per key; v0.3 took about 70 ms. Install with `scripts/install-windows.ps1` or `scripts/install-linux.sh`. Code is MIT; dictionaries keep their upstream licenses.
+KINFX is a Hong Kong Traditional Chinese Sucheng (Quick) IME on librime. It runs inside Weasel on Windows 11 and inside Fcitx5 on Linux. Latest: **v0.5.1** (2026-10-17); see [Releases](https://github.com/Kinfxhk/kinfx-ime/releases).
+
+**What it does**
+- Candidate order matches Windows 11 Microsoft Quick on every page: all 658 two-letter codes were captured on Windows 11 Pro 26H2 (build 26300) and match 658/658.
+- The third key tops out like Windows; only common phrases are held (`ofc` → 人類).
+- Lowercase English without switching modes: Space commits a word on the safe list **and adds the trailing space** (`startup`␣ → `startup `); a Left Shift tap commits short words with no space (`of` Left Shift → `of`). English never takes candidate slots 1–9.
+- Association words after a single-character pick: Shift+digit picks (`hi7` Shift+2 → 我講); a plain digit types the digit; Space and punctuation close the list and type (v0.5.1).
+
+**Measured**
+- Windows: real-machine acceptance 41/41 (v0.5.1, Weasel 0.17.4). About 0.1 ms per key offline (`vd` 0.20 ms, 16 keys 2.1 ms, median, `tools/rimeh` on Weasel's rime.dll); v0.3 took about 70 ms.
+- Linux (2026-10-17, Ubuntu 26.04, Fcitx5 5.1.19, librime 1.16.1, gedit, kernel-level key replay): a 505-character mixed article came out with every full-width punctuation mark identical, 453/453 characters identical after removing spaces, and all 30 English words correct. The remaining difference was an extra space in the test plan, not the IME. v0.4.0 typed the same article byte-exact.
+- The English feature does not change Chinese output: 0 changes over 1.9 million key sequences compared with v0.4.1 (offline).
+- No Linux latency number has been measured yet.
+
+**v0.5.1 fixes**: a full stop after a pick (it was swallowed as paging); the space before an English word after a pick; `passion` no longer split into Chinese; new `scripts/linux-free-left-shift.sh` (removes only Shift_L from the Fcitx5 trigger keys, keeps Ctrl+Space, `--undo` restores).
+
+**Known limits**: on Linux do not use Caps Lock as the commit key (XKB still toggles caps); a new Fcitx5 input context can fall back to keyboard-us, so run `fcitx5-remote -s rime` before automated tests; association order follows Cantonese corpus frequency, not Windows.
+
+Install with `scripts/install-windows.ps1` or `scripts/install-linux.sh`. Code is MIT; dictionaries keep their upstream licenses.
