@@ -12,6 +12,9 @@ bash "$ROOT/tools/rimeh/stage.sh" "$U" >/dev/null
 # v0.5: English smart mode commits on Space/Left Shift; association opens after
 # a one-character pick. C: with nothing after it asserts "no commit" (Space paged).
 CASES=$(cat <<'EOF'
+{slash}	C:/
+{backslash}	C:、
+vdAPI{Shift_L}{Release+Shift_L}	C:好API
 vd1	C:好
 vd{space}1	C:嫻
 vd{space}3	C:樂
@@ -116,6 +119,20 @@ vd1{exclam}	好似
 hi7{space}{space}	我··
 vdni3	好多人
 of{space}	
+vd1{BackSpace}	好
+hello{BackSpace}{space}	hell·
+hellp{BackSpace}o{space}	hello·
+startup{BackSpace}{BackSpace}up{space}	startup·
+of{BackSpace}{BackSpace}vd1	好
+wondershare{space}	Wondershare·
+gitlab{space}	GitLab·
+kubernetes{space}	Kubernetes·
+openai{space}	OpenAI·
+word{space}	word·
+apple{space}	apple·
+wonderxyz{space}	wonderxyz·
+{Shift_L}{Release+Shift_L}vd1	好
+{Control+period}vd1,{period}{slash}{semicolon}{Control+period}vd1,	好,./;好，
 EOF
 )
 {

@@ -220,6 +220,7 @@ try {
       'kinfx_assoc.schema.yaml',
       'kinfx_capture.txt',
       'kinfx_en_unsafe.txt',
+      'kinfx_en_names.txt',
       'kinfx_jyutping.schema.yaml',
       'kinfx_quick_phrase.dict.yaml',
       'kinfx_hk_words.dict.yaml',

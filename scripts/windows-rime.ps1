@@ -35,6 +35,7 @@ function Get-KinfxDeployItems {
     [pscustomobject]@{ Rel = 'kinfx_assoc.schema.yaml'; Src = 'schemas/kinfx-quick/kinfx_assoc.schema.yaml' },
     [pscustomobject]@{ Rel = 'kinfx_capture.txt'; Src = 'lexicon/hk/kinfx_capture.txt' },
     [pscustomobject]@{ Rel = 'kinfx_en_unsafe.txt'; Src = 'lexicon/en/kinfx_en_unsafe.txt' },
+    [pscustomobject]@{ Rel = 'kinfx_en_names.txt'; Src = 'lexicon/en/kinfx_en_names.txt' },
     [pscustomobject]@{ Rel = 'kinfx_jyutping.schema.yaml'; Src = 'schemas/kinfx-jyutping/kinfx_jyutping.schema.yaml' },
     [pscustomobject]@{ Rel = 'kinfx_quick_phrase.dict.yaml'; Src = 'lexicon/hk/kinfx_quick_phrase.dict.yaml' },
     [pscustomobject]@{ Rel = 'kinfx_hk_words.dict.yaml'; Src = 'lexicon/hk/kinfx_hk_words.dict.yaml' },

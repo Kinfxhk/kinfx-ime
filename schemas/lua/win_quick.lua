@@ -23,7 +23,6 @@ local EXPAND_OPTION = "win_quick_expand"
 
 local HIST_COMMENT = "♥常"
 local FILL_COMMENT = "♥熱"
-local HOT_PROMPT = "〔♥常用熱門〕"
 
 -- Shared by the processor and the filter (same Lua state).
 local history = {}
@@ -246,9 +245,8 @@ local function refresh_at(ctx, index)
   local seg = segment_of(ctx)
   if seg then
     seg.selected_index = index
-    if ctx:get_property(VIEW_PROP) == "hot" then
-      seg.prompt = HOT_PROMPT
-    end
+    -- No prompt text: the prompt is drawn inside the inline preedit and
+    -- some clients keep it with the text. The 9 slots carry ♥常／♥熱 instead.
   end
 end
 
@@ -396,9 +394,21 @@ end
 
 local function processor_init(env)
   read_opts(env)
+  -- Tab expand belongs to one composition. When the input is gone (Esc,
+  -- commit, Backspace to empty) switch it off, so the next code starts in the
+  -- normal list. The option is not saved (not in switches), so this only
+  -- resets the session flag.
+  env.expand_conn = env.engine.context.update_notifier:connect(function(ctx)
+    if (ctx.input or "") == "" and ctx:get_option(EXPAND_OPTION) then
+      ctx:set_option(EXPAND_OPTION, false)
+    end
+  end)
 end
 
-local function processor_fini(_env)
+local function processor_fini(env)
+  if env.expand_conn then
+    env.expand_conn:disconnect()
+  end
 end
 
 -- Composition letters must not enter the history path. Ranking stays in the dict.
@@ -564,9 +574,6 @@ local function yield_hot(env, ctx, list)
   local seg = segment_of(ctx)
   local start_i = seg and seg.start or 0
   local end_i = seg and seg._end or #code
-  if seg then
-    seg.prompt = HOT_PROMPT
-  end
   hot_slots = {}
   for _, slot in ipairs(slots) do
     hot_slots[#hot_slots + 1] = slot.text
@@ -623,9 +630,6 @@ local function yield_expanded(env, ctx, input)
     local sel = (seg and seg.selected_index) or 0
     local active_page = math.floor(sel / ps)
     local page = math.floor((i - 1) / ps)
-    if seg and page == active_page then
-      seg.prompt = string.format("〔展開·欄%d〕", active_page + 1)
-    end
     if page == active_page then
       local viewport = math.floor(active_page / cols) * cols
       local row = (i - 1) % ps

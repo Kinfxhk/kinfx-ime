@@ -338,6 +338,7 @@ def stage_variant(base: Path, name: str, patch: dict):
     for src in (ROOT / "lexicon/en").glob("*.yaml"):
         shutil.copy(str(src), str(d / src.name))
     shutil.copy(str(ROOT / "lexicon/en/kinfx_en_unsafe.txt"), str(d / "kinfx_en_unsafe.txt"))
+    shutil.copy(str(ROOT / "lexicon/en/kinfx_en_names.txt"), str(d / "kinfx_en_names.txt"))
     shutil.copy(str(ROOT / "lexicon/hk/kinfx_capture.txt"), str(d / "kinfx_capture.txt"))
     (d / "default.custom.yaml").write_text(
         "patch:\n  schema_list:\n    - schema: kinfx_quick\n  \"menu/page_size\": 9\n",
