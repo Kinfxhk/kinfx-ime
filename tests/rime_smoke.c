@@ -638,6 +638,13 @@ static int assert_english_mix(RimeApi* api, RimeSessionId sid) {
   /* v0.5.2: names list + unknown long words (company / product names). */
   ok = ok && commit_space(api, sid, "wondershare", "Wondershare ");
   ok = ok && commit_space(api, sid, "wonderxyz", "wonderxyz ");
+  /* v0.5.3: unknown-word Space must not skip the names list (gmail -> Gmail),
+     a Shift used for a symbol is not a commit tap, hyphen joins English words. */
+  ok = ok && commit_space(api, sid, "gmail", "Gmail ");
+  ok = ok && commit_space(api, sid, "const", "const ");
+  ok = ok && commit_space(api, sid, "tool{minus}calling", "tool-calling ");
+  ok = ok && commit_space(api, sid,
+      "https{Shift_L}{Shift+colon}{Shift+Release+Shift_L}//x.com", "https://x.com");
   printf("english-mix space/shift:%s\n", ok ? "PASS" : "FAIL");
   return ok;
 }

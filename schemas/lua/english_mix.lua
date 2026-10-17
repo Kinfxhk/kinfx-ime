@@ -315,9 +315,48 @@ end
 
 -- An unknown word (raw ran past every kinfx_en prefix): Space commits the raw
 -- letters once the word is long enough that Chinese typing rarely ends there.
+local unknown_len_ok
 local function unknown_space_ok(env, ctx)
   return env.space_mode ~= "off" and #S.raw > S.known and env.unknown_space_min > 0
-    and #S.raw >= env.unknown_space_min and not chinese_held(ctx)
+    and unknown_len_ok(env, #S.raw) and not chinese_held(ctx)
+end
+
+-- A held prefix of an English word (const, async, defau…) that is not a word
+-- itself: Space commits the letters from 5 on. Measured with
+-- gen_english_space.build(): all such 5-letter prefixes together change
+-- 0.001 Chinese Space presses per 10,000 characters, 6-letter 0.008, 7+ 0.
+local function prefix_space_ok(env, ctx)
+  return env.space_mode ~= "off" and #S.raw >= 5 and S.known == #S.raw
+    and not chinese_held(ctx)
+end
+
+-- Unknown words after a 4-letter English start: lengths 5 and 7+ only.
+-- Length 6 is three full Sucheng pairs, where Space pages the Chinese menu
+-- (all such 6-letter runs together: 2.6 changes per 10,000 characters).
+function unknown_len_ok(env, n)
+  return n >= env.unknown_space_min and (n ~= 6 or env.unknown_space_min > 6)
+end
+
+-- What an end key (Space, comma, period, or any symbol in ASCII-punctuation
+-- mode) commits for the current composition, before the key itself.
+local function end_text(env, ctx)
+  if S.tracking and S.raw ~= "" then
+    -- Word / name form first (gmail -> Gmail); raw letters only after that.
+    if space_allowed(env, S.raw) and not chinese_held(ctx) then
+      local text = space_text(env, S.raw)
+      if text then
+        return text
+      end
+    end
+    if unknown_space_ok(env, ctx) or prefix_space_ok(env, ctx) then
+      return S.raw
+    end
+    return S.pending .. ctx:get_commit_text()
+  end
+  if ctx:is_composing() then
+    return ctx:get_commit_text()
+  end
+  return ""
 end
 
 local function read_env(env)
@@ -342,7 +381,15 @@ local function read_env(env)
   -- except Space / Left Shift on such a run.
   env.hold_min = config_int(config, "english/hold_min", 4)
   env.hold_extra = config_int(config, "english/hold_extra", 8)
-  env.unknown_space_min = config_int(config, "english/unknown_space_min", 7)
+  env.unknown_space_min = config_int(config, "english/unknown_space_min", 5)
+  -- english/clipboard: clear (default) = Ctrl+C / Ctrl+V / Ctrl+X close the
+  -- composition (held top-outs are sent, letters dropped like Esc) and reach
+  -- the app | keep = v0.5.2 (Ctrl+V paged the menu, Ctrl+C did nothing).
+  env.clipboard = config_str(config, "english/clipboard", "clear")
+  env.hyphen = config_str(config, "english/hyphen", "word")
+  -- english/preedit: letters (default) = the preedit shows the typed letters
+  -- (of, hello) | radicals = Sucheng radicals as before (人火).
+  env.letters = config_str(config, "english/preedit", "letters") ~= "radicals"
   local _, hold = pm.load_capture()
   env.hold = hold
   env.hold_set = {}
@@ -436,6 +483,20 @@ local function backspace(env, ctx)
   end
 end
 
+-- Typed after held letters, these start a URL: the letters stay as typed and
+-- librime's recognizer (url pattern) takes the rest (https://x.com).
+local URL_START = {
+  ["http:"] = true, ["https:"] = true, ["ftp:"] = true, ["ftp."] = true,
+  ["www."] = true, ["mailto:"] = true, ["file:"] = true,
+}
+local CLIP = { c = true, v = true, x = true }
+
+local function is_symbol(kc)
+  return kc >= 0x21 and kc <= 0x7e
+    and not ((kc >= 0x30 and kc <= 0x39) or (kc >= 0x41 and kc <= 0x5a)
+             or (kc >= 0x61 and kc <= 0x7a))
+end
+
 local function func(key, env)
   local ctx = env.engine.context
   local repr = key:repr()
@@ -455,6 +516,39 @@ local function func(key, env)
     end
   elseif not key:release() then
     env.assoc_tap = false
+    -- Shift+; / Shift+- / Shift+6 …: releasing that Shift is not an English commit tap.
+    env.shift_used = env.shift_down
+  end
+
+  if not key:release() then
+    -- Ctrl+C / V / X while composing: the emacs bindings turned Ctrl+V into
+    -- Page_Down and the app never saw the shortcut. Send the held top-outs
+    -- (Windows had committed them), drop the letters, let the app copy/paste.
+    if env.clipboard ~= "keep" and key:ctrl() and not key:alt() and not key:super()
+       and CLIP[repr:match("^Control%+([a-z])$") or ""] and ctx:is_composing() then
+      flush(env)
+      S.guard = true
+      ctx:clear()
+      S.guard = false
+      return kNoop
+    end
+    -- ASCII punctuation (Ctrl+.): every symbol commits itself as ASCII, after
+    -- what an end key would commit for the composition (好; / const; / 我,).
+    -- The punctuator only passes the key through in this mode, which some
+    -- clients dropped; committing it here works the same everywhere.
+    local cseg = ctx.composition and not ctx.composition:empty() and ctx.composition:back()
+    local in_url = cseg and (cseg:has_tag("url") or cseg:has_tag("email") or cseg:has_tag("uppercase"))
+    local url_start = S.tracking and kc < 0x80 and URL_START[S.raw .. string.char(kc)]
+    if ctx:get_option("ascii_punct") and not ctx:get_option("ascii_mode") and not in_url
+       and not url_start
+       and not (key:ctrl() or key:alt() or key:super()) and is_symbol(kc) then
+      if assoc_active(ctx) then
+        close_assoc(ctx)
+      end
+      local text = end_text(env, ctx)
+      commit_word(env, ctx, text .. string.char(kc))
+      return kAccepted
+    end
   end
 
   -- Association list open (after a one-character pick). key_binder runs
@@ -476,11 +570,19 @@ local function func(key, env)
   -- Left Shift tap: press, then release with no other key in between.
   if kc == env.commit_code and not key:release() then
     env.shift_down = true
+    env.shift_used = false
     return kNoop
   end
   if kc == env.commit_code and key:release() then
-    local tap = env.shift_down
+    local used = env.shift_used -- set only by a key pressed while this Shift was down
+    local tap = env.shift_down and not env.shift_used
     env.shift_down = false
+    env.shift_used = false
+    if used then
+      -- this processor took the shifted key, so ascii_composer would read the
+      -- release as a bare tap and switch to English: swallow it.
+      return kAccepted
+    end
     if tap and S.tracking and S.raw ~= "" then
       -- the raw letters (or a listed name: openai -> OpenAI) replace the held top-outs
       commit_word(env, ctx, shift_text(env, S.raw))
@@ -576,15 +678,31 @@ local function func(key, env)
     return kNoop
   end
   clear_hint(ctx)
-  local endkey = plain and (repr == "space" or repr == "comma" or repr == "period")
-  if endkey and unknown_space_ok(env, ctx) then
-    if repr == "space" then
-      commit_word(env, ctx, S.raw .. " ")
+  if plain and (kc == 0x3a or kc == 0x2e) then
+    local url = S.raw .. string.char(kc)
+    if URL_START[url] then
+      reset()
+      set_input(ctx, url)
       return kAccepted
     end
-    commit_word(env, ctx, S.raw)
-    return kNoop
   end
+  -- A hyphen after a word that Space would commit as English joins words
+  -- (tool-calling, e-mail): the word and an ASCII "-" go out, the next letters
+  -- start a new run. Same safety rule as Space. english/hyphen: off = v0.5.2.
+  if plain and kc == 0x2d and env.hyphen ~= "off" then
+    local text = nil
+    if space_allowed(env, S.raw) and not chinese_held(ctx) then
+      text = space_text(env, S.raw)
+    end
+    if not text and (unknown_space_ok(env, ctx) or prefix_space_ok(env, ctx)) then
+      text = S.raw
+    end
+    if text then
+      commit_word(env, ctx, text .. "-")
+      return kAccepted
+    end
+  end
+  local endkey = plain and (repr == "space" or repr == "comma" or repr == "period")
   if endkey and space_allowed(env, S.raw) and not chinese_held(ctx) then
     local text = space_text(env, S.raw)
     if text then
@@ -595,6 +713,14 @@ local function func(key, env)
       commit_word(env, ctx, text)
       return kNoop -- the punctuator types the comma / period
     end
+  end
+  if endkey and (unknown_space_ok(env, ctx) or prefix_space_ok(env, ctx)) then
+    if repr == "space" then
+      commit_word(env, ctx, S.raw .. " ")
+      return kAccepted
+    end
+    commit_word(env, ctx, S.raw)
+    return kNoop
   end
   flush(env)
   return kNoop
@@ -615,13 +741,28 @@ local function filter_func(input, env)
     local ctx = env.engine.context
     local mark = "⇧"
     if (space_allowed(env, S.raw) and not chinese_held(ctx)
-        and space_text(env, S.raw)) or unknown_space_ok(env, ctx) then
+        and space_text(env, S.raw)) or unknown_space_ok(env, ctx)
+        or prefix_space_ok(env, ctx) then
       mark = "␣"
     end
     local pre = S.pending ~= "" and (S.pending .. " ") or ""
-    hint = pre .. mark .. S.raw
+    -- The preedit already shows the letters in letters mode; keep only the mark.
+    hint = pre .. mark .. (env.letters and "" or S.raw)
+  end
+  -- Letters mode: every candidate's preedit is the letters it covers, and the
+  -- whole held run while an English word is tracked (hello, not just o).
+  local run, code = nil, nil
+  if env.letters then
+    code = env.engine.context.input or ""
+    if env.smart and S.tracking and S.raw ~= "" then
+      run = S.raw
+    end
   end
   for cand in input:iter() do
+    if code then
+      local g = cand:get_genuine()
+      g.preedit = run or code:sub(g.start + 1, g._end)
+    end
     if hint then
       local c = cand.comment or ""
       yield(ShadowCandidate(cand, cand.type, cand.text, c ~= "" and (c .. " " .. hint) or hint))

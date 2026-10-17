@@ -8,7 +8,7 @@ U="${RIMEH_TMP:-$LOCALAPPDATA/hermes/profiles/it-dog/cache/scratch}/rime-accept"
 SHARED="${RIMEH_SHARED:-C:/Program Files/Rime/weasel-0.17.4/data}"
 [ -x "$ROOT/tools/rimeh/rimeh.exe" ] || bash "$ROOT/tools/rimeh/build.sh" >/dev/null
 bash "$ROOT/tools/rimeh/stage.sh" "$U" >/dev/null
-# Cases: keys <TAB> expected commit (C:...) or expected first candidates (M:a|b|c)
+# Cases: keys <TAB> expected commit (C:...), first candidates (M:a|b|c) or preedit (P:...)
 # v0.5: English smart mode commits on Space/Left Shift; association opens after
 # a one-character pick. C: with nothing after it asserts "no commit" (Space paged).
 CASES=$(cat <<'EOF'
@@ -46,6 +46,11 @@ vd	M:好|她|妹|紆|巢|媒|彙|綑|綵
 hi	M:凡|么|丟|夙|舟|卵|我|私|的
 of	M:伙|你|係|偽|氮|焦|無|絛|僚
 h	M:竹|丿
+of	P:of
+hello	P:hello
+vdhe	P:he
+ofc	P:ofc
+vdAPI	P:好API
 me	M:汞|歿|泵|玻|夏|破|球|豉|瑕
 rd	M:吁|呆|味|呼|咪|咻|哮|喋|嗓
 the{space}	C:the 
@@ -94,6 +99,7 @@ while IFS=$'\t' read -r k want; do
   case "$want" in
     C:*) got="$commit"; exp="${want#C:}";;
     M:*) got="$menu"; exp="${want#M:}";;
+    P:*) got=$(printf '%s' "$line" | cut -f4); exp="${want#P:}";;
   esac
   if [ "$got" = "$exp" ]; then pass=$((pass+1)); echo "OK   $k → $got"
   else fail=$((fail+1)); echo "FAIL $k → got [$got] want [$exp]"; fi
@@ -131,6 +137,28 @@ openai{space}	OpenAI·
 word{space}	word·
 apple{space}	apple·
 wonderxyz{space}	wonderxyz·
+const{space}	const·
+async{space}	async·
+consts{space}	欲乃
+json{space}	JSON·
+lol{Shift_L}{Release+Shift_L}	lol
+{Shift_L}{Shift+colon}{Shift+Release+Shift_L}vd1	：好
+https{Shift_L}{Shift+colon}{Shift+Release+Shift_L}//x.com{space}	https://x.com
+{Control+period}{Shift_L}{Shift+colon}{Shift+Release+Shift_L}{Shift_L}{Shift+underscore}{Shift+Release+Shift_L}{Shift_L}{Shift+asciicircum}{Shift+Release+Shift_L}{Control+period}	:_^
+hel{Shift_L}{Shift+Release+Shift_L}	hel
+tool{minus}calling{space}	tool-calling·
+json{minus}schema{space}	JSON-schema·
+abac{minus}{Return}	明顯
+vd{minus}{Return}	好
+https://x.com{space}	https://x.com
+www.x.com{space}	www.x.com
+vd;	好；
+const;	欲乃廿；
+vd{Control+v}	v
+hel{Control+c}	反c
+{Control+period};'"()_^:!{Control+period}	;'"()_^:!
+{Control+period}const;{Control+period}	const;
+{Control+period}vd;hi7,{Control+period}	好;我,
 {Shift_L}{Release+Shift_L}vd1	好
 {Control+period}vd1,{period}{slash}{semicolon}{Control+period}vd1,	好,./;好，
 EOF

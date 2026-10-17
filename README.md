@@ -2,14 +2,14 @@
 
 香港繁體速成輸入法，中英混打唔使切換模式。速成候選次序**逐頁跟 Windows 11 微軟速成**，另外補齊港字、常用詞、英文詞同聯想詞。引擎用 [librime](https://github.com/rime/librime)：Windows 11 由 [小狼毫（Weasel）](https://github.com/rime/weasel) 載入，Linux 用 Fcitx5。
 
-**最新版本：v0.5.2**（2026-10-17）· [所有版本同更新紀錄](https://github.com/Kinfxhk/kinfx-ime/releases)
+**最新版本：v0.5.3**（2026-10-18）· [所有版本同更新紀錄](https://github.com/Kinfxhk/kinfx-ime/releases)
 
 ## 實測
 
 | 項目 | 結果 | 版本／日期／環境 |
 | --- | --- | --- |
 | 速成候選次序 | 658 個兩碼，每頁每格同 Windows 一致：**658／658** | 2026-10-15～16 喺 Windows 11 Pro 26H2（build 26300）微軟速成用 `tools/mscapture` 讀出全表；每次發佈用 `fullorder.sh` 再對 |
-| Windows 實機打字 | 自動化驗收 **41／41**（逐粒鍵打入真視窗） | v0.5.1，2026-10-17，小狼毫 0.17.4 |
+| Windows 實機打字 | 自動化驗收 **54／54**（逐粒鍵打入真視窗，包括 `https://x.com`、`tool-calling`、`好：`） | v0.5.3，2026-10-18，Windows 11 Pro、小狼毫 0.17.4 |
 | Linux 實機打字 | 505 字中英混合文章：全形標點全部一致（，17　、2　。9　：2　「1　」1），去掉空格後 **453／453** 字一致，**30 個英文詞全部正確** | v0.5.1，2026-10-17，Ubuntu 26.04、Fcitx5 5.1.19、fcitx5-rime（librime 1.16.1）、gedit，kernel-level 按鍵重播 |
 | Linux 實機打字（舊版） | 同一篇文章 **byte-exact 505／505** | v0.4.0，2026-10-16，同上環境 |
 | 英文功能有冇改到中文 | 190 萬組按鍵（全部兩碼＋兩碼、三段連打抽樣），同冇英文功能嘅 v0.4.1 比：**中文改變 0** | v0.5.1，`tools/rimeh/compare.py`，離線 |
@@ -60,9 +60,10 @@ Linux v0.5.1 嗰次唔係 byte-exact，原因係測試計劃喺英文詞後面�
 | 2 字母短詞（of、to、on、or…） | 打完撳一下**左 Shift** | `of` 左 Shift → `of` |
 | 空白唔上屏嘅詞（容易同中文撞嘅短詞、少見詞，例如 door） | 打完撳一下左 Shift | `door` 左 Shift → `door` |
 | 公司名、產品名（Wondershare、GitLab、OpenAI…） | 打完撳空白或者左 Shift | `openai`␣ → `OpenAI ` |
-| 詞表冇嘅長英文字 | 7 個字母或以上撳空白；短啲撳左 Shift | `wonderxyz`␣ → `wonderxyz ` |
+| 詞表冇嘅英文字、英文詞開頭（const、async） | 5 個字母或以上撳空白（6 個字母除外，空白係速成翻頁）；短啲撳左 Shift | `const`␣ → `const ` |
+| 連字號英文（tool-calling） | 直接打 `-` | `tool-calling`␣ → `tool-calling ` |
 | 打錯字 | Backspace 退一個字母，再打 | `hellp` ⌫ `o`␣ → `hello ` |
-| 大寫開頭、email、URL | 直接打 | `Startup`、`a@b.com`、`www.x.com` |
+| 大寫開頭、email、URL | 直接打 | `Startup`、`a@b.com`、`www.x.com`、`https://x.com` |
 | 打長段英文 | `Ctrl+Shift+2` 切英文模式，再撳一次返中文 | — |
 
 - **v0.5.1 起，用空白上屏英文會自帶一個空格**：`startup` 空白 → `startup `，嗰下空白已經用咗，唔使再撳。用左 Shift 上屏就冇空格。
@@ -79,6 +80,8 @@ Linux v0.5.1 嗰次唔係 byte-exact，原因係測試計劃喺英文詞後面�
 | `/` | 直接撳，出半形 /（v0.5.2 起唔使揀） |
 | 「、」 | 撳 `\` |
 | 全部符號半形（寫 code：`( ) ; : ' " , .` 等） | 撳 **Ctrl+.** 切英文標點，再撳一次返中文標點（同 Windows 微軟速成一樣）。狀態會記住 |
+| `:` `_` `^` 等 Shift 符號 | 照平時撳住 Shift 打；撳住 Shift 打符號唔會當英文上屏（v0.5.3 修正） |
+| 打緊字撳 Ctrl+C／V／X | 收起輸入，快捷鍵交返程式（`english/clipboard: keep` 還原 v0.5.2） |
 
 ## 聯想詞
 
@@ -169,6 +172,7 @@ Fcitx5 預設用左 Shift 切輸入法，librime 收唔到嗰下 Shift，所以 
 | 空白揀字而唔係翻頁 | `"win_quick/space_pages": false` |
 | 冇打字撳左 Shift 切臨時英文（v0.5.1 行為） | `"english/empty_shift": ascii` |
 | 唔留住詞表冇嘅英文字 | `"english/hold_min": 0` |
+| 預編輯顯示速成字根（人火）而唔係字母（of） | `"english/preedit": radicals` |
 | `/` 返做選單（、 / ／ ÷） | custom 入面刪走 `punctuator/half_shape` 嗰兩行 |
 
 ## 方案
@@ -195,6 +199,16 @@ Windows 實機自動化驗收（41 項）同 Linux VM 實打嘅結果，見上�
 ## 版本
 
 [GitHub Releases](https://github.com/Kinfxhk/kinfx-ime/releases) 有每個版本嘅更新紀錄同 Windows 安裝包。
+
+**v0.5.3（2026-10-18）**：打 code／網址修正。
+- 撳住 Shift 打 `:` `_` `^` `!` 等符號唔再被當成「左 Shift 上屏英文」吞咗；`https://x.com` 可以直接打。
+- `www.`、`https:`、`ftp:`、`mailto:` 開頭會保留做網址。
+- 英文詞開頭（const、async、function）同詞表冇嘅字 5 個字母起撳空白上屏（v0.5.2 要 7 個）。
+- 英文詞後面打 `-` 接駁（tool-calling、JSON-schema），中文照 Windows（`english/hyphen: off` 還原）。
+- 打緊字撳 Ctrl+C／V／X 收起輸入，快捷鍵交返程式。
+- 預編輯改為顯示打咗嘅字母（`of`，唔再係字根 `人火`）；英文詞顯示成個（`hello`）。要字根：`"english/preedit": radicals`。
+- `;`、`'` 照 Windows 頂字再出標點（`vd;` → 好；）。
+- 名表加 140 個科技詞同縮寫（JSON、API、Linux…）；同時修正一個 v0.5.3 開發中出現、令名表大寫失效嘅次序錯誤。
 
 **v0.5.2（2026-10-17）**：用戶親測回報。
 - `/` 直出；`\` 出「、」；Ctrl+. 切中英文標點。
@@ -232,7 +246,7 @@ Windows 實機自動化驗收（41 項）同 Linux VM 實打嘅結果，見上�
 
 ## English
 
-KINFX is a Hong Kong Traditional Chinese Sucheng (Quick) IME on librime. It runs inside Weasel on Windows 11 and inside Fcitx5 on Linux. Latest: **v0.5.2** (2026-10-17); see [Releases](https://github.com/Kinfxhk/kinfx-ime/releases).
+KINFX is a Hong Kong Traditional Chinese Sucheng (Quick) IME on librime. It runs inside Weasel on Windows 11 and inside Fcitx5 on Linux. Latest: **v0.5.3** (2026-10-18); see [Releases](https://github.com/Kinfxhk/kinfx-ime/releases).
 
 **What it does**
 - Candidate order matches Windows 11 Microsoft Quick on every page: all 658 two-letter codes were captured on Windows 11 Pro 26H2 (build 26300) and match 658/658.
@@ -245,6 +259,8 @@ KINFX is a Hong Kong Traditional Chinese Sucheng (Quick) IME on librime. It runs
 - Linux (2026-10-17, Ubuntu 26.04, Fcitx5 5.1.19, librime 1.16.1, gedit, kernel-level key replay): a 505-character mixed article came out with every full-width punctuation mark identical, 453/453 characters identical after removing spaces, and all 30 English words correct. The remaining difference was an extra space in the test plan, not the IME. v0.4.0 typed the same article byte-exact.
 - The English feature does not change Chinese output: 0 changes over 1.9 million key sequences compared with v0.4.1 (offline).
 - No Linux latency number has been measured yet.
+
+**v0.5.3 fixes** (coding / URLs): a Shift held for a symbol (`:` `_` `^` `!`) is no longer read as the Left Shift English commit, so `https://x.com` types as is; `www.` `https:` `ftp:` `mailto:` starts stay a URL; English word starts and unknown words commit on Space from 5 letters (not 6: three Sucheng pairs, Space pages); a hyphen after an English word joins (`tool-calling`, `english/hyphen: off` restores v0.5.2); Ctrl+C / V / X while composing close the composition and reach the app (`english/clipboard: keep`); the preedit shows the typed letters (`of`, the whole `hello`) instead of Sucheng radicals (`english/preedit: radicals` restores them); `;` and `'` top out like Windows (`vd;` → 好；); 141 tech terms and acronyms added to the names list. Windows real-machine acceptance 54/54.
 
 **v0.5.2 fixes** (user report): `/` types `/` directly and `\` types 、; Ctrl+. toggles ASCII punctuation for code; the Tab expand label no longer sits in the preedit (it leaked into documents) and Esc ends it; Backspace inside an English word removes one letter instead of committing the held Chinese; a Left Shift tap with nothing typed no longer enters inline English; company / product names (`lexicon/en/kinfx_en_names.txt`, 333 entries) and unknown long words are held instead of being split into Chinese.
 
