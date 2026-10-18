@@ -20,8 +20,10 @@
 
 local pm = require("phrase_mix").helpers
 
+local kRejected = 0 -- the app gets the key (librime ProcessResult)
 local kAccepted = 1
 local kNoop = 2
+local META_MASK = 0x10000000 -- kMetaMask (1 << 28)
 
 local function config_int(config, path, default)
   local v = config:get_int(path)
@@ -577,8 +579,33 @@ end
 
 local process -- the v0.5.3 key handler, below
 
+-- Paste while composing: Ctrl+V, or Command+V on macOS (Super), or Meta+V
+-- (some X clients). The user may have clicked elsewhere first, so nothing
+-- composed or held is committed: it would land at the old caret. Drop it all
+-- and return kRejected so the app pastes. kNoop let key_binder
+-- (emacs_editing, when: composing) turn Control+v into Page_Down.
+local function paste_key(env, key)
+  local kc = key.keycode
+  if env.clipboard == "keep" or key:release() or key:alt()
+     or not (kc == 0x76 or kc == 0x56) then
+    return false
+  end
+  if not (key:ctrl() or key:super() or math.floor(key.modifier / META_MASK) % 2 == 1) then
+    return false
+  end
+  return env.engine.context:is_composing()
+end
+
 local function func(key, env)
   local kc = key.keycode
+  if paste_key(env, key) then
+    reset()
+    rescue_drop()
+    S.guard = true
+    env.engine.context:clear()
+    S.guard = false
+    return kRejected
+  end
   if not R.alive then
     local r = process(key, env)
     -- the rescue started on this key; kNoop lets the speller commit next,
@@ -673,7 +700,7 @@ function process(key, env)
   end
 
   if not key:release() then
-    -- Ctrl+C / V / X while composing: the emacs bindings turned Ctrl+V into
+    -- Ctrl+C / X while composing (Ctrl+V: paste_key above): the emacs bindings turned Ctrl+V into
     -- Page_Down and the app never saw the shortcut. Send the held top-outs
     -- (Windows had committed them), drop the letters, let the app copy/paste.
     if env.clipboard ~= "keep" and key:ctrl() and not key:alt() and not key:super()

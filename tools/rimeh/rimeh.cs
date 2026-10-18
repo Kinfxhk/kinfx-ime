@@ -63,6 +63,7 @@ static class KeyTab {
     public const int kControlMask = 1 << 2;
     public const int kAltMask = 1 << 3;
     public const int kSuperMask = 1 << 26;
+    public const int kMetaMask = 1 << 28;
     public const int kReleaseMask = 1 << 30;
 
     public static int KeycodeForName(string name) {
@@ -183,6 +184,11 @@ static class P {
         if (Rime.RimeGetContext(s, ref c) == 0) return "";
         var t = S(c.preedit); Rime.RimeFreeContext(ref c); return t;
     }
+    static int PageNo(UIntPtr s) {
+        var c = new Rime.Context(); c.data_size = Marshal.SizeOf(typeof(Rime.Context)) - 4;
+        if (Rime.RimeGetContext(s, ref c) == 0) return -1;
+        int p = c.page_no; Rime.RimeFreeContext(ref c); return p;
+    }
     static List<string> Cands(UIntPtr s, int max) {
         var l = new List<string>();
         var it = new Rime.Iter();
@@ -227,6 +233,7 @@ static class P {
                 else if (m == "Control" || m == "Ctrl") mods |= KeyTab.kControlMask;
                 else if (m == "Alt") mods |= KeyTab.kAltMask;
                 else if (m == "Super") mods |= KeyTab.kSuperMask;
+                else if (m == "Meta") mods |= KeyTab.kMetaMask;
                 else return false;
             }
         }
@@ -290,6 +297,23 @@ static class P {
                 var commit = ReadCommit(s);
                 Console.WriteLine("OK\t" + arg + "\t" + Clean(commit) + "\t" + Clean(Preedit(s)) + "\t" +
                     string.Join("|", Cands(s, maxc)) + "\t" + us.ToString("F0"));
+            } else if (cmd == "pk") {
+                // pk <seq>: one line per token: PK <tok> eaten=<RimeProcessKey>
+                // page=<page_no> preedit=<..> cand1=<..> commit=<..>. The
+                // composition carries over from the previous command.
+                foreach (var tok in Tokenize(arg)) {
+                    int kc, mask; string printable;
+                    if (!ParseToken(tok, out kc, out mask, out printable)) {
+                        Console.WriteLine("PK\t" + tok + "\tparse-error");
+                        continue;
+                    }
+                    int eaten = Rime.RimeProcessKey(s, kc, mask);
+                    string commit = ReadCommit(s);
+                    var cands = Cands(s, 1);
+                    Console.WriteLine("PK\t" + tok + "\teaten=" + eaten + "\tpage=" + PageNo(s) +
+                        "\tpreedit=" + Clean(Preedit(s)) + "\tcand1=" + (cands.Count > 0 ? cands[0] : "") +
+                        "\tcommit=" + Clean(commit));
+                }
             } else if (cmd == "typed") {
                 // typed <seq>: model app-visible text. Feeds each token through
                 // RimeProcessKey (so handled vs passthrough is known), drains
