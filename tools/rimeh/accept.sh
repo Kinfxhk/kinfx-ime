@@ -213,6 +213,11 @@ vd{Right}.	嫻。
 vd{space}1	嫻
 vd{Right}1	嫻
 vd1{Shift_L}{Shift+parenleft}{Shift+Release+Shift_L}	好（
+vd1{Shift+9}	好（
+vd1{Shift+KP_9}	好（
+vd1{Shift+1}	好似
+vd1{Shift+8}	好過
+vd19	好9
 vd1{Shift_L}{Shift+exclam}{Shift+Release+Shift_L}	好似
 vd1{Shift_L}{Shift+asterisk}{Shift+Release+Shift_L}	好過
 hello.	hello。

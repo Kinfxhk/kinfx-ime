@@ -89,6 +89,7 @@ check spaceoff "  \"english/space\": off" "vdAPI{space}" "好API"
 check periodpg "  \"win_quick/period_pages\": true" "vd.{Return}" "嫻"
 # association/paren_pick: true = v0.5.6 (Shift+9 after a pick takes slot 9)
 check parenpick "  \"association/paren_pick\": true" "vd1{Shift_L}{Shift+parenleft}{Shift+Release+Shift_L}" "好了"
+check parenpick9 "  \"association/paren_pick\": true" "vd1{Shift+9}" "好了"
 # english/hyphen: off = v0.5.2 (hyphen after an English word goes to the punctuator)
 check hyoff "$HYOFF" "tool{minus}" "芝"
 # english/preedit: radicals = v0.5.2 preedit (Sucheng radicals); checkp compares the preedit

@@ -820,9 +820,16 @@ function process(key, env)
   -- list first; the key then reaches key_binder with no menu and types.
   if not key:release() and assoc_active(ctx) and
      not (key:ctrl() or key:alt() or key:super()) then
+    -- Shift+9 sent as 9 / KP_9 with the Shift mask (direct process_key, some
+    -- remote or on-screen keyboards): the punctuator would type 9, so commit （ here.
+    local shift_nine = key:shift() and (kc == 0x39 or kc == 0xffb9)
     if ASSOC_PUNCT[repr] or (repr == "space" and env.assoc_space == "type")
-       or (kc == 0x28 and not env.paren_pick) then
+       or ((kc == 0x28 or shift_nine) and not env.paren_pick) then
       close_assoc(ctx)
+      if shift_nine and kc ~= 0x28 then
+        env.engine:commit_text("（")
+        return kAccepted
+      end
       return kNoop
     end
   end
