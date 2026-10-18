@@ -732,6 +732,39 @@ static int assert_association(RimeApi* api, RimeSessionId sid) {
   return ok;
 }
 
+/* v0.5.9: a single code letter before a capital stays Latin (iPhone), Shift+4
+   types $ without eating the next digit, the comma between digits stays ","
+   (librime 1.16 default turned 20,000 into 20，000), and ] after a long
+   unknown English word commits the letters first. App-visible text: keys the
+   engine does not eat are typed by the app. */
+static int assert_v059(RimeApi* api, RimeSessionId sid) {
+  const struct { const char* keys; const char* want; } c[] = {
+    {"iPhone ", "iPhone "}, {"eSIM ", "eSIM "}, {"$48", "$48"}, {"20,000", "20,000"},
+    {"[1nudification]1", "「nudification」"}, {"vd1,", "好，"}, {"vd1.", "好。"}, {"i1", "戈"}, {NULL, NULL}};
+  int ok = 1;
+  for (int i = 0; c[i].keys; ++i) {
+    char got[256] = {0};
+    api->clear_composition(sid);
+    drain_commit(api, sid);
+    for (const char* k = c[i].keys; *k; ++k) {
+      Bool eaten = api->process_key(sid, (unsigned char)*k, 0);
+      char part[128];
+      if (take_commit(api, sid, part, sizeof part))
+        strncat(got, part, sizeof got - strlen(got) - 1);
+      if (!eaten) {
+        char ch[2] = {*k, 0};
+        strncat(got, ch, sizeof got - strlen(got) - 1);
+      }
+    }
+    int good = strcmp(got, c[i].want) == 0;
+    printf("v059 '%s' -> '%s' (want '%s')%s\n", c[i].keys, got, c[i].want, good ? "" : " FAIL");
+    ok = ok && good;
+  }
+  api->clear_composition(sid);
+  drain_commit(api, sid);
+  return ok;
+}
+
 static int try_jyutping_tone(RimeApi* api, RimeSessionId sid) {
   if (!api->select_schema(sid, "kinfx_jyutping")) {
     printf("jyutping: select_schema failed (skip)\n");
@@ -958,6 +991,7 @@ int main(int argc, char** argv) {
   int ok_phrase = assert_phrase_mix(api, sid);
   int ok_engmix = assert_english_mix(api, sid);
   int ok_assoc = assert_association(api, sid);
+  int ok_v059 = assert_v059(api, sid);
   int ok_keys = assert_space_enter(api, sid);
   int ok_hot = assert_hot_cycle(api, sid);
   int ok_tab = assert_tab_expand(api, sid);
@@ -980,12 +1014,12 @@ int main(int argc, char** argv) {
       ok_keys ? "PASS" : "FAIL", ok_hot ? "PASS" : "FAIL",
       ok_tab ? "PASS" : "FAIL", ok_one ? "PASS" : "FAIL",
       ok_hist ? "PASS" : "FAIL", ok_jyut ? "PASS" : "FAIL");
-  printf("RESULT2 page2:%s topout:%s\n", ok_page2 ? "PASS" : "FAIL",
-         ok_topout ? "PASS" : "FAIL");
+  printf("RESULT2 page2:%s topout:%s v059:%s\n", ok_page2 ? "PASS" : "FAIL",
+         ok_topout ? "PASS" : "FAIL", ok_v059 ? "PASS" : "FAIL");
   return (ok_page && ok_sel && ok_me && ok_vd && ok_or && ok_win &&
           ok_no_qiao && ok_mix && ok_phrase && ok_engmix && ok_assoc &&
           ok_keys && ok_hot && ok_tab &&
-          ok_one && ok_hist && ok_jyut && ok_page2 && ok_topout)
+          ok_one && ok_hist && ok_jyut && ok_page2 && ok_topout && ok_v059)
              ? 0
              : 1;
 }
