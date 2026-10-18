@@ -78,7 +78,7 @@ try {
   }
   $share = @'
 KINFX 中英混打輸入法 — Windows 11 分享包
-建議標籤 v0.3.2（文件＋安裝腳本；zip 本身唔係已發佈嘅 git tag）
+版本見 GitHub Releases：https://github.com/Kinfxhk/kinfx-ime/releases
 
 1. 裝 Weasel（小狼毫）：winget install Rime.Weasel
    或 https://github.com/rime/weasel/releases
