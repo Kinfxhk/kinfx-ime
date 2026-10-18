@@ -596,9 +596,43 @@ local function paste_key(env, key)
   return env.engine.context:is_composing()
 end
 
+-- Clipboard text for a paste typed while the association list shows.
+-- shortcut: one shell call per paste (Windows ~0.3 s for powershell); upgrade
+-- to a native clipboard API if users find it slow.
+local function read_clipboard()
+  local cmd = "pbpaste 2>/dev/null || wl-paste -n 2>/dev/null || xclip -o -selection clipboard 2>/dev/null"
+  if package.config:sub(1, 1) == "\\" then
+    cmd = 'powershell -NoProfile -NonInteractive -Command "[Console]::OutputEncoding=[Text.Encoding]::UTF8;[Console]::Out.Write((Get-Clipboard -Raw))"'
+  end
+  local ok, text = pcall(function()
+    local fh = io.popen(cmd, "r")
+    if not fh then
+      return nil
+    end
+    local t = fh:read("*a")
+    fh:close()
+    return t
+  end)
+  if ok and text and text ~= "" then
+    return text
+  end
+  return nil
+end
+
 local function func(key, env)
   local kc = key.keycode
   if paste_key(env, key) then
+    local ctx = env.engine.context
+    -- After a pick nothing is composed but the association list shows: paste
+    -- here so the list survives (passing the key on closes it). Clipboard
+    -- unreadable: fall through and hand the key to the app as before.
+    if (ctx:get_property("kinfx_assoc_code") or "") ~= "" and (ctx.input or "") == "" then
+      local text = read_clipboard()
+      if text then
+        env.engine:commit_text(text)
+        return kAccepted
+      end
+    end
     reset()
     rescue_drop()
     S.guard = true
