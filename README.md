@@ -14,12 +14,13 @@
 | Linux 實機打字 | 505 字中英混合文章：全形標點全部一致（，17　、2　。9　：2　「1　」1），去掉空格後 **453／453** 字一致，**30 個英文詞全部正確** | v0.5.1，2026-10-17，Ubuntu 26.04、Fcitx5 5.1.19、fcitx5-rime（librime 1.16.1）、gedit，kernel-level 按鍵重播 |
 | Linux 實機打字（舊版） | 同一篇文章 **byte-exact 505／505** | v0.4.0，2026-10-16，同上環境 |
 | macOS（headless，唔係介面實打） | v0.5.7：`vd.`→好。、`of.`→伙。、`vd1.`→好。、`vd` 空白 `.`→嫻。、`vd` 空白 1→嫻、`vd{Right}1`→嫻、`vd1{parenleft}`→好（（清單收起）、`vd1{Shift+exclam}`→好似、`hello.`→hello。、`AI` 空白→`AI `、`https://x.com` 空白→`https://x.com `、`ctrl` 空白→`ctrl `、`vd1`→好；`9`＋Shift 直接送入 librime→好了（清單未收，v0.5.7 嘅漏洞）。v0.5.8：`9`、`0x28`、`0xffb9`＋Shift→好（，`1`＋Shift→好似，`8`＋Shift→好過，`vd` `.`→好。 | 2026-10-18，kin-studio，Squirrel 內置 librime 1.16，`scripts/install-macos.sh` 裝 add7bbc 再換 v0.5.8 Lua，用 `simulate_key_sequence`／`process_key` 直接送按鍵（唔經 TextEdit、唔用實體鍵盤） |
+| macOS 程式內打字（TextEdit） | `vd` 之後送句號鍵（key code 47）：**好。**，通過。`vd1` 之後送 Shift＋9 鍵（key code 25）：**好日（**，多咗「日」，**未通過**（見「已知限制」）。用 `keystroke` 送文字嘅結果（例如 `vd.` → 好.）唔計，因為咁送嘅係文字，唔係按鍵 | 2026-10-18，kin-studio，Squirrel 1.1.2（librime 1.16），輸入法 im.rime.inputmethod.Squirrel，方案 kinfx_quick，用 System Events `key code` 送按鍵打入 TextEdit。冇用實體鍵盤 |
 | 英文功能有冇改到中文 | 209 萬組按鍵（全部兩碼＋兩碼、三段連打抽樣），同冇英文功能嘅 v0.4.1 比：**中文改變 0**；文章重打 2 萬字中文錯 0、英文 741／741。**意外差異 972**（見「已知限制」） | v0.5.7（2026-10-18），`tools/rimeh/compare.py`，離線 |
 | 每粒鍵用時（Windows） | 約 **0.1 ms**：`vd`（2 粒鍵）0.20 ms；16 粒鍵 2.1 ms；`thequickbrownfox`＋空白（17 粒鍵）2.1 ms（中位數） | v0.5.1，2026-10-17，`tools/rimeh` 離線，用小狼毫 0.17.4 嘅 rime.dll。舊版 v0.3 約 70 ms |
 | 每粒鍵用時（Linux） | 未有量度數字；實機打 505 字文章冇掉鍵 | — |
 | 英文字打唔打得出（空白或左 Shift） | 最多人去嘅網站名頭 5,000 個：打唔出 **16.2%**（v0.5.3：40.0%）；最常用英文詞頭 9,868 個：打唔出 **0.4%**（v0.5.3：1.6%） | v0.5.4（799d7fc），2026-10-18，`tools/rimeh/english_reach.py` 離線；網站名嚟自 Tranco 排名 |
 
-**邊啲係真機打字**：Windows 係真機，用 `keybd_event` 送按鍵，經 Windows 輸入佇列同 TSF 入小狼毫，再打入 WinForms 文字框。macOS 同 Linux 由 v0.5.7 起只做咗 headless：直接叫 librime 嘅 `simulate_key_sequence`／`process_key`，唔經輸入法前端。Linux GUI 實打最後一次係 v0.5.1（上表）。macOS 未做到真機打字，原因係測試機揀咗 ABC 鍵盤，冇 `im-select` 可以用指令切去鼠鬚管；Ctrl+Space 切唔到輸入法；用 AppleEvent 控制 TextEdit 又會卡住。
+**邊啲係真機打字**：Windows 係真機，用 `keybd_event` 送按鍵，經 Windows 輸入佇列同 TSF 入小狼毫，再打入 WinForms 文字框。macOS 同 Linux 由 v0.5.7 起只做咗 headless：直接叫 librime 嘅 `simulate_key_sequence`／`process_key`，唔經輸入法前端。Linux GUI 實打最後一次係 v0.5.1（上表）。macOS 喺 2026-10-18 補做咗一次 TextEdit 程式內打字（上表），用 System Events `key code` 送按鍵，經鼠鬚管前端，但冇用實體鍵盤；`keystroke` 送嘅係文字，唔計做按鍵。
 
 Linux v0.5.1 嗰次唔係 byte-exact，原因係測試計劃喺英文詞後面多加咗一個空白。v0.5.1 用空白上屏英文已經自帶空格（見下面「打英文」），所以變咗雙空格，唔係輸入法打錯字。
 
@@ -183,10 +184,11 @@ KINFX 係裝入鼠鬚管嘅方案，唔係獨立輸入法程式，所以冇 .app
 - 腳本只會喺 `default.custom.yaml` 嘅方案清單加入 `kinfx_quick`，唔會刪除你原有嘅方案。原檔案會另存一份 `default.custom.yaml.bak-*`。
 - macOS 冇 Fcitx5 嗰種左 Shift 切換問題，唔使執行 `linux-free-left-shift.sh`。
 - 打緊字撳 Cmd+V 會交返程式貼上。
-- 實測：2026-10-18 喺 Mac Studio（macOS 27.0.1、Squirrel 1.1.2、librime 1.16）用臨時目錄跑安裝腳本測試，`tests/test_install_macos.sh` 7／7 通過；按鍵結果係 headless（見「實測」）。**macOS 未做過真機打字**，即係未喺 TextEdit 之類嘅程式用按鍵事件打過字。
+- 實測：2026-10-18 喺 Mac Studio（macOS 27.0.1、Squirrel 1.1.2、librime 1.16）用臨時目錄跑安裝腳本測試，`tests/test_install_macos.sh` 7／7 通過；按鍵結果大部分係 headless；TextEdit 程式內打字只測咗句號（通過）同 Shift+9（未通過），見「實測」。未用實體鍵盤打過。
 
 ## 已知限制
 
+- **macOS 鼠鬚管 1.1.2：揀字後用 System Events 送 Shift＋9 會出「好日（」**（2026-10-18 TextEdit 實測）。推斷原因：鼠鬚管 1.1.2 收到 Shift 鍵嘅 flagsChanged 時，如果 keyCode 係 0（模擬或者遙距桌面嘅按鍵常見），會當咗係 `a` 鍵（kVK_ANSI_A＝0）送入 librime，`a` 喺速成係「日」。離線送 `a`＋Shift 再送 `(`＋Shift，可以重現「日（」。上游鼠鬚管 2026-04-03 已修正（commit 151a43c「幽靈 a 按鍵」），但未有正式版，1.1.2 係 2026-01-14 出。用實體鍵盤會唔會中未測。
 - **v0.5.4：5 個字母嘅英文詞開頭撳空白會上屏英文**（例如 `fogge` 空白 → `fogge `），v0.4.1 會翻中文頁。離線比對 209 萬組按鍵入面有 972 組係咁（約每 1 萬組 4.6 組），中文字本身冇改。v0.5.3 已經係咁，v0.5.4 嘅比對先量到。想避開：`"english/space": long` 或者 `off`。
 - **v0.5.4 左 Shift 補救會令部分中文遲一兩粒鍵先上屏**（例如 `zdr` 打到一半，「。」要等下一粒鍵）。有即時顯示嘅程式（網址欄、終端機）會睇到。`"english/rescue_min": 0` 關。
 - **2026-10-18 用戶回報：Windows 實機用 v0.5.4 開發版時「突然打唔到速成」**，退返 v0.5.3 後正常。原因未查明，正喺 VM 重現。遇到嘅話：撳 Ctrl+Shift+2 或右下角切返「中」；未解決可以退返 v0.5.3。
@@ -322,6 +324,7 @@ KINFX is a Hong Kong Traditional Chinese Sucheng (Quick) IME on librime. It runs
 
 **Measured**
 - macOS (2026-10-18, kin-studio, Squirrel's librime 1.16, headless `simulate_key_sequence` / `process_key`, not typed in an app): v0.5.7 gave `vd.` → 好。, `vd` Space `.` → 嫻。, `vd{Right}1` → 嫻, `vd1{parenleft}` → 好（, `hello.` → hello。, `ctrl` Space → `ctrl `; `9` + Shift sent straight to librime still picked slot 9 (好了). v0.5.8: `9` / `0x28` / `0xffb9` + Shift → 好（, `1` + Shift → 好似, `8` + Shift → 好過.
+- macOS in TextEdit (2026-10-18, Squirrel 1.1.2, System Events `key code`, no physical keyboard): `vd` + period key (key code 47) → 好。 (pass); `vd1` + Shift+9 key (key code 25) → 好日（ (fail: an extra 日). Likely Squirrel 1.1.2 reading a Shift flagsChanged with keyCode 0 as the `a` key (fixed upstream in 151a43c, not yet released). `keystroke` text runs are not counted as key presses.
 - Windows: real-machine acceptance 41/41 (v0.5.1, Weasel 0.17.4). About 0.1 ms per key offline (`vd` 0.20 ms, 16 keys 2.1 ms, median, `tools/rimeh` on Weasel's rime.dll); v0.3 took about 70 ms.
 - Linux (2026-10-17, Ubuntu 26.04, Fcitx5 5.1.19, librime 1.16.1, gedit, kernel-level key replay): a 505-character mixed article came out with every full-width punctuation mark identical, 453/453 characters identical after removing spaces, and all 30 English words correct. The remaining difference was an extra space in the test plan, not the IME. v0.4.0 typed the same article byte-exact.
 - The English feature does not change Chinese output: 0 changes over 1.9 million key sequences compared with v0.4.1 (offline).
