@@ -702,6 +702,31 @@ static int assert_association(RimeApi* api, RimeSessionId sid) {
            after[i].want, good ? "" : " FAIL");
     ok = ok && good;
   }
+  /* v0.5.8: Shift+9 after a pick types （ and closes the list, whatever keysym
+     the front end sends: parenleft (Weasel/Squirrel/fcitx5), 9 or KP_9.
+     Shift+1 / Shift+8 still pick slots 1 and 8. */
+  const struct { int kc; const char* want; } s9[] = {
+    {0x39, "好（"}, {0x28, "好（"}, {0xffb9, "好（"}, {0x31, "好似"}, {0x38, "好過"}, {0, NULL}};
+  for (int i = 0; s9[i].want; ++i) {
+    char got[256] = {0};
+    api->clear_composition(sid);
+    drain_commit(api, sid);
+    const int keys[] = {'v', 'd', '1'};
+    for (int k = 0; k < 4; ++k) {
+      if (k < 3) api->process_key(sid, keys[k], 0);
+      else api->process_key(sid, s9[i].kc, 1 /* Shift */);
+      char part[128];
+      if (take_commit(api, sid, part, sizeof part))
+        strncat(got, part, sizeof got - strlen(got) - 1);
+    }
+    int open = 0;
+    RIME_STRUCT(RimeContext, cx);
+    if (api->get_context(sid, &cx)) { open = cx.menu.num_candidates > 0; api->free_context(&cx); }
+    int good = strcmp(got, s9[i].want) == 0 && (s9[i].kc == 0x31 || s9[i].kc == 0x38 || !open);
+    printf("assoc-shift 0x%x → '%s' (want '%s')%s%s\n", s9[i].kc, got, s9[i].want,
+           open ? " list-open" : "", good ? "" : " FAIL");
+    ok = ok && good;
+  }
   api->clear_composition(sid);
   drain_commit(api, sid);
   return ok;
