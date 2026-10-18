@@ -161,6 +161,15 @@ gg{Shift_L}{Release+Shift_L}	gg
 wp{Shift_L}{Release+Shift_L}	wp
 defau{space}	defau·
 json{space}	JSON·
+ctrl{space}	ctrl·
+esc{space}	esc·
+ime{space}	ime·
+utf{space}	utf·
+del{space}	del·
+cfg{space}	cfg·
+pid{space}	pid·
+ct1	盆
+es1	污
 lol{Shift_L}{Release+Shift_L}	lol
 {Shift_L}{Shift+colon}{Shift+Release+Shift_L}vd1	：好
 https{Shift_L}{Shift+colon}{Shift+Release+Shift_L}//x.com{space}	https://x.com·

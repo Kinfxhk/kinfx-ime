@@ -481,3 +481,11 @@ fyi	fyi
 asap	asap
 bff	bff
 dms	dms
+# Short tech abbreviations: not in kinfx_en, so the 3rd letter topped out the first pair
+ctrl	ctrl
+esc	esc
+ime	ime
+utf	utf
+del	del
+cfg	cfg
+pid	pid
