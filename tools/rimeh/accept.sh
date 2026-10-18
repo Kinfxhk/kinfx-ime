@@ -190,6 +190,9 @@ zdra{Control+v}	v
 vd{Super+v}	v
 vd{Meta+v}	v
 vd{Control+v}vd1	v好
+vd1{Control+v}{Shift+exclam}	好ZZ似
+vd1{Control+v}{Control+v}	好ZZZZ
+vd1{Escape}{Control+v}	好v
 hel{Control+c}	反c
 {Control+period};'"()_^:!{Control+period}	;'"()_^:!
 {Control+period}const;{Control+period}	const;
@@ -203,7 +206,11 @@ EOF
   echo "schema kinfx_quick"
   while IFS=$'\t' read -r k _; do [ -n "$k" ] && echo "typed $k"; done <<<"$TYPED_CASES"
 } > "$U/typed.txt"
+# Paste cases read the clipboard: set ZZ for the run, restore it after.
+CLIP_SAVE="$U/clip_save.txt"
+powershell.exe -NoProfile -Command "Get-Clipboard -Raw | Set-Content -Encoding UTF8 -NoNewline '$(cygpath -w "$CLIP_SAVE")'; Set-Clipboard -Value ZZ"
 TOUT=$("$ROOT/tools/rimeh/rimeh.exe" "$SHARED" "$(cygpath -m "$U")" --no-deploy < "$U/typed.txt" 2>/dev/null | tr -d '\r')
+powershell.exe -NoProfile -Command "Set-Clipboard -Value (Get-Content -Raw -Encoding UTF8 '$(cygpath -w "$CLIP_SAVE")')"
 while IFS=$'\t' read -r k want; do
   [ -z "$k" ] && continue
   got=$(printf '%s\n' "$TOUT" | awk -F'\t' -v k="$k" '$1=="TYPED" && $2==k {print $3; exit}' | sed 's/ /·/g')

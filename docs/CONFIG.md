@@ -75,7 +75,7 @@
 | --- | --- | --- |
 | `english/preedit` | `letters` | 預編輯顯示打咗嘅字母（`of`、`hello`）；`radicals` 顯示速成字根（`人火`，v0.5.2） |
 | `english/hyphen` | `word` | 英文詞後面打 `-` 接駁（`tool-calling`）；`off` 交返標點（v0.5.2） |
-| `english/clipboard` | `clear` | 打緊字撳 Ctrl+V（macOS Cmd+V）：收起輸入，未上屏嘅字唔會上屏，交返程式貼上（可以先用滑鼠點去第二個位置）；Ctrl+C／X：已頂字照上屏，收起輸入，快捷鍵交返程式；`keep` 照 v0.5.2 |
+| `english/clipboard` | `clear` | 打緊字撳 Ctrl+V（macOS Cmd+V）：收起輸入，未上屏嘅字唔會上屏，交返程式貼上（可以先用滑鼠點去第二個位置）；揀字後聯想清單開住時撳 Ctrl+V：輸入法讀剪貼簿直接上屏，清單保留，可以繼續揀字；Ctrl+C／X：已頂字照上屏，收起輸入，快捷鍵交返程式；`keep` 照 v0.5.2 |
 
 ## v0.5.4 新開關
 
