@@ -9,12 +9,13 @@
 | 項目 | 結果 | 版本／日期／環境 |
 | --- | --- | --- |
 | 速成候選次序 | 658 個兩碼，每頁每格同 Windows 一致：**658／658** | 2026-10-15～16 喺 Windows 11 Pro 26H2（build 26300）微軟速成用 `tools/mscapture` 讀出全表；每次發佈用 `fullorder.sh` 再對 |
-| Windows 實機打字 | 自動化驗收 **54／54**（逐粒鍵打入真視窗，包括 `https://x.com`、`tool-calling`、`好：`） | v0.5.3，2026-10-18，Windows 11 Pro、小狼毫 0.17.4 |
+| Windows 實機打字 | 自動化驗收 **61／61**（逐粒鍵打入真視窗，包括 `https://x.com`、`tool-calling`、`好：`、`adsense`、`zdrav` 左 Shift） | v0.5.4 開發版 fb609f6，2026-10-18，Windows 11 Pro 26H2（build 26300）、小狼毫 0.17.4。最終版 799d7fc 未喺實機重跑 |
 | Linux 實機打字 | 505 字中英混合文章：全形標點全部一致（，17　、2　。9　：2　「1　」1），去掉空格後 **453／453** 字一致，**30 個英文詞全部正確** | v0.5.1，2026-10-17，Ubuntu 26.04、Fcitx5 5.1.19、fcitx5-rime（librime 1.16.1）、gedit，kernel-level 按鍵重播 |
 | Linux 實機打字（舊版） | 同一篇文章 **byte-exact 505／505** | v0.4.0，2026-10-16，同上環境 |
-| 英文功能有冇改到中文 | 190 萬組按鍵（全部兩碼＋兩碼、三段連打抽樣），同冇英文功能嘅 v0.4.1 比：**中文改變 0** | v0.5.1，`tools/rimeh/compare.py`，離線 |
+| 英文功能有冇改到中文 | 209 萬組按鍵（全部兩碼＋兩碼、三段連打抽樣），同冇英文功能嘅 v0.4.1 比：**中文改變 0**；文章重打 2 萬字中文錯 0、英文 741／741。**意外差異 972**（見「已知限制」） | v0.5.4（45b32fc，Lua 同 799d7fc 一樣），`tools/rimeh/compare.py`，離線 |
 | 每粒鍵用時（Windows） | 約 **0.1 ms**：`vd`（2 粒鍵）0.20 ms；16 粒鍵 2.1 ms；`thequickbrownfox`＋空白（17 粒鍵）2.1 ms（中位數） | v0.5.1，2026-10-17，`tools/rimeh` 離線，用小狼毫 0.17.4 嘅 rime.dll。舊版 v0.3 約 70 ms |
 | 每粒鍵用時（Linux） | 未有量度數字；實機打 505 字文章冇掉鍵 | — |
+| 英文字打唔打得出（空白或左 Shift） | 最多人去嘅網站名頭 5,000 個：打唔出 **16.2%**（v0.5.3：40.0%）；最常用英文詞頭 9,868 個：打唔出 **0.4%**（v0.5.3：1.6%） | v0.5.4（799d7fc），2026-10-18，`tools/rimeh/english_reach.py` 離線；網站名嚟自 Tranco 排名 |
 
 Linux v0.5.1 嗰次唔係 byte-exact，原因係測試計劃喺英文詞後面多加咗一個空白。v0.5.1 用空白上屏英文已經自帶空格（見下面「打英文」），所以變咗雙空格，唔係輸入法打錯字。
 
@@ -157,6 +158,9 @@ Fcitx5 預設用左 Shift 切輸入法，librime 收唔到嗰下 Shift，所以 
 
 ## 已知限制
 
+- **v0.5.4：5 個字母嘅英文詞開頭撳空白會上屏英文**（例如 `fogge` 空白 → `fogge `），v0.4.1 會翻中文頁。離線比對 209 萬組按鍵入面有 972 組係咁（約每 1 萬組 4.6 組），中文字本身冇改。v0.5.3 已經係咁，v0.5.4 嘅比對先量到。想避開：`"english/space": long` 或者 `off`。
+- **v0.5.4 左 Shift 補救會令部分中文遲一兩粒鍵先上屏**（例如 `zdr` 打到一半，「。」要等下一粒鍵）。有即時顯示嘅程式（網址欄、終端機）會睇到。`"english/rescue_min": 0` 關。
+- **2026-10-18 用戶回報：Windows 實機用 v0.5.4 開發版時「突然打唔到速成」**，退返 v0.5.3 後正常。原因未查明，正喺 VM 重現。遇到嘅話：撳 Ctrl+Shift+2 或右下角切返「中」；未解決可以退返 v0.5.3。
 - **Linux 唔好用 Caps Lock 做上屏鍵**（`english/commit_key: Caps_Lock`）：XKB 照樣會切大寫鎖定，之後全部變大寫（hello → HELLO），而且 `of` 冇上屏（2026-10-17 Linux VM 實測）。請用左 Shift 加 `linux-free-left-shift.sh`。
 - **Fcitx5 開新視窗有時會返去英文鍵盤（keyboard-us）**：平時睇托盤圖示就知道；做自動化測試之前，先執行 `fcitx5-remote -s rime`。
 - **Tab 展開**：v0.5.1 及之前，撳錯 Tab 之後「〔展開·欄1〕」會出現喺預編輯，部分程式會連埋寫入文件，而且 Esc 關唔到。v0.5.2 已修正：提示唔再放喺預編輯，Esc、上屏或者清空之後自動返普通候選。
@@ -192,17 +196,17 @@ Fcitx5 預設用左 Shift 切輸入法，librime 收唔到嗰下 Shift，所以 
 
 ## 測試
 
-| 指令 | 內容 | v0.5.1 結果 |
+| 指令 | 內容 | v0.5.4 結果 |
 | --- | --- | --- |
-| `bash tools/rimeh/accept.sh` | Windows 離線（用已安裝小狼毫嘅 rime.dll）：選字、頂字、詞語、英文、聯想、效能。包括 v0.5.1 新加嘅揀字後打「.」、`passion` 空白、空白上屏自帶空格 | 76／76 |
+| `bash tools/rimeh/accept.sh` | Windows 離線（用已安裝小狼毫嘅 rime.dll）：選字、頂字、詞語、英文、品牌名、左 Shift 補救、聯想、效能 | 150／150 |
 | `bash tools/rimeh/fullorder.sh` | 658 個碼逐格同 Windows 比對 | 658／658 |
-| `bash tools/rimeh/flex.sh` | 設定開關（英文 mode／space、聯想、詞語） | 22／22 |
-| `python tools/rimeh/compare.py --assoc` | 190 萬組按鍵，同 v0.4.1 比中文結果 | 中文改變 0 |
+| `bash tools/rimeh/flex.sh` | 設定開關（英文 mode／space、聯想、詞語、補救） | 29／29 |
+| `python tools/rimeh/compare.py --assoc` | 209 萬組按鍵，同 v0.4.1 比中文結果 | 中文改變 0；意外差異 972（已知限制） |
 | `./scripts/smoke-linux.sh` | Linux／CI headless（Debian librime）：候選次序、頂字、英文、聯想、揀字後標點、`passion` | GitHub Actions 通過 |
 | `pwsh -File scripts/test-windows-rime.ps1` | 安裝／卸載腳本 | 0 failure |
-| `python tests/test_gen_quick_dict.py`<br>`python tests/test_gen_quick_phrases.py`<br>`python tests/test_gen_assoc.py`<br>`python tests/test_gen_english_space.py` | 碼表／詞語／聯想／英文詞表生成器 | 4／4 |
+| `python tests/test_gen_quick_dict.py`<br>`python tests/test_gen_quick_phrases.py`<br>`python tests/test_gen_assoc.py`<br>`python tests/test_gen_english_space.py`<br>`python tests/test_gen_names.py` | 碼表／詞語／聯想／英文詞表／品牌名表生成器 | 5／5 |
 
-Windows 實機自動化驗收（41 項）同 Linux VM 實打嘅結果，見上面「實測」。
+Windows 實機自動化驗收（61 項）、Linux VM 同 macOS 外部驗收嘅結果，見上面「實測」。
 
 ## 版本
 
@@ -211,6 +215,8 @@ Windows 實機自動化驗收（41 項）同 Linux VM 實打嘅結果，見上�
 **v0.5.4（2026-10-18）**：品牌名同左 Shift 補救。
 - 新增品牌／網站名表（Wikidata，約 5 千個）：`adsense` 空白 → `AdSense `、`godaddy` → `GoDaddy`、`zendesk` → `Zendesk`。
 - 英文字打到一半變咗中文（詞表冇嗰個字），撳一下左 Shift 就照字母打出（`zdrav`）。冇撳左 Shift，結果同 v0.5.3 一樣（`"english/rescue_min": 0` 關）。
+- 速成候選唔再混入拼音反查字（`j` 只出「十」，同 Windows 一樣）；拼音反查照用 ` 開頭。
+- 撳空白：6 個字母嘅英文詞開頭唔再上屏英文（三對速成碼，空白係翻頁）；詞表冇嘅字返返要 7 個字母。
 
 **v0.5.3（2026-10-18）**：打 code／網址修正。
 - 撳住 Shift 打 `:` `_` `^` `!` 等符號唔再被當成「左 Shift 上屏英文」吞咗；`https://x.com` 可以直接打。
