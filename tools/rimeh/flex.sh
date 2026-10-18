@@ -83,6 +83,8 @@ check nohold "$NOHOLD" "wonderxyz1" "囚子河⺀"
 check norescue "$NORESCUE" "zdrav{Shift_L}{Release+Shift_L}" "。rav"
 # english/clipboard: keep = v0.5.2 (Ctrl+V pages the menu)
 check clipkeep "$CLIPKEEP" "vd{Control+v}" ""
+# english/space: off = v0.5.6 Space after an uppercase run (no space typed)
+check spaceoff "  \"english/space\": off" "vdAPI{space}" "好API"
 # english/hyphen: off = v0.5.2 (hyphen after an English word goes to the punctuator)
 check hyoff "$HYOFF" "tool{minus}" "芝"
 # english/preedit: radicals = v0.5.2 preedit (Sucheng radicals); checkp compares the preedit

@@ -759,6 +759,14 @@ function process(key, env)
       commit_word(env, ctx, (ctx.input or "") .. " ")
       return kAccepted
     end
+    -- Space after a capitalised word or acronym (Sony, PS5, AI): commit what is
+    -- shown plus the space, like a lowercase English word. librime committed
+    -- the letters and dropped the Space, so "Sony PS5 " came out "SonyPS5".
+    if repr == "space" and not S.tracking and env.smart and env.space_mode ~= "off"
+       and cseg and cseg:has_tag("uppercase") then
+      commit_word(env, ctx, ctx:get_commit_text() .. " ")
+      return kAccepted
+    end
     if ctx:get_option("ascii_punct") and not ctx:get_option("ascii_mode") and not in_url
        and not url_start
        and not (key:ctrl() or key:alt() or key:super()) and is_symbol(kc) then
