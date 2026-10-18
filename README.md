@@ -2,17 +2,18 @@
 
 香港繁體速成輸入法，中英混打唔使切換模式。速成候選次序**逐頁跟 Windows 11 微軟速成**，另外補齊港字、常用詞、英文詞同聯想詞。引擎用 [librime](https://github.com/rime/librime)：Windows 11 由 [小狼毫（Weasel）](https://github.com/rime/weasel) 載入，Linux 用 Fcitx5。
 
-**最新版本：v0.5.4**（2026-10-18）· [所有版本同更新紀錄](https://github.com/Kinfxhk/kinfx-ime/releases)
+**最新版本：v0.5.7**（2026-10-18）· [所有版本同更新紀錄](https://github.com/Kinfxhk/kinfx-ime/releases)
 
 ## 實測
 
 | 項目 | 結果 | 版本／日期／環境 |
 | --- | --- | --- |
 | 速成候選次序 | 658 個兩碼，每頁每格同 Windows 一致：**658／658** | 2026-10-15～16 喺 Windows 11 Pro 26H2（build 26300）微軟速成用 `tools/mscapture` 讀出全表；每次發佈用 `fullorder.sh` 再對 |
-| Windows 實機打字 | 自動化驗收 **61／61**（逐粒鍵打入真視窗，包括 `https://x.com`、`tool-calling`、`好：`、`adsense`、`zdrav` 左 Shift） | v0.5.4 開發版 fb609f6，2026-10-18，Windows 11 Pro 26H2（build 26300）、小狼毫 0.17.4。最終版 799d7fc 未喺實機重跑 |
+| Windows 實機打字 | 自動化驗收 **66／66**（逐粒鍵打入真視窗，包括 `https://x.com`、`tool-calling`、`好：`、`adsense`、`zdrav` 左 Shift、`vd.`→好。、`vd` 1 `Shift+9`→好（、右箭咀翻頁） | v0.5.7 Lua，2026-10-18，KinTest VM（Windows 11）、小狼毫 0.17.4 |
+| Windows 實機打文章 | HKEPC 十篇 76 段 9,307 字（22,171 粒鍵，模擬照 Windows 習慣打字）：錯字 v0.5.6 **514** → v0.5.7 **213**，冇一段變差；VM 真按鍵每段同離線一致 | v0.5.7 Lua，2026-10-18，KinTest VM、小狼毫 0.17.4；錯字大部分係詞語暫留同聯想（設計行為），見「已知限制」 |
 | Linux 實機打字 | 505 字中英混合文章：全形標點全部一致（，17　、2　。9　：2　「1　」1），去掉空格後 **453／453** 字一致，**30 個英文詞全部正確** | v0.5.1，2026-10-17，Ubuntu 26.04、Fcitx5 5.1.19、fcitx5-rime（librime 1.16.1）、gedit，kernel-level 按鍵重播 |
 | Linux 實機打字（舊版） | 同一篇文章 **byte-exact 505／505** | v0.4.0，2026-10-16，同上環境 |
-| 英文功能有冇改到中文 | 209 萬組按鍵（全部兩碼＋兩碼、三段連打抽樣），同冇英文功能嘅 v0.4.1 比：**中文改變 0**；文章重打 2 萬字中文錯 0、英文 741／741。**意外差異 972**（見「已知限制」） | v0.5.4（45b32fc，Lua 同 799d7fc 一樣），`tools/rimeh/compare.py`，離線 |
+| 英文功能有冇改到中文 | 209 萬組按鍵（全部兩碼＋兩碼、三段連打抽樣），同冇英文功能嘅 v0.4.1 比：**中文改變 0**；文章重打 2 萬字中文錯 0、英文 741／741。**意外差異 972**（見「已知限制」） | v0.5.7（2026-10-18），`tools/rimeh/compare.py`，離線 |
 | 每粒鍵用時（Windows） | 約 **0.1 ms**：`vd`（2 粒鍵）0.20 ms；16 粒鍵 2.1 ms；`thequickbrownfox`＋空白（17 粒鍵）2.1 ms（中位數） | v0.5.1，2026-10-17，`tools/rimeh` 離線，用小狼毫 0.17.4 嘅 rime.dll。舊版 v0.3 約 70 ms |
 | 每粒鍵用時（Linux） | 未有量度數字；實機打 505 字文章冇掉鍵 | — |
 | 英文字打唔打得出（空白或左 Shift） | 最多人去嘅網站名頭 5,000 個：打唔出 **16.2%**（v0.5.3：40.0%）；最常用英文詞頭 9,868 個：打唔出 **0.4%**（v0.5.3：1.6%） | v0.5.4（799d7fc），2026-10-18，`tools/rimeh/english_reach.py` 離線；網站名嚟自 Tranco 排名 |
@@ -104,10 +105,12 @@ Linux v0.5.1 嗰次唔係 byte-exact，原因係測試計劃喺英文詞後面�
 | `hi` 7 1 | 我1（普通數字照打數字，關聯想） |
 | `hi` 7 空白 | `我 `（預設：空白關聯想，再打一個空格） |
 | `hi` 7 `.` | 我。（標點關聯想，照打） |
+| `vd` 1 `Shift+9` | 好（（揀字後 `Shift+9` 打括號，唔揀第 9 個聯想詞；第 1–8 個照用 `Shift+1`–`Shift+8`） |
 | `hi` 7 再打字母 | 關聯想，開始打新字 |
 | `ofc` 1 | 人類（揀詞語唔出聯想） |
 
 - 想同 Windows 一樣，揀字後撳空白係翻聯想頁：設 `"association/space": page`。
+- 想用 `Shift+9` 揀第 9 個聯想詞（v0.5.6 做法）：設 `"association/paren_pick": true`。
 - 聯想詞次序跟粵語語料（essay-cantonese）字頻，唔係 Windows 聯想詞次序。
 
 ## Windows 11 安裝
@@ -162,6 +165,8 @@ Fcitx5 預設用左 Shift 切輸入法，librime 收唔到嗰下 Shift，所以 
 - **v0.5.4：5 個字母嘅英文詞開頭撳空白會上屏英文**（例如 `fogge` 空白 → `fogge `），v0.4.1 會翻中文頁。離線比對 209 萬組按鍵入面有 972 組係咁（約每 1 萬組 4.6 組），中文字本身冇改。v0.5.3 已經係咁，v0.5.4 嘅比對先量到。想避開：`"english/space": long` 或者 `off`。
 - **v0.5.4 左 Shift 補救會令部分中文遲一兩粒鍵先上屏**（例如 `zdr` 打到一半，「。」要等下一粒鍵）。有即時顯示嘅程式（網址欄、終端機）會睇到。`"english/rescue_min": 0` 關。
 - **2026-10-18 用戶回報：Windows 實機用 v0.5.4 開發版時「突然打唔到速成」**，退返 v0.5.3 後正常。原因未查明，正喺 VM 重現。遇到嘅話：撳 Ctrl+Shift+2 或右下角切返「中」；未解決可以退返 v0.5.3。
+- **詞語暫留時撳數字鍵，揀嘅係詞語候選**：照 Windows 習慣唔睇候選直接撳數字，會出多咗字（`成功將` → `成功率將`、`同時插` → `同時又插`）。呢個係詞語功能本身，HKEPC 十篇模擬打字入面佔餘下錯字大部分。唔想要：`"phrase_mix/capture": none`（同 Windows 一樣三碼頂字）。
+- **有候選時「.」會上屏第一個候選**（v0.5.7，同微軟速成一樣），所以 `.` 唔再翻頁；翻頁用空白或右箭咀。`llama.cpp` 呢類細楷英文中間嘅「.」仍然會變「。」；`!!` 會變「！！」。
 - **Linux 唔好用 Caps Lock 做上屏鍵**（`english/commit_key: Caps_Lock`）：XKB 照樣會切大寫鎖定，之後全部變大寫（hello → HELLO），而且 `of` 冇上屏（2026-10-17 Linux VM 實測）。請用左 Shift 加 `linux-free-left-shift.sh`。
 - **Fcitx5 開新視窗有時會返去英文鍵盤（keyboard-us）**：平時睇托盤圖示就知道；做自動化測試之前，先執行 `fcitx5-remote -s rime`。
 - **Tab 展開**：v0.5.1 及之前，撳錯 Tab 之後「〔展開·欄1〕」會出現喺預編輯，部分程式會連埋寫入文件，而且 Esc 關唔到。v0.5.2 已修正：提示唔再放喺預編輯，Esc、上屏或者清空之後自動返普通候選。
@@ -182,6 +187,8 @@ Fcitx5 預設用左 Shift 切輸入法，librime 收唔到嗰下 Shift，所以 
 | 關掉聯想詞 | `"association/enable": false` |
 | 揀字後空白翻聯想頁（Windows） | `"association/space": page` |
 | 空白揀字而唔係翻頁 | `"win_quick/space_pages": false` |
+| 「.」翻頁（v0.5.6 做法，唔出「好。」） | `"win_quick/period_pages": true` |
+| 揀字後 `Shift+9` 揀第 9 個聯想詞 | `"association/paren_pick": true` |
 | 冇打字撳左 Shift 切臨時英文（v0.5.1 行為） | `"english/empty_shift": ascii` |
 | 唔留住詞表冇嘅英文字 | `"english/hold_min": 0` |
 | 關左 Shift 補救（中文即刻上屏，v0.5.3 行為） | `"english/rescue_min": 0` |
@@ -197,11 +204,11 @@ Fcitx5 預設用左 Shift 切輸入法，librime 收唔到嗰下 Shift，所以 
 
 ## 測試
 
-| 指令 | 內容 | v0.5.4 結果 |
+| 指令 | 內容 | v0.5.7 結果 |
 | --- | --- | --- |
-| `bash tools/rimeh/accept.sh` | Windows 離線（用已安裝小狼毫嘅 rime.dll）：選字、頂字、詞語、英文、品牌名、左 Shift 補救、聯想、效能 | 150／150 |
+| `bash tools/rimeh/accept.sh` | Windows 離線（用已安裝小狼毫嘅 rime.dll）：選字、頂字、詞語、英文、品牌名、左 Shift 補救、聯想、貼上、句號、效能 | 186／186 |
 | `bash tools/rimeh/fullorder.sh` | 658 個碼逐格同 Windows 比對 | 658／658 |
-| `bash tools/rimeh/flex.sh` | 設定開關（英文 mode／space、聯想、詞語、補救） | 29／29 |
+| `bash tools/rimeh/flex.sh` | 設定開關（英文 mode／space、聯想、詞語、補救、句號翻頁、括號揀字） | 32／32 |
 | `python tools/rimeh/compare.py --assoc` | 209 萬組按鍵，同 v0.4.1 比中文結果 | 中文改變 0；意外差異 972（已知限制） |
 | `./scripts/smoke-linux.sh` | Linux／CI headless（Debian librime）：候選次序、頂字、英文、聯想、揀字後標點、`passion` | GitHub Actions 通過 |
 | `pwsh -File scripts/test-windows-rime.ps1` | 安裝／卸載腳本 | 0 failure |
@@ -212,6 +219,12 @@ Windows 實機自動化驗收（61 項）、Linux VM 同 macOS 外部驗收嘅�
 ## 版本
 
 [GitHub Releases](https://github.com/Kinfxhk/kinfx-ime/releases) 有每個版本嘅更新紀錄同 Windows 安裝包。
+
+**v0.5.7（2026-10-18）**：用 HKEPC 文章實打之後嘅修正。
+- 有候選時打「.」：上屏第一個候選再出「。」（`vd.` → 好。），同微軟速成一樣；唔再用「.」翻頁。空白同右箭咀照舊翻頁（`"win_quick/period_pages": true` 還原）。
+- 揀字後打「（」（`Shift+9`）：出括號同收起聯想詞，唔再揀第 9 個聯想詞（`遊戲越獄（` 唔再變 `越獄訟`）。第 1–8 個照用 `Shift+1`–`Shift+8`（`"association/paren_pick": true` 還原）。
+- 大楷字或縮寫後面撳空白會打埋空格（`Sony PS5 遊戲` 唔再變 `SonyPS5遊戲`）（`"english/space": off` 還原）。
+- `ctrl` `esc` `ime` `utf` `del` `cfg` `pid` 撳空白出英文（v0.5.6）；揀字後撳 Ctrl+V 保留聯想詞（v0.5.6）。
 
 **v0.5.4（2026-10-18）**：品牌名同左 Shift 補救。
 - 新增品牌／網站名表（Wikidata，約 5 千個）：`adsense` 空白 → `AdSense `、`godaddy` → `GoDaddy`、`zendesk` → `Zendesk`。
@@ -266,7 +279,7 @@ Windows 實機自動化驗收（61 項）、Linux VM 同 macOS 外部驗收嘅�
 
 ## English
 
-KINFX is a Hong Kong Traditional Chinese Sucheng (Quick) IME on librime. It runs inside Weasel on Windows 11 and inside Fcitx5 on Linux. Latest: **v0.5.4** (2026-10-18); see [Releases](https://github.com/Kinfxhk/kinfx-ime/releases).
+KINFX is a Hong Kong Traditional Chinese Sucheng (Quick) IME on librime. It runs inside Weasel on Windows 11 and inside Fcitx5 on Linux. Latest: **v0.5.7** (2026-10-18); see [Releases](https://github.com/Kinfxhk/kinfx-ime/releases).
 
 **What it does**
 - Candidate order matches Windows 11 Microsoft Quick on every page: all 658 two-letter codes were captured on Windows 11 Pro 26H2 (build 26300) and match 658/658.

@@ -416,6 +416,13 @@ local function read_env(env)
   -- association/space: type (Space closes the list and types a space) | page
   -- (Windows: Space pages the list and is swallowed).
   env.assoc_space = config_str(config, "association/space", "type")
+  -- association/paren_pick: false (default) = Shift+9 after a pick types （ and
+  -- closes the list (HKEPC: 遊戲越獄（ came out 越獄訟) | true = Shift+9 picks slot 9.
+  env.paren_pick = pm.config_bool(config, "association/paren_pick", false)
+  -- win_quick/period_pages: false (default) = "." with a menu commits the
+  -- highlighted candidate, then the punctuator types 。 (vd. -> 好。, Windows Quick)
+  -- | true = "." pages (Weasel's paging_with_comma_period binding).
+  env.period_pages = pm.config_bool(config, "win_quick/period_pages", false)
   env.commit_key = config_str(config, "english/commit_key", "Shift_L")
   env.commit_code = KEYCODE[env.commit_key] or 0xffe1
   env.en_mem = pm.new_memory(env, "kinfx_en")
@@ -619,7 +626,7 @@ local function read_clipboard()
   return nil
 end
 
-local function func(key, env)
+local function dispatch(key, env)
   local kc = key.keycode
   if paste_key(env, key) then
     local ctx = env.engine.context
@@ -687,6 +694,34 @@ local function func(key, env)
   end
   rescue_end(env)
   return process(key, env)
+end
+
+-- "." with a candidate menu: commit the highlighted candidate like a Windows
+-- top-out; the punctuator then types 。 (key_binder's period -> Page_Down runs
+-- later and finds no menu). Only after every other path returned kNoop, so
+-- URLs (www.), English words (hello。) and ASCII punctuation keep their handling.
+local function period_topout(env, key)
+  if env.period_pages or key:release() or key.keycode ~= 0x2e
+     or key:ctrl() or key:alt() or key:super() then
+    return
+  end
+  local ctx = env.engine.context
+  if ctx:get_option("ascii_mode") or not ctx:has_menu() or assoc_active(ctx) then
+    return
+  end
+  local seg = ctx.composition:back()
+  if seg and (seg:has_tag("url") or seg:has_tag("email") or seg:has_tag("uppercase")) then
+    return
+  end
+  ctx:commit()
+end
+
+local function func(key, env)
+  local r = dispatch(key, env)
+  if r == kNoop then
+    period_topout(env, key)
+  end
+  return r
 end
 
 function process(key, env)
@@ -785,7 +820,8 @@ function process(key, env)
   -- list first; the key then reaches key_binder with no menu and types.
   if not key:release() and assoc_active(ctx) and
      not (key:ctrl() or key:alt() or key:super()) then
-    if ASSOC_PUNCT[repr] or (repr == "space" and env.assoc_space == "type") then
+    if ASSOC_PUNCT[repr] or (repr == "space" and env.assoc_space == "type")
+       or (kc == 0x28 and not env.paren_pick) then
       close_assoc(ctx)
       return kNoop
     end
