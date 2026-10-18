@@ -13,6 +13,7 @@
 | Windows 實機打文章 | HKEPC 十篇 76 段 9,307 字（22,171 粒鍵，模擬照 Windows 習慣打字）：錯字 v0.5.6 **514** → v0.5.7 **213**，冇一段變差；VM 真按鍵每段同離線一致 | v0.5.7 Lua，2026-10-18，KinTest VM、小狼毫 0.17.4；錯字大部分係詞語暫留同聯想（設計行為），見「已知限制」 |
 | Linux 實機打字 | 505 字中英混合文章：全形標點全部一致（，17　、2　。9　：2　「1　」1），去掉空格後 **453／453** 字一致，**30 個英文詞全部正確** | v0.5.1，2026-10-17，Ubuntu 26.04、Fcitx5 5.1.19、fcitx5-rime（librime 1.16.1）、gedit，kernel-level 按鍵重播 |
 | Linux 實機打字（舊版） | 同一篇文章 **byte-exact 505／505** | v0.4.0，2026-10-16，同上環境 |
+| macOS（headless，唔係介面實打） | v0.5.7：`vd.`→好。、`of.`→伙。、`vd1.`→好。、`vd` 空白 `.`→嫻。、`vd` 空白 1→嫻、`vd{Right}1`→嫻、`vd1{parenleft}`→好（（清單收起）、`vd1{Shift+exclam}`→好似、`hello.`→hello。、`AI` 空白→`AI `、`https://x.com` 空白→`https://x.com `、`ctrl` 空白→`ctrl `、`vd1`→好；`9`＋Shift 直接送入 librime→好了（清單未收，v0.5.7 嘅漏洞）。v0.5.8：`9`、`0x28`、`0xffb9`＋Shift→好（，`1`＋Shift→好似，`8`＋Shift→好過，`vd` `.`→好。 | 2026-10-18，kin-studio，Squirrel 內置 librime 1.16，`scripts/install-macos.sh` 裝 add7bbc 再換 v0.5.8 Lua，用 `simulate_key_sequence`／`process_key` 直接送按鍵（唔經 TextEdit、唔用實體鍵盤） |
 | 英文功能有冇改到中文 | 209 萬組按鍵（全部兩碼＋兩碼、三段連打抽樣），同冇英文功能嘅 v0.4.1 比：**中文改變 0**；文章重打 2 萬字中文錯 0、英文 741／741。**意外差異 972**（見「已知限制」） | v0.5.7（2026-10-18），`tools/rimeh/compare.py`，離線 |
 | 每粒鍵用時（Windows） | 約 **0.1 ms**：`vd`（2 粒鍵）0.20 ms；16 粒鍵 2.1 ms；`thequickbrownfox`＋空白（17 粒鍵）2.1 ms（中位數） | v0.5.1，2026-10-17，`tools/rimeh` 離線，用小狼毫 0.17.4 嘅 rime.dll。舊版 v0.3 約 70 ms |
 | 每粒鍵用時（Linux） | 未有量度數字；實機打 505 字文章冇掉鍵 | — |
@@ -317,6 +318,7 @@ KINFX is a Hong Kong Traditional Chinese Sucheng (Quick) IME on librime. It runs
 - Association words after a single-character pick: Shift+digit picks (`hi7` Shift+2 → 我講); a plain digit types the digit; Space and punctuation close the list and type (v0.5.1).
 
 **Measured**
+- macOS (2026-10-18, kin-studio, Squirrel's librime 1.16, headless `simulate_key_sequence` / `process_key`, not typed in an app): v0.5.7 gave `vd.` → 好。, `vd` Space `.` → 嫻。, `vd{Right}1` → 嫻, `vd1{parenleft}` → 好（, `hello.` → hello。, `ctrl` Space → `ctrl `; `9` + Shift sent straight to librime still picked slot 9 (好了). v0.5.8: `9` / `0x28` / `0xffb9` + Shift → 好（, `1` + Shift → 好似, `8` + Shift → 好過.
 - Windows: real-machine acceptance 41/41 (v0.5.1, Weasel 0.17.4). About 0.1 ms per key offline (`vd` 0.20 ms, 16 keys 2.1 ms, median, `tools/rimeh` on Weasel's rime.dll); v0.3 took about 70 ms.
 - Linux (2026-10-17, Ubuntu 26.04, Fcitx5 5.1.19, librime 1.16.1, gedit, kernel-level key replay): a 505-character mixed article came out with every full-width punctuation mark identical, 453/453 characters identical after removing spaces, and all 30 English words correct. The remaining difference was an extra space in the test plan, not the IME. v0.4.0 typed the same article byte-exact.
 - The English feature does not change Chinese output: 0 changes over 1.9 million key sequences compared with v0.4.1 (offline).
