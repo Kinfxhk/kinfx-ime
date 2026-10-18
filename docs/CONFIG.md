@@ -42,6 +42,8 @@
 | 空白唔上屏英文（都要左 Shift） | `"english/space": "off"` |
 | 關掉聯想詞 | `"association/enable": false` |
 | 空白改回揀焦點候選 | `"win_quick/space_pages": false` |
+| 「.」翻頁，唔上屏（v0.5.6 做法） | `"win_quick/period_pages": true` |
+| 揀字後 `Shift+9` 揀第 9 個聯想詞（v0.5.6 做法） | `"association/paren_pick": true` |
 | 關掉常用熱門 | `"win_quick/hot_page": false` |
 | Tab 唔展開 | `"win_quick/tab_expand": false` |
 | 候選打橫 | `"style/horizontal": true` |
