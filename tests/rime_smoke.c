@@ -742,7 +742,17 @@ static int assert_v059(RimeApi* api, RimeSessionId sid) {
     {"iPhone ", "iPhone "}, {"eSIM ", "eSIM "}, {"$48", "$48"}, {"20,000", "20,000"},
     {"[1nudification]1", "「nudification」"}, {"vd1,", "好，"}, {"vd1.", "好。"}, {"i1", "戈"}, {NULL, NULL}};
   int ok = 1;
+  /* punctuator/digit_separators exists from librime 1.13; older engines
+     (Ubuntu 24.04 ships 1.10) type the comma after a digit full-width. */
+  const char* ver = api->get_version ? api->get_version() : "";
+  int major = 0, minor = 0;
+  sscanf(ver ? ver : "", "%d.%d", &major, &minor);
+  int has_digit_sep = major > 1 || (major == 1 && minor >= 13);
   for (int i = 0; c[i].keys; ++i) {
+    if (!has_digit_sep && strcmp(c[i].keys, "20,000") == 0) {
+      printf("v059 '20,000' skipped: librime %s has no digit_separators\n", ver);
+      continue;
+    }
     char got[256] = {0};
     api->clear_composition(sid);
     drain_commit(api, sid);
