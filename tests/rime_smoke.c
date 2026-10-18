@@ -723,8 +723,7 @@ static int assert_association(RimeApi* api, RimeSessionId sid) {
     RIME_STRUCT(RimeContext, cx);
     if (api->get_context(sid, &cx)) { open = cx.menu.num_candidates > 0; api->free_context(&cx); }
     int good = strcmp(got, s9[i].want) == 0 && (s9[i].kc == 0x31 || s9[i].kc == 0x38 || !open);
-    printf("assoc-shift 0x%x → '%s' (want '%s')%s%s
-", s9[i].kc, got, s9[i].want,
+    printf("assoc-shift 0x%x → '%s' (want '%s')%s%s\n", s9[i].kc, got, s9[i].want,
            open ? " list-open" : "", good ? "" : " FAIL");
     ok = ok && good;
   }

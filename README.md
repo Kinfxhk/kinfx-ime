@@ -19,6 +19,8 @@
 | 每粒鍵用時（Linux） | 未有量度數字；實機打 505 字文章冇掉鍵 | — |
 | 英文字打唔打得出（空白或左 Shift） | 最多人去嘅網站名頭 5,000 個：打唔出 **16.2%**（v0.5.3：40.0%）；最常用英文詞頭 9,868 個：打唔出 **0.4%**（v0.5.3：1.6%） | v0.5.4（799d7fc），2026-10-18，`tools/rimeh/english_reach.py` 離線；網站名嚟自 Tranco 排名 |
 
+**邊啲係真機打字**：Windows 係真機，用 `keybd_event` 送按鍵，經 Windows 輸入佇列同 TSF 入小狼毫，再打入 WinForms 文字框。macOS 同 Linux 由 v0.5.7 起只做咗 headless：直接叫 librime 嘅 `simulate_key_sequence`／`process_key`，唔經輸入法前端。Linux GUI 實打最後一次係 v0.5.1（上表）。macOS 未做到真機打字，原因係測試機揀咗 ABC 鍵盤，冇 `im-select` 可以用指令切去鼠鬚管；Ctrl+Space 切唔到輸入法；用 AppleEvent 控制 TextEdit 又會卡住。
+
 Linux v0.5.1 嗰次唔係 byte-exact，原因係測試計劃喺英文詞後面多加咗一個空白。v0.5.1 用空白上屏英文已經自帶空格（見下面「打英文」），所以變咗雙空格，唔係輸入法打錯字。
 
 ## 打法速查
@@ -163,15 +165,16 @@ Fcitx5 預設用左 Shift 切輸入法，librime 收唔到嗰下 Shift，所以 
 
 ## macOS（鼠鬚管）安裝
 
-```bash
-# 1. 安裝鼠鬚管
-brew install --cask squirrel-app
+KINFX 係裝入鼠鬚管嘅方案，唔係獨立輸入法程式，所以冇 .app，亦唔使用系統管理員權限。
 
-# 2. 安裝 KINFX（會先備份 ~/Library/Rime，再部署並重新載入鼠鬚管）
-git clone https://github.com/Kinfxhk/kinfx-ime.git
-cd kinfx-ime
-./scripts/install-macos.sh
-```
+1. 安裝鼠鬚管：`brew install --cask squirrel-app`（或者自己裝 Squirrel.app）。
+2. 喺 [Releases](https://github.com/Kinfxhk/kinfx-ime/releases) 下載 `kinfx-ime-macos.zip` 並解壓，然後喺解壓出嚟嘅資料夾執行：
+
+   ```bash
+   bash scripts/install-macos.sh
+   ```
+
+   腳本會先備份 `~/Library/Rime`，再複製方案、執行 `rime_deployer --build`，最後重新載入鼠鬚管。用 git 都得：`git clone https://github.com/Kinfxhk/kinfx-ime.git && cd kinfx-ime && bash scripts/install-macos.sh`。
 
 3. 系統設定 → 鍵盤 → 輸入方式 → 加入「鼠鬚管」。
 4. 按 Ctrl+` 開方案選單，揀「KINFX 中英混打輸入法 · 速成」。
@@ -180,7 +183,7 @@ cd kinfx-ime
 - 腳本只會喺 `default.custom.yaml` 嘅方案清單加入 `kinfx_quick`，唔會刪除你原有嘅方案。原檔案會另存一份 `default.custom.yaml.bak-*`。
 - macOS 冇 Fcitx5 嗰種左 Shift 切換問題，唔使執行 `linux-free-left-shift.sh`。
 - 打緊字撳 Cmd+V 會交返程式貼上。
-- 實測：2026-10-18 喺 Mac Studio（macOS 27.0.1、Squirrel 1.1.2、librime 1.16）用臨時目錄跑安裝腳本測試，`tests/test_install_macos.sh` 7／7 通過。v0.5.7 嘅句號、翻頁、括號同英文，用 librime 直接送按鍵（headless）測試，結果同 Windows 一致。未做過 macOS 介面上嘅逐鍵實打測試。
+- 實測：2026-10-18 喺 Mac Studio（macOS 27.0.1、Squirrel 1.1.2、librime 1.16）用臨時目錄跑安裝腳本測試，`tests/test_install_macos.sh` 7／7 通過；按鍵結果係 headless（見「實測」）。**macOS 未做過真機打字**，即係未喺 TextEdit 之類嘅程式用按鍵事件打過字。
 
 ## 已知限制
 
