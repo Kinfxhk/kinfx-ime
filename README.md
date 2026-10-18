@@ -1,8 +1,8 @@
 # KINFX 中英混打輸入法
 
-香港繁體速成輸入法，中英混打唔使切換模式。速成候選次序**逐頁跟 Windows 11 微軟速成**，另外補齊港字、常用詞、英文詞同聯想詞。引擎用 [librime](https://github.com/rime/librime)：Windows 11 由 [小狼毫（Weasel）](https://github.com/rime/weasel) 載入，Linux 用 Fcitx5。
+香港繁體速成輸入法，中英混打唔使切換模式。速成候選次序**逐頁跟 Windows 11 微軟速成**，另外補齊港字、常用詞、英文詞同聯想詞。引擎用 [librime](https://github.com/rime/librime)：Windows 11 由 [小狼毫（Weasel）](https://github.com/rime/weasel) 載入，Linux 用 Fcitx5，macOS 用 [鼠鬚管（Squirrel）](https://github.com/rime/squirrel)。
 
-**最新版本：v0.5.7**（2026-10-18）· [所有版本同更新紀錄](https://github.com/Kinfxhk/kinfx-ime/releases)
+**最新版本：v0.5.8**（2026-10-18）· [所有版本同更新紀錄](https://github.com/Kinfxhk/kinfx-ime/releases)
 
 ## 實測
 
@@ -160,6 +160,27 @@ Fcitx5 預設用左 Shift 切輸入法，librime 收唔到嗰下 Shift，所以 
 
 2026-10-17 Linux VM 實測：執行之後 `of` 左 Shift → `of`，輸入法保持喺 rime。
 
+## macOS（鼠鬚管）安裝
+
+```bash
+# 1. 安裝鼠鬚管
+brew install --cask squirrel-app
+
+# 2. 安裝 KINFX（會先備份 ~/Library/Rime，再部署並重新載入鼠鬚管）
+git clone https://github.com/Kinfxhk/kinfx-ime.git
+cd kinfx-ime
+./scripts/install-macos.sh
+```
+
+3. 系統設定 → 鍵盤 → 輸入方式 → 加入「鼠鬚管」。
+4. 按 Ctrl+` 開方案選單，揀「KINFX 中英混打輸入法 · 速成」。
+5. 試打：`vd` 1 → 好；`vd.` → 好。；`of` 左 Shift → `of`。
+
+- 腳本只會喺 `default.custom.yaml` 嘅方案清單加入 `kinfx_quick`，唔會刪除你原有嘅方案。原檔案會另存一份 `default.custom.yaml.bak-*`。
+- macOS 冇 Fcitx5 嗰種左 Shift 切換問題，唔使執行 `linux-free-left-shift.sh`。
+- 打緊字撳 Cmd+V 會交返程式貼上。
+- 實測：2026-10-18 喺 Mac Studio（macOS 27.0.1、Squirrel 1.1.2、librime 1.16）用臨時目錄跑安裝腳本測試，`tests/test_install_macos.sh` 7／7 通過。v0.5.7 嘅句號、翻頁、括號同英文，用 librime 直接送按鍵（headless）測試，結果同 Windows 一致。未做過 macOS 介面上嘅逐鍵實打測試。
+
 ## 已知限制
 
 - **v0.5.4：5 個字母嘅英文詞開頭撳空白會上屏英文**（例如 `fogge` 空白 → `fogge `），v0.4.1 會翻中文頁。離線比對 209 萬組按鍵入面有 972 組係咁（約每 1 萬組 4.6 組），中文字本身冇改。v0.5.3 已經係咁，v0.5.4 嘅比對先量到。想避開：`"english/space": long` 或者 `off`。
@@ -206,9 +227,9 @@ Fcitx5 預設用左 Shift 切輸入法，librime 收唔到嗰下 Shift，所以 
 
 | 指令 | 內容 | v0.5.7 結果 |
 | --- | --- | --- |
-| `bash tools/rimeh/accept.sh` | Windows 離線（用已安裝小狼毫嘅 rime.dll）：選字、頂字、詞語、英文、品牌名、左 Shift 補救、聯想、貼上、句號、效能 | 186／186 |
+| `bash tools/rimeh/accept.sh` | Windows 離線（用已安裝小狼毫嘅 rime.dll）：選字、頂字、詞語、英文、品牌名、左 Shift 補救、聯想、貼上、句號、效能 | 191／191 |
 | `bash tools/rimeh/fullorder.sh` | 658 個碼逐格同 Windows 比對 | 658／658 |
-| `bash tools/rimeh/flex.sh` | 設定開關（英文 mode／space、聯想、詞語、補救、句號翻頁、括號揀字） | 32／32 |
+| `bash tools/rimeh/flex.sh` | 設定開關（英文 mode／space、聯想、詞語、補救、句號翻頁、括號揀字） | 33／33 |
 | `python tools/rimeh/compare.py --assoc` | 209 萬組按鍵，同 v0.4.1 比中文結果 | 中文改變 0；意外差異 972（已知限制） |
 | `./scripts/smoke-linux.sh` | Linux／CI headless（Debian librime）：候選次序、頂字、英文、聯想、揀字後標點、`passion` | GitHub Actions 通過 |
 | `pwsh -File scripts/test-windows-rime.ps1` | 安裝／卸載腳本 | 0 failure |
@@ -219,6 +240,8 @@ Windows 實機自動化驗收（61 項）、Linux VM 同 macOS 外部驗收嘅�
 ## 版本
 
 [GitHub Releases](https://github.com/Kinfxhk/kinfx-ime/releases) 有每個版本嘅更新紀錄同 Windows 安裝包。
+
+**v0.5.8（2026-10-18）**：揀字後 `Shift+9` 唔理前端送咩鍵碼（`(`、`9`、小鍵盤 `9` 加 Shift）都出「（」同收起聯想詞。v0.5.7 只認 `(`，直接送 `9`＋Shift 會揀第 9 個聯想詞。
 
 **v0.5.7（2026-10-18）**：用 HKEPC 文章實打之後嘅修正。
 - 有候選時打「.」：上屏第一個候選再出「。」（`vd.` → 好。），同微軟速成一樣；唔再用「.」翻頁。空白同右箭咀照舊翻頁（`"win_quick/period_pages": true` 還原）。
@@ -271,6 +294,12 @@ Windows 實機自動化驗收（61 項）、Linux VM 同 macOS 外部驗收嘅�
 | `tools/rimeh/` | 離線測試同效能量度 |
 | `docs/` | 詳細文件 |
 
+## 維護者
+
+KinFx。Prop Firm 規則研究、比較表、工具連結同推薦碼：**<https://linktr.ee/kinfx>**
+
+呢頁部分係**聯盟（affiliate）／推薦連結**，例如考核優惠碼同夥伴註冊；你用咗嘅話，維護者可能會收到佣金。呢啲連結同本輸入法無關：程式碼用 MIT 授權，冇任何推薦或者追蹤功能，輸入法亦唔會連網。本專案同該頁列出嘅公司冇關係。
+
 ## 授權
 
 - 本專案程式同文件：MIT（`LICENSE`）
@@ -279,7 +308,7 @@ Windows 實機自動化驗收（61 項）、Linux VM 同 macOS 外部驗收嘅�
 
 ## English
 
-KINFX is a Hong Kong Traditional Chinese Sucheng (Quick) IME on librime. It runs inside Weasel on Windows 11 and inside Fcitx5 on Linux. Latest: **v0.5.7** (2026-10-18); see [Releases](https://github.com/Kinfxhk/kinfx-ime/releases).
+KINFX is a Hong Kong Traditional Chinese Sucheng (Quick) IME on librime. It runs inside Weasel on Windows 11, Fcitx5 on Linux and Squirrel on macOS. Latest: **v0.5.8** (2026-10-18); see [Releases](https://github.com/Kinfxhk/kinfx-ime/releases).
 
 **What it does**
 - Candidate order matches Windows 11 Microsoft Quick on every page: all 658 two-letter codes were captured on Windows 11 Pro 26H2 (build 26300) and match 658/658.
@@ -303,4 +332,6 @@ KINFX is a Hong Kong Traditional Chinese Sucheng (Quick) IME on librime. It runs
 
 **Known limits**: on Linux do not use Caps Lock as the commit key (XKB still toggles caps); a new Fcitx5 input context can fall back to keyboard-us, so run `fcitx5-remote -s rime` before automated tests; association order follows Cantonese corpus frequency, not Windows.
 
-Install with `scripts/install-windows.ps1` or `scripts/install-linux.sh`. Code is MIT; dictionaries keep their upstream licenses.
+Install with `scripts/install-windows.ps1`, `scripts/install-linux.sh` or, on macOS after `brew install --cask squirrel-app`, `scripts/install-macos.sh`. Code is MIT; dictionaries keep their upstream licenses.
+
+Maintainer: KinFx. Prop-firm research, comparison tables, tool links and referral codes: <https://linktr.ee/kinfx>. Some of those are affiliate / referral links and the maintainer may earn a commission. They have nothing to do with this IME: the code is MIT and contains no referral, tracking or network code.

@@ -90,6 +90,7 @@ static class KeyTab {
             case "ampersand": return 0x26;
             case "asterisk": return 0x2a;
             case "parenleft": return 0x28;
+            case "KP_9": return 0xffb9;
             case "minus": return 0x2d;
             case "equal": return 0x3d;
             case "semicolon": return 0x3b;
