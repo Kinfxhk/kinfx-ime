@@ -65,9 +65,26 @@
 | `english/empty_shift` | `noop` | 冇打字撳左 Shift：`noop` 乜都唔做；`ascii` 照 librime 切臨時英文（v0.5.1） |
 | `english/hold_min` | `4` | 英文開頭夠呢個字母數之後，詞表冇嘅字都繼續留住；`0` 關 |
 | `english/hold_extra` | `8` | 上面留住最多再多幾多個字母 |
-| `english/unknown_space_min` | `7` | 詞表冇嘅字，幾多個字母或以上先可以撳空白上屏（短啲用左 Shift） |
+| `english/unknown_space_min` | `7`（v0.5.3 開發版試過 `5`，撞中文，改返） | 詞表冇嘅字，幾多個字母或以上先可以撳空白上屏（短啲用左 Shift） |
 | `punctuator/half_shape` `/`、`\` | `/`、「、」 | `/` 直出；「、」由 `\` 出 |
 | Ctrl+. | — | 切中英文標點（`ascii_punct`），寫 code 用 |
+
+## v0.5.3 新開關
+
+| 開關 | 預設 | 作用 |
+| --- | --- | --- |
+| `english/preedit` | `letters` | 預編輯顯示打咗嘅字母（`of`、`hello`）；`radicals` 顯示速成字根（`人火`，v0.5.2） |
+| `english/hyphen` | `word` | 英文詞後面打 `-` 接駁（`tool-calling`）；`off` 交返標點（v0.5.2） |
+| `english/clipboard` | `clear` | 打緊字撳 Ctrl+C／V／X：收起輸入，快捷鍵交返程式；`keep` 照 v0.5.2 |
+
+## v0.5.4 新開關
+
+| 開關 | 預設 | 作用 |
+| --- | --- | --- |
+| `english/rescue_min` | `2` | 左 Shift 補救：開頭夠呢個字母數係英文／品牌名開頭，之後斷咗都繼續留住，撳左 Shift 照字母上屏（`adsense`、`zdrav`）；空白／數字照 Windows 出中文。`0` 關（v0.5.3） |
+| `english/rescue_extra` | `8` | 上面最多再留幾多個字母 |
+
+品牌／網站名表（v0.5.4）：`lexicon/en/kinfx_names.dict.yaml`，由 `scripts/gen_names.py` 喺 Wikidata（CC0）生成，部署時編譯成原生表 `kinfx_names`（唔入 Lua heap）。手寫名表 `kinfx_en_names.txt` 優先。
 
 公司名／產品名表：`lexicon/en/kinfx_en_names.txt`（「顯示字<Tab>細楷碼」）。安裝後喺 Rime 用戶目錄，改完重新部署。
 
@@ -76,6 +93,19 @@
 - **空白上屏英文會自帶一個空格**：`startup` 空白 → `startup `，嗰下空白已經用咗。測試計劃打完英文詞唔好再加一個空白，否則會變雙空格。左 Shift 上屏（`of` 左 Shift → `of`）就冇空格，要空格先再撳空白。
 - **揀字後第一下空白係打空格**（`association/space: type`），唔會翻聯想頁。
 - **Fcitx5**：重啟或者開新視窗時，輸入法有時會返去 `keyboard-us`。自動化開始前先執行 `fcitx5-remote -s rime`。
+
+### librime 按鍵序列（`simulate_key_sequence`／rimeh `keys`）常見寫錯
+
+三平台（Windows Weasel、Linux Fcitx5、macOS Squirrel）用同一套檔，候選次序一樣。以下寫法錯咗會報假差異：
+
+| 想測 | ✅ 正確 | ❌ 錯誤 | 錯咗會點 |
+| --- | --- | --- | --- |
+| 揀第 5 個 | `me5` → 夏 | `me 5` | 空白係翻頁，變咗揀第 2 頁第 5 個（璦） |
+| 撳一下左 Shift | `is{Shift_L}{Release+Shift_L}` → is | `is{Shift_L}` | 只有按下、冇放開，唔當撳一下，乜都唔出 |
+| Shift 打符號 | `{Shift_L}{Shift+colon}{Shift+Release+Shift_L}` → ： | `{Shift+;}` | librime 唔認呢個鍵名，整串序列失敗 |
+| 用詞表嘅詞 | 先睇 `kinfx_en_names.txt` 有冇（`grep -P "\tyolo$"`） | — | 版本未有嗰個詞，就會照速成出中文（v0.5.2 `/yolo` → /亥） |
+
+另外：Ctrl+. 切英文標點會記住喺 `user.yaml`（`ascii_punct`）。一連串 case 之前先清走，否則之後所有符號 case 都受影響。
 
 ## Fcitx5 同左 Shift
 

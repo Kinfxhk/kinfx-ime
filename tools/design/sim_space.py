@@ -11,7 +11,7 @@ import json, os, random, sys
 from collections import Counter
 from wordfreq import top_n_list, zipf_frequency
 
-R = 'C:/Users/kinfx/kinfx-ime/'
+R = 'C:/HermesHub/profiles/it-dog/projects/kinfx-ime/'
 order = {}
 for l in open(R + 'schemas/kinfx-quick/ms_quick_order.tsv', encoding='utf-8'):
     l = l.rstrip('\r\n')

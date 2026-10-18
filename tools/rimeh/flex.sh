@@ -20,11 +20,28 @@ check() { # variant patch keys want
   if [ "$got" = "$want" ]; then pass=$((pass+1)); echo "OK   [$name] $keys → $got"
   else fail=$((fail+1)); echo "FAIL [$name] $keys → got [$got] want [$want]"; fi
 }
+checkp() { # variant patch keys want-preedit
+  local name="$1" patch="$2" keys="$3" want="$4"
+  local U="$BASE/$name"
+  if [ ! -d "$U/build" ]; then
+    bash "$ROOT/tools/rimeh/stage.sh" "$U" >/dev/null
+    printf 'patch:\n%s\n' "$patch" > "$U/kinfx_quick.custom.yaml"
+    printf 'schema kinfx_quick\n' | "$ROOT/tools/rimeh/rimeh.exe" "$SHARED" "$(cygpath -m "$U")" >/dev/null 2>&1
+  fi
+  local got
+  got=$(printf 'schema kinfx_quick\nkeys %s\n' "$keys" | "$ROOT/tools/rimeh/rimeh.exe" "$SHARED" "$(cygpath -m "$U")" --no-deploy 2>/dev/null | tr -d '\r' | awk -F'\t' '$1=="OK"{print $4}')
+  if [ "$got" = "$want" ]; then pass=$((pass+1)); echo "OK   [$name] $keys → $got"
+  else fail=$((fail+1)); echo "FAIL [$name] $keys → got [$got] want [$want]"; fi
+}
 rm -rf "$BASE"
 NONE='  "phrase_mix/capture": none'
 NOEN='  "english/enable": false'
 ESHIFT='  "english/empty_shift": ascii'
 NOHOLD='  "english/hold_min": 0'
+NORESCUE='  "english/rescue_min": 0'
+CLIPKEEP='  "english/clipboard": keep'
+HYOFF='  "english/hyphen": off'
+RADICALS='  "english/preedit": radicals'
 NOPH='  "phrase_mix/enable": false'
 SHIFT='  "english/mode": "shift"'
 ENOFF='  "english/mode": "off"'
@@ -62,6 +79,14 @@ check spaceoff "$SPACEOFF" "wonderxyz1" "囚子河⺀"   # unknown words follow 
 check eshift "$ESHIFT" "{Shift_L}{Release+Shift_L}vd1" ""   # ascii mode: keys pass through to the app (nothing committed)
 # english/hold_min: 0 = no unknown-word hold (v0.5.1 behaviour)
 check nohold "$NOHOLD" "wonderxyz1" "囚子河⺀"
+# english/rescue_min: 0 = v0.5.3 (zdrav breaks into Chinese at d, Left Shift keeps only rav)
+check norescue "$NORESCUE" "zdrav{Shift_L}{Release+Shift_L}" "。rav"
+# english/clipboard: keep = v0.5.2 (Ctrl+V pages the menu)
+check clipkeep "$CLIPKEEP" "vd{Control+v}" ""
+# english/hyphen: off = v0.5.2 (hyphen after an English word goes to the punctuator)
+check hyoff "$HYOFF" "tool{minus}" "芝"
+# english/preedit: radicals = v0.5.2 preedit (Sucheng radicals); checkp compares the preedit
+checkp radicals "$RADICALS" "of" "人火"
 # association off = no follow-up menu
 check assoff "$ASSOFF" "hi7{Shift+exclam}" "我！"
 echo "PASS $pass/$((pass+fail))"

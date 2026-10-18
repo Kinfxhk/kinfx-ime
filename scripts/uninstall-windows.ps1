@@ -74,7 +74,7 @@ if (Test-Path -LiteralPath $luaDir -PathType Container) {
 
 $buildDir = Join-Path $userDir 'build'
 if (Test-Path -LiteralPath $buildDir -PathType Container) {
-  $prefixes = @('kinfx_quick', 'kinfx_jyutping', 'kinfx_hk_words', 'kinfx_hk_idioms', 'kinfx_en', 'kinfx_phrase')
+  $prefixes = @('kinfx_quick', 'kinfx_jyutping', 'kinfx_hk_words', 'kinfx_hk_idioms', 'kinfx_en', 'kinfx_names', 'kinfx_phrase')
   foreach ($file in @(Get-ChildItem -LiteralPath $buildDir -Force -ErrorAction SilentlyContinue)) {
     foreach ($prefix in $prefixes) {
       if ($file.Name.StartsWith($prefix)) {
