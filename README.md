@@ -2,7 +2,7 @@
 
 香港繁體速成輸入法。打英文不必切換模式，候選字次序與 Windows 11 微軟速成逐頁一致。支援 Windows、macOS 和 Linux。
 
-**最新版本：v0.5.8**（2026-10-18）· [下載與更新紀錄](https://github.com/Kinfxhk/kinfx-ime/releases)
+**最新版本：v0.5.9**（2026-10-19）· [下載與更新紀錄](https://github.com/Kinfxhk/kinfx-ime/releases)
 
 ## 特色
 
@@ -95,6 +95,9 @@ KINFX 是裝進 Rime 輸入法的方案，不是獨立程式：Windows 用小狼
 | `adsense` 空白 | `AdSense ` |
 | `Sony` 空白 `PS5` 空白 | `Sony PS5 ` |
 | `vd` `API` | 好API（大寫直接出） |
+| `iPhone` 空白 | `iPhone `（細階單碼後接大楷，照字母出） |
+| Shift+4 `48` | $48 |
+| `20,000` | 20,000（數字中間的逗號是半形） |
 | `hi` 7 再 Shift+2 | 我講（聯想詞） |
 | `vd` 1 再 Shift+9 | 好（ |
 | `/`　`\` | /　、 |
@@ -109,6 +112,8 @@ KINFX 是裝進 Rime 輸入法的方案，不是獨立程式：Windows 用小狼
 | 公司、品牌、網站名 | 按空白或左 Shift | `openai` 空白 → `OpenAI ` |
 | 打到一半變了中文 | 按一下左 Shift，照字母打出 | `zdrav` 左 Shift → `zdrav` |
 | 大寫字、縮寫 | 直接打，按空白會加空格 | `AI` 空白 → `AI ` |
+| 細階開頭再接大楷（iPhone、eSIM、xAI） | 直接打 | `iPhone` 空白 → `iPhone ` |
+| 英文詞後接「」」 | 直接打 | `[` 1 `nudification` `]` 1 → 「nudification」 |
 | 網址、電郵、連字號 | 直接打 | `https://x.com`、`a@b.com`、`tool-calling` |
 | 長段英文 | Ctrl+Shift+2 切英文模式，再按一次切回中文 | — |
 
@@ -116,7 +121,8 @@ KINFX 是裝進 Rime 輸入法的方案，不是獨立程式：Windows 用小狼
 
 ### 符號與快捷鍵
 
-- `'` `"` `_` 是半形，其餘中文標點是全形，與微軟速成相同。
+- `'` `"` `_` `$` `%` `#` `@` 是半形，其餘中文標點是全形。
+- 數字後的 `,` `.` `:` 保持半形（20,000、3.14、12:30）；連按兩下就是中文標點。
 - 寫程式要全部半形標點：按 **Ctrl+.** 切換，再按一次切回。
 - 打字中途按 Ctrl+C／V／X：先收起輸入，再交給程式處理（macOS 見上表）。
 
@@ -134,6 +140,7 @@ KINFX 是裝進 Rime 輸入法的方案，不是獨立程式：Windows 用小狼
 - **`llama.cpp` 中間的「.」會變「。」**；`!!` 會變「！！」。
 - **5 個字母的英文詞開頭按空白會出英文**（例如 `fogge`）。不想要可設 `"english/space": long`。
 - **macOS**：打字中途貼上，見上面「三個平台的分別」。用遠端桌面或模擬按鍵工具在鼠鬚管 1.1.2 打 Shift+9，可能多出一個「日」，這是鼠鬚管的問題，上游已修正但未出正式版。
+- **Linux 舊版 librime（1.13 以前，例如 Ubuntu 24.04 的 1.10）**：數字中間的逗號仍會變全形（20，000）；Ubuntu 26.04（1.16）沒有這個問題。
 - **Linux**：不要把 Caps Lock 設為英文上屏鍵（之後會全部變大寫）；Fcitx5 開新視窗有時會切回英文鍵盤，看托盤圖示即可。
 - **突然打不到中文**：按 Ctrl+Shift+2，或在工作列把輸入法切回「中」。
 
@@ -159,8 +166,9 @@ KINFX 是裝進 Rime 輸入法的方案，不是獨立程式：Windows 用小狼
 | 項目 | 結果 | 環境 |
 | --- | --- | --- |
 | 速成候選次序 | 658 個兩碼，每頁每格與 Windows 一致：**658／658** | 2026-10-15～16，Windows 11 Pro 26H2 微軟速成 |
-| Windows 打字 | 自動化驗收 **66／66**，按鍵逐個打入視窗 | v0.5.8，2026-10-18，Windows 11 VM、小狼毫 0.17.4 |
+| Windows 打字 | 自動化驗收 **66／66**，按鍵逐個打入視窗 | v0.5.9，2026-10-19，Windows 11 VM、小狼毫 0.17.4 |
 | 打真實文章 | HKEPC 十篇 9,307 字，模擬「不看候選、照 Windows 習慣打」：錯字由 514 減至 **213**，大部分屬上面第一項限制 | v0.5.7／v0.5.8，2026-10-18，Windows VM |
+| v0.5.9 修正 | iPhone、$48、20,000、「nudification」等 17 個情境：**17／17**；同一批文章錯字 213 → **208**，沒有段落變差 | v0.5.9，2026-10-19，Windows 11 VM、小狼毫 0.17.4，按鍵逐個打入視窗 |
 | 英文功能有沒有改到中文 | 209 萬組按鍵與沒有英文功能的舊版比較：**中文改變 0** | v0.5.8，離線 |
 | macOS 打字 | TextEdit：`vd.` → 好。、`vd` 1 Shift+9 → 好（ | v0.5.8，2026-10-18，鼠鬚管 1.1.2，程式送出按鍵事件，非實體鍵盤 |
 | Linux 打字 | 505 字中英文章，去掉空格後 **453／453** 字一致，30 個英文詞全對 | v0.5.1，2026-10-17，Ubuntu 26.04、Fcitx5、gedit |
@@ -172,6 +180,7 @@ macOS 與 Linux 新版本的其餘項目，以直接呼叫 Rime 引擎的方式�
 
 完整紀錄見 [Releases](https://github.com/Kinfxhk/kinfx-ime/releases)。
 
+- **v0.5.9**：iPhone、iPad、eSIM 等細階單碼接大楷不再變成「戈Phone」；Shift+4／5／3／2 出半形 $ % # @，不會吃掉後面的數字；數字中間的逗號保持半形；長英文詞後接「」」先出英文。
 - **v0.5.8**：選字後 Shift+9 在各平台都出「（」；新增 macOS 安裝包。
 - **v0.5.7**：有候選時「.」直接出「好。」；選字後 Shift+9 出「（」；大寫字後按空白會加空格。
 - **v0.5.6**：`ctrl`、`esc`、`ime` 等縮寫按空白出英文；選字後貼上不會收起聯想詞。
@@ -215,6 +224,7 @@ KINFX is a Hong Kong Traditional Chinese Sucheng (Quick) input method built on l
 - Hong Kong characters, common phrases (`ofc` → 人類) and association words after a pick.
 - Install: download `kinfx-ime-windows-share.zip` or `kinfx-ime-macos.zip` from [Releases](https://github.com/Kinfxhk/kinfx-ime/releases), then run `scripts/install-windows.ps1` or `bash scripts/install-macos.sh`. On Linux run `scripts/install-linux.sh`, then `scripts/linux-free-left-shift.sh`.
 - Platform notes: on macOS, Cmd+V while composing first commits the typed letters, so press Esc first. Linux needs the Left Shift script.
-- Tested: Windows acceptance 66/66 with key events in a VM (v0.5.8); macOS key events in TextEdit for `.` and Shift+9 (v0.5.8); a 505-character article on Linux (v0.5.1). The English feature changed no Chinese output across 2.09 million key sequences.
+- v0.5.9: `iPhone`, `eSIM`, `xAI` stay Latin; Shift+4/5/3/2 give half-width `$ % # @`; the comma inside numbers stays `,` (20,000); a long English word before `」` commits as letters.
+- Tested: Windows acceptance 66/66 plus 17 v0.5.9 cases with key events in a VM (v0.5.9); macOS key events in TextEdit for `.` and Shift+9 (v0.5.8); a 505-character article on Linux (v0.5.1). The English feature changed no Chinese output across 2.09 million key sequences.
 - Code is MIT; dictionaries keep their upstream licences.
 - Support: [Buy Me a Coffee](https://buymeacoffee.com/kinfxhk) · [PayPal](https://paypal.me/sc2nohope)

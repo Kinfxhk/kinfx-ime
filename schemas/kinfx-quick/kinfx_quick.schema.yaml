@@ -217,6 +217,14 @@ punctuator:
     "'": "'"
     "\"": "\""
     "_": "_"
+    # v0.5.9：Shift+4/5/3/2 出半形 $ % # @ 本身（$ 原本係選單，Shift+4 再打 48 變 £8）。
+    "$": "$"
+    "%": "%"
+    "#": "#"
+    "@": "@"
+  # v0.5.9：數字後面嘅 . : , ' 留半形（20,000、3.14、12:30）；連撳兩下先出中文標點。
+  # Weasel 0.17.4 一向係咁；librime 1.16（macOS／Linux）預設只有 . :，20,000 變 20，000。
+  digit_separators: ".:,'"
 
 # 有候選窗：空白／右＝下一頁，左＝上一頁。無候選窗唔命中，空白仍係確認上屏
 # （混打 preedit「好API」按空白會 commit）。Flex 關翻頁：win_quick/space_pages: false。
@@ -258,6 +266,7 @@ recognizer:
   patterns:
     # 零切換混打主路徑：大寫開頭英詞、email、URL
     email: "^[A-Za-z][-_.0-9A-Za-z]*@.*$"
-    uppercase: "[A-Z][-_+.'0-9A-Za-z]*$"
+    # v0.5.9：單碼後面即刻大楷（iPhone、eSIM、xAI）成串留拉丁，唔再頂成 戈Phone。
+    uppercase: "^[a-z][A-Z][-_+.'0-9A-Za-z]*$|[A-Z][-_+.'0-9A-Za-z]*$"
     url: "^(www[.]|https?:|ftp[.:]|mailto:|file:).*$|[a-z]+[.].+$"
     reverse_lookup: "`[a-z]*'?$"

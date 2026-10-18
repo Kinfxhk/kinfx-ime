@@ -986,7 +986,10 @@ function process(key, env)
       return kAccepted
     end
   end
-  local endkey = plain and (repr == "space" or repr == "comma" or repr == "period")
+  -- v0.5.9: ] / } (」 』) end a word like , and . ([1 nudification ]1 typed 乙寸灼曾芍乞); keycode
+  -- so Shift+bracketright (Linux / macOS) and Weasel's braceright both match
+  local endkey = plain and (repr == "space" or repr == "comma" or repr == "period"
+    or kc == 0x5d or kc == 0x7d)
   if endkey and space_allowed(env, S.raw) and not chinese_held(ctx) then
     local text = space_text(env, S.raw)
     if text then

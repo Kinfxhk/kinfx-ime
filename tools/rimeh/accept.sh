@@ -232,6 +232,32 @@ hel{Control+c}	反c
 {Control+period}vd;hi7,{Control+period}	好;我,
 {Shift_L}{Release+Shift_L}vd1	好
 {Control+period}vd1,{period}{slash}{semicolon}{Control+period}vd1,	好,./;好，
+iPhone{space}	iPhone·
+iPad{space}	iPad·
+iOS{space}	iOS·
+eSIM{space}	eSIM·
+xAI{space}	xAI·
+vdiPhone{space}	好iPhone·
+{dollar}48	$48
+{percent}	%
+{numbersign}	#
+{at}	@
+HK{dollar}20{comma}000	HK$20,000
+20{comma}000	20,000
+20{comma}{comma}	20，
+1{period}5	1.5
+vd1{dollar}	好奇
+vd1{percent}	好的
+i1	戈
+i{space}1	戈
+{bracketleft}1nudification{bracketright}1	「nudification」
+{bracketleft}1jailbreak{bracketright}1	「jailbreak」
+{bracketleft}1hello{bracketright}1	「hello」
+{braceleft}1firmware{braceright}1	『firmware』
+{bracketleft}1vd1{bracketright}1	「好」
+hi7{bracketright}1	我」
+vdbr{bracketright}1	好同」
+door{bracketright}1	來合」
 hello{Caps_Lock}	反川
 EOF
 )
