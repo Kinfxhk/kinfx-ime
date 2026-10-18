@@ -572,22 +572,26 @@ static int commit_shift_tap(RimeApi* api, RimeSessionId sid, const char* seq,
 static int assert_top_keeps_char(RimeApi* api, RimeSessionId sid) {
   api->clear_composition(sid);
   drain_commit(api, sid);
-  if (!api->simulate_key_sequence(sid, "vdz")) return 0;
+  /* v0.5.4: vd + a. z had only pinyin reverse-lookup candidates, gone since
+     225493f (Windows Quick lists none for z). VD is an English start that
+     breaks at a, so the Left Shift rescue parks 好 until the next key; 1 then
+     sends 好日, the same text v0.5.3 gave. */
+  if (!api->simulate_key_sequence(sid, "vda")) return 0;
   RIME_STRUCT(RimeContext, ctx);
   if (!api->get_context(sid, &ctx)) return 0;
   const char* pre = ctx.composition.preedit ? ctx.composition.preedit : "";
   const char* first = "";
   if (ctx.menu.num_candidates > 0 && ctx.menu.candidates[0].text)
     first = ctx.menu.candidates[0].text;
-  printf("topchar vdz preedit=%s first=%s num=%d\n", pre, first,
+  printf("topchar vda preedit=%s first=%s num=%d\n", pre, first,
          ctx.menu.num_candidates);
   int page_ok = ctx.menu.page_size == 9;
   api->free_context(&ctx);
-  /* 頂字 commits 好 before the remainder menu; preedit is then only z. */
+  if (!api->simulate_key_sequence(sid, "1")) return 0;
   char commit[128];
   int committed = take_commit(api, sid, commit, sizeof commit);
-  printf("topchar vdz commit='%s'\n", committed ? commit : "");
-  int ok = page_ok && committed && strstr(commit, "好") != NULL;
+  printf("topchar vda1 commit='%s'\n", committed ? commit : "");
+  int ok = page_ok && committed && strcmp(commit, "好日") == 0;
   api->clear_composition(sid);
   drain_commit(api, sid);
   return ok;
@@ -638,6 +642,16 @@ static int assert_english_mix(RimeApi* api, RimeSessionId sid) {
   /* v0.5.2: names list + unknown long words (company / product names). */
   ok = ok && commit_space(api, sid, "wondershare", "Wondershare ");
   ok = ok && commit_space(api, sid, "wonderxyz", "wonderxyz ");
+  /* v0.5.3: unknown-word Space must not skip the names list (gmail -> Gmail),
+     a Shift used for a symbol is not a commit tap, hyphen joins English words. */
+  ok = ok && commit_space(api, sid, "gmail", "Gmail ");
+  ok = ok && commit_space(api, sid, "const", "const ");
+  ok = ok && commit_space(api, sid, "tool{minus}calling", "tool-calling ");
+  ok = ok && commit_space(api, sid,
+      "https{Shift_L}{Shift+colon}{Shift+Release+Shift_L}//x.com", "https://x.com ");
+  /* v0.5.4: kinfx_names (Wikidata brands) and the Left Shift rescue. */
+  ok = ok && commit_space(api, sid, "adsense", "AdSense ");
+  ok = ok && commit_shift_tap(api, sid, "zdrav", "zdrav");
   printf("english-mix space/shift:%s\n", ok ? "PASS" : "FAIL");
   return ok;
 }
@@ -657,7 +671,7 @@ static int assert_association(RimeApi* api, RimeSessionId sid) {
   /* v0.5.1: punctuation and Space after a pick close the list and type
      (period was swallowed as Page_Down by key_binder). Collect every commit. */
   const struct { const char* keys; const char* want; } after[] = {
-    {"vd1.", "好。"}, {"hi7,", "我，"}, {"vd1 ", "好 "}, {"vd1/", "好/"},
+    {"vd1.", "好。"}, {"hi7,", "我，"}, {"vd1 ", "好 "}, {"vd1/", "好/"}, {"vd'", "好'"}, {"vd1'", "好'"},
     {"/", "/"}, {NULL, NULL}};
   for (int i = 0; after[i].keys; ++i) {
     char got[256] = {0};
