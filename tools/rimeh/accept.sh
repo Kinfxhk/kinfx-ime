@@ -185,6 +185,11 @@ vd{Shift_R}{Shift+colon}{Shift+Release+Shift_R}	好：
 vd;	好；
 const;	欲乃廿；
 vd{Control+v}	v
+vdof{Control+v}	v
+zdra{Control+v}	v
+vd{Super+v}	v
+vd{Meta+v}	v
+vd{Control+v}vd1	v好
 hel{Control+c}	反c
 {Control+period};'"()_^:!{Control+period}	;'"()_^:!
 {Control+period}const;{Control+period}	const;
