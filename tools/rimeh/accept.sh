@@ -35,7 +35,7 @@ vd9	C:綵
 ymml1	C:上面
 vdbr1	C:好同
 hioa1	C:我會
-vdAPI{space}	C:好API
+vdAPI{space}	C:好API 
 or9	C:含
 of3	C:係
 me5	C:夏
@@ -161,6 +161,11 @@ gg{Shift_L}{Release+Shift_L}	gg
 wp{Shift_L}{Release+Shift_L}	wp
 defau{space}	defau·
 json{space}	JSON·
+{Shift+A}{Shift+I}{space}	AI·
+{Shift+S}ony{space}{Shift+P}{Shift+S}5{space}vd1	Sony·PS5·好
+vd{Shift+A}{Shift+P}{Shift+I}{space}	好API·
+{Shift+A}{Shift+I}{Return}	AI
+{Shift+A}{Shift+I}{comma}	AI，
 ctrl{space}	ctrl·
 esc{space}	esc·
 ime{space}	ime·
