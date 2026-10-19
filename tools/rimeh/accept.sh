@@ -261,6 +261,9 @@ llama.{Shift_L}{Release+Shift_L}	llama.
 hello.hi7{Return}	hello.hi7
 hello.{BackSpace}{space}	hello。·
 tool{minus}1	tool-1
+your{minus}site.com{space}	your-site.com·
+tool{minus}calling.md{space}	tool-calling.md·
+bait{minus}and{minus}switch.{space}	bait-and-switch。·
 v1.2{space}	女。2·
 {bracketleft}1nudification{bracketright}1	「nudification」
 {bracketleft}1jailbreak{bracketright}1	「jailbreak」
