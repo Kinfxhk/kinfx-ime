@@ -732,7 +732,7 @@ static int assert_association(RimeApi* api, RimeSessionId sid) {
   return ok;
 }
 
-/* v0.5.9: a single code letter before a capital stays Latin (iPhone), Shift+4
+/* v0.5.9 / v0.5.10: a single code letter before a capital stays Latin (iPhone), Shift+4
    types $ without eating the next digit, the comma between digits stays ","
    (librime 1.16 default turned 20,000 into 20，000), and ] after a long
    unknown English word commits the letters first. App-visible text: keys the
@@ -740,7 +740,10 @@ static int assert_association(RimeApi* api, RimeSessionId sid) {
 static int assert_v059(RimeApi* api, RimeSessionId sid) {
   const struct { const char* keys; const char* want; } c[] = {
     {"iPhone ", "iPhone "}, {"eSIM ", "eSIM "}, {"$48", "$48"}, {"20,000", "20,000"},
-    {"[1nudification]1", "「nudification」"}, {"vd1,", "好，"}, {"vd1.", "好。"}, {"i1", "戈"}, {NULL, NULL}};
+    {"[1nudification]1", "「nudification」"}, {"vd1,", "好，"}, {"vd1.", "好。"}, {"i1", "戈"},
+    /* v0.5.10: . and - between letters keep the token Latin */
+    {"llama.cpp ", "llama.cpp "}, {"openai.com ", "openai.com "}, {"bait-and-switch ", "bait-and-switch "},
+    {NULL, NULL}};
   int ok = 1;
   /* punctuator/digit_separators exists from librime 1.13; older engines
      (Ubuntu 24.04 ships 1.10) type the comma after a digit full-width. */

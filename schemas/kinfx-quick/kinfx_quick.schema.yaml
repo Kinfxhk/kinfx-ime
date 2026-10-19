@@ -6,7 +6,7 @@
 schema:
   schema_id: kinfx_quick
   name: KINFX 中英混打輸入法 · 速成
-  version: "0.5.8"
+  version: "0.5.10"
   author:
     - KINFX
     - 速成規則／碼表源流見 NOTICE（rime-quick / rime-cangjie）
@@ -268,5 +268,6 @@ recognizer:
     email: "^[A-Za-z][-_.0-9A-Za-z]*@.*$"
     # v0.5.9：單碼後面即刻大楷（iPhone、eSIM、xAI）成串留拉丁，唔再頂成 戈Phone。
     uppercase: "^[a-z][A-Z][-_+.'0-9A-Za-z]*$|[A-Z][-_+.'0-9A-Za-z]*$"
-    url: "^(www[.]|https?:|ftp[.:]|mailto:|file:).*$|[a-z]+[.].+$"
+    # v0.5.10：英文詞中間嘅「-」後面再有字母（bait-and-switch），成個詞留拉丁。
+    url: "^(www[.]|https?:|ftp[.:]|mailto:|file:).*$|[a-z]+[.].+$|^[a-z]+-[A-Za-z0-9][-A-Za-z0-9]*$"
     reverse_lookup: "`[a-z]*'?$"

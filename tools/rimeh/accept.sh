@@ -220,7 +220,8 @@ vd1{Shift+8}	好過
 vd19	好9
 vd1{Shift_L}{Shift+exclam}{Shift+Release+Shift_L}	好似
 vd1{Shift_L}{Shift+asterisk}{Shift+Release+Shift_L}	好過
-hello.	hello。
+hello.{Return}	hello。
+hello.{space}	hello。·
 gmai.	Gmail。
 11.4	11.4
 www.x.com{space}	www.x.com·
@@ -250,6 +251,17 @@ vd1{dollar}	好奇
 vd1{percent}	好的
 i1	戈
 i{space}1	戈
+llama.cpp{space}	llama.cpp·
+openai.com{space}	openai.com·
+bait{minus}and{minus}switch{space}	bait-and-switch·
+node.js{comma}	node.js，
+llama.cpp.{space}	llama.cpp。·
+{bracketleft}1llama.cpp{bracketright}1	「llama.cpp」
+llama.{Shift_L}{Release+Shift_L}	llama.
+hello.hi7{Return}	hello.hi7
+hello.{BackSpace}{space}	hello。·
+tool{minus}1	tool-1
+v1.2{space}	女。2·
 {bracketleft}1nudification{bracketright}1	「nudification」
 {bracketleft}1jailbreak{bracketright}1	「jailbreak」
 {bracketleft}1hello{bracketright}1	「hello」
