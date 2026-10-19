@@ -216,8 +216,6 @@ macOS 與 Linux 新版本的其餘項目，以直接呼叫 Rime 引擎的方式�
 KINFX 免費、開源。如果對你有幫助，歡迎請我喝杯咖啡：
 
 - [Buy Me a Coffee](https://buymeacoffee.com/kinfxhk)
-- [PayMe（HSBC）](https://payme.hsbc/kinfx)
-- [PayPal](https://paypal.me/sc2nohope)
 
 ## English
 
@@ -232,4 +230,3 @@ KINFX is a Hong Kong Traditional Chinese Sucheng (Quick) input method built on l
 - v0.5.9: `iPhone`, `eSIM`, `xAI` stay Latin; Shift+4/5/3/2 give half-width `$ % # @`; the comma inside numbers stays `,` (20,000); a long English word before `」` commits as letters.
 - Tested: Windows acceptance 66/66 plus 17 v0.5.9 cases with key events in a VM (v0.5.9); macOS key events in TextEdit for `.` and Shift+9 (v0.5.8); a 505-character article on Linux (v0.5.1). The English feature changed no Chinese output across 2.09 million key sequences.
 - Code is MIT; dictionaries keep their upstream licences.
-- Support: [Buy Me a Coffee](https://buymeacoffee.com/kinfxhk) · [PayPal](https://paypal.me/sc2nohope)
