@@ -314,6 +314,18 @@ local function commit_word(env, ctx, text)
   env.engine:commit_text(text)
 end
 
+-- v0.5.10: "." / "-" after an English word waits for the next key. A letter
+-- keeps the whole token Latin (llama.cpp, openai.com, bait-and-switch: the
+-- recognizer's url pattern takes the letters); any other key first commits
+-- what v0.5.9 committed at the "." / "-" (hello。 / tool-), so text is the same.
+local function hold_latin(env, ctx, word, ch, fallback)
+  local token = word .. ch -- word or name form (json- -> JSON-schema)
+  reset()
+  env.latin = fallback
+  set_input(ctx, token)
+  return kAccepted
+end
+
 -- Keys that close the association list and then type themselves. Shift+digit
 -- symbols (exclam at numbersign ... parenleft) pick from the list instead, and
 -- equal stays a page key.
@@ -487,6 +499,7 @@ local function init(env)
   -- Composition cleared from outside (focus change, schema switch): drop the run.
   env.update_conn = ctx.update_notifier:connect(function(c)
     if not S.guard and (c.input or "") == "" then
+      env.latin = nil
       reset()
       if R.alive then
         rescue_end(env)
@@ -716,7 +729,52 @@ local function period_topout(env, key)
   ctx:commit()
 end
 
+-- A Latin token built by hold_latin (llama.cpp, bait-and): url-tagged, but
+-- not one of the URL starts (www. https: ...), which keep their own rules.
+local function latin_token(ctx)
+  local input = ctx.input or ""
+  if not input:match("^[a-z][A-Za-z0-9]*[.-]") or input:match("^www%.") or input:match("^ftp[.:]")
+     or input:match("^https?:") or input:match("^mailto:") or input:match("^file:") then
+    return false
+  end
+  local seg = ctx.composition and not ctx.composition:empty() and ctx.composition:back()
+  return seg and seg:has_tag("url")
+end
+
 local function func(key, env)
+  local kc0 = key.keycode
+  local ctx0 = env.engine.context
+  if not env.latin and not key:release() and not (key:ctrl() or key:alt() or key:super())
+     and (kc0 == 0x2c or kc0 == 0x2e or kc0 == 0x5d or kc0 == 0x7d) and latin_token(ctx0) then
+    local input = ctx0.input
+    if kc0 == 0x2e then
+      -- llama.cpp. : another letter keeps the token going, anything else is 3002
+      env.latin = input .. "。"
+      set_input(ctx0, input .. ".")
+      return kAccepted
+    end
+    commit_word(env, ctx0, input) -- llama.cpp, / 」: the token, then the punctuator
+    return kNoop
+  end
+  local fallback = env.latin
+  if fallback then
+    local kc = key.keycode
+    local ctx = env.engine.context
+    if key:release() then
+      -- Left Shift tap on llama. / bait-: type the letters as shown
+      if kc == env.commit_code and env.shift_down and not env.shift_used then
+        env.latin, env.shift_down = nil, false
+        commit_word(env, ctx, ctx.input or "")
+        return kAccepted
+      end
+    elseif not (key:ctrl() or key:alt() or key:super())
+           and ((kc >= 0x61 and kc <= 0x7a) or (kc >= 0x41 and kc <= 0x5a)) then
+      env.latin = nil -- a letter: the token goes on as Latin
+    elseif not (kc >= 0xffe1 and kc <= 0xffee and kc ~= 0xffe5 and kc ~= 0xffe6) then
+      env.latin = nil -- not a modifier press: v0.5.9 text, then this key as usual
+      commit_word(env, ctx, fallback)
+    end
+  end
   local r = dispatch(key, env)
   if r == kNoop then
     period_topout(env, key)
@@ -982,8 +1040,7 @@ function process(key, env)
       text = S.raw
     end
     if text then
-      commit_word(env, ctx, text .. "-")
-      return kAccepted
+      return hold_latin(env, ctx, text, "-", text .. "-")
     end
   end
   -- v0.5.9: ] / } (」 』) end a word like , and . ([1 nudification ]1 typed 乙寸灼曾芍乞); keycode
@@ -997,6 +1054,9 @@ function process(key, env)
         commit_word(env, ctx, text .. " ")
         return kAccepted
       end
+      if kc == 0x2e then
+        return hold_latin(env, ctx, S.raw, ".", text .. "。") -- openai.com, not OpenAI.com
+      end
       commit_word(env, ctx, text)
       return kNoop -- the punctuator types the comma / period
     end
@@ -1005,6 +1065,9 @@ function process(key, env)
     if repr == "space" then
       commit_word(env, ctx, S.raw .. " ")
       return kAccepted
+    end
+    if kc == 0x2e then
+      return hold_latin(env, ctx, S.raw, ".", S.raw .. "。")
     end
     commit_word(env, ctx, S.raw)
     return kNoop
