@@ -18,6 +18,11 @@
 
 ## 安裝
 
+想要獨立程式、唔靠小狼毫／鼠鬚管：下載 [KINFX Input v0.1.0](https://github.com/Kinfxhk/kinfx-input/releases/tag/v0.1.0)。macOS 雙擊 `.pkg`，Windows 以系統管理員執行 `.exe`，Linux amd64 用 `sudo apt install ./kinfx-input_0.1.0_amd64.deb` 然後 `ibus restart`。
+
+下面係 Rime schema 的安裝，給已經用小狼毫、鼠鬚管或 fcitx 的人。
+
+
 KINFX 是裝進 Rime 輸入法的方案，不是獨立程式：Windows 用小狼毫，macOS 用鼠鬚管，Linux 用 Fcitx5。安裝腳本會先備份你原有的設定，也不會刪除你原有的方案。
 
 ### Windows 11
