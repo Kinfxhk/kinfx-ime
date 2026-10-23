@@ -1,8 +1,10 @@
 # KINFX 中英混打輸入法
 
-香港繁體速成輸入法。打英文不必切換模式，候選字次序與 Windows 11 微軟速成逐頁一致。支援 Windows、macOS 和 Linux。
+香港繁體速成。打英文不必切換模式，候選字次序與 Windows 11 微軟速成逐頁一致。
 
-**最新版本：v0.5.10**（2026-10-19）· [下載與更新紀錄](https://github.com/Kinfxhk/kinfx-ime/releases)
+**最新版本：v0.5.10**（2026-10-19）· [發佈頁](https://github.com/Kinfxhk/kinfx-ime/releases/tag/v0.5.10)
+
+本 repo 是 Rime 方案檔，供小狼毫（Windows）、鼠鬚管（macOS）和 Fcitx5-Rime（Linux）使用。想獨立直裝，用 [KINFX Input v0.1.3](https://github.com/Kinfxhk/kinfx-input/releases/tag/v0.1.3)。
 
 ## 特色
 
@@ -18,17 +20,28 @@
 
 ## 安裝
 
-想要獨立程式、唔靠小狼毫／鼠鬚管：下載 [KINFX Input v0.1.0](https://github.com/Kinfxhk/kinfx-input/releases/tag/v0.1.0)。macOS 雙擊 `.pkg`，Windows 以系統管理員執行 `.exe`，Linux amd64 用 `sudo apt install ./kinfx-input_0.1.0_amd64.deb` 然後 `ibus restart`。
+已用小狼毫、鼠鬚管或 Fcitx5：用本方案包。小狼毫、鼠鬚管、Fcitx5 是 Rime 上游宿主，請另行安裝。安裝腳本會先備份原有設定，也不會刪除原有方案。
 
-下面係 Rime schema 的安裝，給已經用小狼毫、鼠鬚管或 fcitx 的人。
+| 平台 | 方案包（[v0.5.10](https://github.com/Kinfxhk/kinfx-ime/releases/tag/v0.5.10)） |
+| --- | --- |
+| Windows | [kinfx-ime-windows-share.zip](https://github.com/Kinfxhk/kinfx-ime/releases/download/v0.5.10/kinfx-ime-windows-share.zip) |
+| macOS | [kinfx-ime-macos.zip](https://github.com/Kinfxhk/kinfx-ime/releases/download/v0.5.10/kinfx-ime-macos.zip) |
+| Linux | 沒有 zip。Clone 本 repo 後執行 `scripts/install-linux.sh` |
 
+### 獨立直裝（[KINFX Input](https://github.com/Kinfxhk/kinfx-input)）
 
-KINFX 是裝進 Rime 輸入法的方案，不是獨立程式：Windows 用小狼毫，macOS 用鼠鬚管，Linux 用 Fcitx5。安裝腳本會先備份你原有的設定，也不會刪除你原有的方案。
+| 平台 | 安裝包（[v0.1.3](https://github.com/Kinfxhk/kinfx-input/releases/tag/v0.1.3)） |
+| --- | --- |
+| macOS | [KINFX-Input-0.1.3-macOS.pkg](https://github.com/Kinfxhk/kinfx-input/releases/download/v0.1.3/KINFX-Input-0.1.3-macOS.pkg) |
+| Windows | [KINFX-Input-0.1.3-Windows-x64.exe](https://github.com/Kinfxhk/kinfx-input/releases/download/v0.1.3/KINFX-Input-0.1.3-Windows-x64.exe) |
+| Linux（amd64） | [kinfx-input_0.1.3_amd64.deb](https://github.com/Kinfxhk/kinfx-input/releases/download/v0.1.3/kinfx-input_0.1.3_amd64.deb) |
+
+macOS 雙擊 `.pkg`。Windows 以系統管理員執行 `.exe`。Linux：`sudo apt install ./kinfx-input_0.1.3_amd64.deb`，然後 `ibus restart`。
 
 ### Windows 11
 
 1. 安裝小狼毫：在 PowerShell 執行 `winget install Rime.Weasel`。
-2. 在 [Releases](https://github.com/Kinfxhk/kinfx-ime/releases) 下載 `kinfx-ime-windows-share.zip`，然後解壓。
+2. 下載 [kinfx-ime-windows-share.zip](https://github.com/Kinfxhk/kinfx-ime/releases/download/v0.5.10/kinfx-ime-windows-share.zip)，然後解壓。
 3. 在解壓出來的資料夾，用平時打字的帳戶（不要用系統管理員）執行：
 
    ```powershell
@@ -42,7 +55,7 @@ KINFX 是裝進 Rime 輸入法的方案，不是獨立程式：Windows 用小狼
 ### macOS
 
 1. 安裝鼠鬚管：`brew install --cask squirrel-app`（或自行安裝 Squirrel.app）。
-2. 在 [Releases](https://github.com/Kinfxhk/kinfx-ime/releases) 下載 `kinfx-ime-macos.zip`，解壓後在資料夾內執行：
+2. 下載 [kinfx-ime-macos.zip](https://github.com/Kinfxhk/kinfx-ime/releases/download/v0.5.10/kinfx-ime-macos.zip)，解壓後在資料夾內執行：
 
    ```bash
    bash scripts/install-macos.sh
@@ -62,7 +75,7 @@ KINFX 是裝進 Rime 輸入法的方案，不是獨立程式：Windows 用小狼
      rime-data-cangjie5 rime-data-jyut6ping3 rime-essay rime-prelude rime-data-luna-pinyin
    ```
 
-2. 下載並安裝：`git clone https://github.com/Kinfxhk/kinfx-ime.git && cd kinfx-ime && ./scripts/install-linux.sh`
+2. 沒有 zip。Clone 後安裝：`git clone https://github.com/Kinfxhk/kinfx-ime.git && cd kinfx-ime && ./scripts/install-linux.sh`
 3. Fcitx5 設定 → 加入「中州韻」→ 選「KINFX 中英混打輸入法 · 速成」。
 4. 讓左 Shift 可以上屏英文：`./scripts/linux-free-left-shift.sh`。Fcitx5 預設用左 Shift 切換輸入法；這個腳本只移除左 Shift，保留 Ctrl+Space，執行 `--undo` 可還原。
 
@@ -245,12 +258,13 @@ KINFX 免費、開源。如果對你有幫助，歡迎請我喝杯咖啡：
 
 ## English
 
-KINFX is a Hong Kong Traditional Chinese Sucheng (Quick) input method built on librime. It runs in Weasel on Windows 11, Squirrel on macOS and Fcitx5 on Linux.
+KINFX is a Hong Kong Traditional Chinese Sucheng (Quick) Rime schema for Weasel (Windows), Squirrel (macOS) and Fcitx5-Rime (Linux). For a standalone input method with installers, use [KINFX Input v0.1.3](https://github.com/Kinfxhk/kinfx-input/releases/tag/v0.1.3).
 
 - Candidate order matches Windows 11 Microsoft Quick on every page (658/658 two-letter codes); the third key tops out like Windows.
 - Type lowercase English without switching modes: Space commits a word and adds a space (`startup` → `startup `); a Left Shift tap commits short words (`of`). Brand names are capitalised (`adsense` → `AdSense`).
 - Hong Kong characters, common phrases (`ofc` → 人類) and association words after a pick.
-- Install: download `kinfx-ime-windows-share.zip` or `kinfx-ime-macos.zip` from [Releases](https://github.com/Kinfxhk/kinfx-ime/releases), then run `scripts/install-windows.ps1` or `bash scripts/install-macos.sh`. On Linux run `scripts/install-linux.sh`, then `scripts/linux-free-left-shift.sh`.
+- Schema packages ([v0.5.10](https://github.com/Kinfxhk/kinfx-ime/releases/tag/v0.5.10)): [Windows zip](https://github.com/Kinfxhk/kinfx-ime/releases/download/v0.5.10/kinfx-ime-windows-share.zip), [macOS zip](https://github.com/Kinfxhk/kinfx-ime/releases/download/v0.5.10/kinfx-ime-macos.zip). Linux has no zip; clone the repo and run `scripts/install-linux.sh`, then `scripts/linux-free-left-shift.sh`. Weasel, Squirrel and Fcitx5 are separate host installs.
+- Standalone installers ([KINFX Input v0.1.3](https://github.com/Kinfxhk/kinfx-input/releases/tag/v0.1.3)): [macOS .pkg](https://github.com/Kinfxhk/kinfx-input/releases/download/v0.1.3/KINFX-Input-0.1.3-macOS.pkg), [Windows .exe](https://github.com/Kinfxhk/kinfx-input/releases/download/v0.1.3/KINFX-Input-0.1.3-Windows-x64.exe), [Linux .deb](https://github.com/Kinfxhk/kinfx-input/releases/download/v0.1.3/kinfx-input_0.1.3_amd64.deb).
 - Platform notes: on macOS, Cmd+V while composing first commits the typed letters, so press Esc first. Linux needs the Left Shift script.
 - v0.5.10: `.` and `-` between letters stay half-width and the token stays Latin (`llama.cpp`, `openai.com`, `bait-and-switch`).
 - v0.5.9: `iPhone`, `eSIM`, `xAI` stay Latin; Shift+4/5/3/2 give half-width `$ % # @`; the comma inside numbers stays `,` (20,000); a long English word before `」` commits as letters.
