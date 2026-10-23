@@ -6,8 +6,6 @@
 
 本 repo 是 Rime 方案檔，供小狼毫（Windows）、鼠鬚管（macOS）和 Fcitx5-Rime（Linux）使用。想獨立直裝，用 [KINFX Input v0.1.3](https://github.com/Kinfxhk/kinfx-input/releases/tag/v0.1.3)。
 
-**OpenVanilla `.cin`：** 而家唔支援 OpenVanilla `.cin` 匯出；詞庫係 Rime `.dict.yaml`。
-
 ## 特色
 
 - **與微軟速成一樣**：658 個兩碼的候選次序逐頁逐格對照 Windows 11；第三碼頂字上屏，打字習慣不用改。
@@ -261,8 +259,6 @@ KINFX 免費、開源。如果對你有幫助，歡迎請我喝杯咖啡：
 ## English
 
 KINFX is a Hong Kong Traditional Chinese Sucheng (Quick) Rime schema for Weasel (Windows), Squirrel (macOS) and Fcitx5-Rime (Linux). For a standalone input method with installers, use [KINFX Input v0.1.3](https://github.com/Kinfxhk/kinfx-input/releases/tag/v0.1.3).
-
-OpenVanilla `.cin` export is unsupported. Dictionaries are Rime `.dict.yaml`.
 
 - Candidate order matches Windows 11 Microsoft Quick on every page (658/658 two-letter codes); the third key tops out like Windows.
 - Type lowercase English without switching modes: Space commits a word and adds a space (`startup` → `startup `); a Left Shift tap commits short words (`of`). Brand names are capitalised (`adsense` → `AdSense`).
