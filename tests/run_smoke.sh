@@ -10,8 +10,10 @@ export RIME_USER_DIR="$USER_DIR"
 "$ROOT/scripts/install-linux.sh"
 
 # Lexicon generator: one code per word, no cartesian product.
+# Sucheng .cin export: static code table only.
 python3 "$ROOT/tests/test_gen_quick_phrases.py"
 python3 "$ROOT/tests/test_gen_quick_dict.py"
+python3 "$ROOT/tests/test_export_quick_cin.py"
 
 # Also ensure build can see jyutping if selected — primary smoke is quick
 cc -O2 -o "$ROOT/tests/rime_smoke" "$ROOT/tests/rime_smoke.c" -lrime

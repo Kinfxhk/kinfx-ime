@@ -151,6 +151,26 @@ KINFX 是裝進 Rime 輸入法的方案，不是獨立程式：Windows 用小狼
 - **Linux**：不要把 Caps Lock 設為英文上屏鍵（之後會全部變大寫）；Fcitx5 開新視窗有時會切回英文鍵盤，看托盤圖示即可。
 - **突然打不到中文**：按 Ctrl+Shift+2，或在工作列把輸入法切回「中」。
 
+## 常見問題
+
+### 可以匯出 .cin 給 OpenVanilla 匯入嗎？
+
+KINFX 沒有匯出按鈕。日常打字用的是 Rime 方案（小狼毫、鼠鬚管、Fcitx5），設定在 yaml。
+
+想自己拿速成字碼去 OpenVanilla 試匯入，在專案目錄執行：
+
+```bash
+python3 scripts/export_quick_cin.py
+```
+
+腳本讀取 `schemas/kinfx-quick/kinfx_quick.dict.yaml`，寫入 `exports/kinfx_quick.cin`。這個檔案不會提交進 git，跑完指令才會出現。
+
+這是一張靜態碼表：開頭是 `%gen_inp`，按鍵名在 `%keyname`，字碼在 `%chardef`，次序跟字典一樣。表內只有字和碼。中英混打、Lua、聯想詞都不在這張表裡。英文名稱是 `KINFX-Quick`，跟 OpenVanilla 內建的簡易（Simplex）表分開。
+
+請用 OpenVanilla 的「匯入」自己試。本專案不保證這張表與內建簡易表完全一致。
+
+授權跟速成字典相同，見 `NOTICE`（rime-quick、rime-cangjie、rime-essay 為 LGPL-3.0，全文在 `licenses/rime-quick-LGPL-3.0.txt` 和 `third_party/rime-quick/LICENSE`）。匯出腳本是本專案程式，MIT（`LICENSE`）。
+
 ## 設定
 
 預設已跟 Windows。要改的話，把下表的設定加進 `kinfx_quick.custom.yaml`（範例：`schemas/examples/kinfx_quick.custom.yaml.example`；說明：`docs/CONFIG.md`）。
@@ -205,7 +225,7 @@ macOS 與 Linux 新版本的其餘項目，以直接呼叫 Rime 引擎的方式�
 | --- | --- |
 | `schemas/` | 速成、粵拼方案與 Lua（選字、常用詞、英文、聯想） |
 | `lexicon/` | 港詞、四字詞、聯想詞、英文詞與品牌名 |
-| `scripts/` | 安裝、卸載、詞表生成 |
+| `scripts/` | 安裝、卸載、詞表生成；`export_quick_cin.py` 寫出靜態 `.cin` |
 | `tools/rimeh/` | 離線測試：`accept.sh`、`fullorder.sh`、`flex.sh`、`compare.py` |
 | `tools/mscapture/` | 讀取微軟速成候選次序 |
 | `docs/` | 詳細文件，例如 `ENGLISH_MIX.md`、`WIN_QUICK_RANK.md`、`CONFIG.md` |
@@ -214,6 +234,7 @@ macOS 與 Linux 新版本的其餘項目，以直接呼叫 Rime 引擎的方式�
 
 - 程式與文件：MIT（`LICENSE`）。
 - 詞庫與上游資料各有授權（LGPL-3.0、CC BY 4.0、SCOWL），見 `NOTICE` 與 `lexicon/NOTICE`；`lexicon/` 不是 MIT。
+- `exports/kinfx_quick.cin`（由 `scripts/export_quick_cin.py` 產生）沿用速成字典的 LGPL-3.0，不是 MIT。見 `NOTICE`。
 - `ms_quick_order.tsv` 只記錄候選次序作參考，不包含微軟的程式或字庫。
 
 ## 支持開發
@@ -234,4 +255,5 @@ KINFX is a Hong Kong Traditional Chinese Sucheng (Quick) input method built on l
 - v0.5.10: `.` and `-` between letters stay half-width and the token stays Latin (`llama.cpp`, `openai.com`, `bait-and-switch`).
 - v0.5.9: `iPhone`, `eSIM`, `xAI` stay Latin; Shift+4/5/3/2 give half-width `$ % # @`; the comma inside numbers stays `,` (20,000); a long English word before `」` commits as letters.
 - Tested: Windows acceptance 66/66 plus 17 v0.5.9 cases with key events in a VM (v0.5.9); macOS key events in TextEdit for `.` and Shift+9 (v0.5.8); a 505-character article on Linux (v0.5.1). The English feature changed no Chinese output across 2.09 million key sequences.
+- A static Sucheng `.cin` table for an OpenVanilla import: `python3 scripts/export_quick_cin.py` writes `exports/kinfx_quick.cin` (generated, not committed). The file is only the character table (`%gen_inp`, `%keyname`, `%chardef`): no mixed English, Lua, or association. `%ename` is `KINFX-Quick`, separate from OpenVanilla's built-in Simplex table. Import it yourself; this project does not claim the table matches that built-in table. Dictionary terms stay LGPL-3.0; see `NOTICE`.
 - Code is MIT; dictionaries keep their upstream licences.
