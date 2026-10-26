@@ -649,6 +649,7 @@ local function dispatch(key, env)
     if (ctx:get_property("kinfx_assoc_code") or "") ~= "" and (ctx.input or "") == "" then
       local text = read_clipboard()
       if text then
+        ctx:set_property("kinfx_assoc_rearm", "1") -- the paste commit gets Weasel's clear too
         env.engine:commit_text(text)
         return kAccepted
       end

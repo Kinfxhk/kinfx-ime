@@ -291,5 +291,12 @@ while IFS=$'\t' read -r k want; do
   if [ "$got" = "$want" ]; then pass=$((pass+1)); echo "OK   typed $k → $got"
   else fail=$((fail+1)); echo "FAIL typed $k → got [$got] want [$want]"; fi
 done <<<"$TYPED_CASES"
+# v0.5.12: an outside clear after a pick (Weasel focus change) closes the
+# association list for good; Weasel's own post-pick clear still re-arms it.
+SOUT=$(printf 'schema kinfx_quick\nclear\npk ee1\nclear\npk {Release+a}\nclear\npk {Release+a}\n' \
+  | "$ROOT/tools/rimeh/rimeh.exe" "$SHARED" "$(cygpath -m "$U")" --no-deploy 2>/dev/null | tr -d '\r' | grep '^PK' | cut -f6 | tr '\n' ' ')
+want="cand1=水 cand1=沒~⇧ cand1=有 cand1=有 cand1= "
+if [ "$SOUT" = "$want" ]; then pass=$((pass+1)); echo "OK   assoc stays closed after an outside clear"
+else fail=$((fail+1)); echo "FAIL assoc after outside clear: [$SOUT]"; fi
 echo "PASS $pass/$((pass+fail))"
 [ "$fail" -eq 0 ]

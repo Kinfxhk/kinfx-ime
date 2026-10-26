@@ -727,6 +727,24 @@ static int assert_association(RimeApi* api, RimeSessionId sid) {
            open ? " list-open" : "", good ? "" : " FAIL");
     ok = ok && good;
   }
+  /* v0.5.12: an outside clear after a pick (Weasel focus change) must close the
+     list for good. The first clear is Weasel's own post-pick clear and re-arms. */
+  {
+    api->clear_composition(sid);
+    drain_commit(api, sid);
+    api->simulate_key_sequence(sid, "ee1");
+    drain_commit(api, sid);
+    int cands[2] = {0, 0};
+    for (int i = 0; i < 2; ++i) {
+      api->clear_composition(sid);
+      api->process_key(sid, 'a', 1 << 30 /* Release */);
+      RIME_STRUCT(RimeContext, cx);
+      if (api->get_context(sid, &cx)) { cands[i] = cx.menu.num_candidates; api->free_context(&cx); }
+    }
+    int good = cands[0] > 0 && cands[1] == 0;
+    printf("assoc-outside-clear rearm=%d after=%d%s\n", cands[0], cands[1], good ? "" : " FAIL");
+    ok = ok && good;
+  }
   api->clear_composition(sid);
   drain_commit(api, sid);
   return ok;
