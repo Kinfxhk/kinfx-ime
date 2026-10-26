@@ -139,6 +139,7 @@ local function open_assoc(env, ctx, ch)
   rearming = true
   comp:push_back(seg)
   ctx:set_property("kinfx_assoc_code", code)
+  ctx:set_property("kinfx_assoc_rearm", "1")
   -- Fire update_notifier to re-translate the placeholder. refresh_non_confirmed
   -- would CLEAR the composition (dropping the segment); setting caret_pos
   -- re-fires the update notifier without clearing.
@@ -214,6 +215,13 @@ local function processor_init(env)
     if comp and not comp:empty() then
       return
     end
+    -- Only Weasel's one clear right after the pick may re-arm. A later clear
+    -- is a focus change: reopening then left the list floating over other apps.
+    if ctx:get_property("kinfx_assoc_rearm") ~= "1" then
+      ctx:set_property("kinfx_assoc_code", "")
+      return
+    end
+    ctx:set_property("kinfx_assoc_rearm", "")
     rearming = true
     local seg = Segment(0, 0)
     seg.tags = Set({ "kinfx_assoc", "placeholder" })
@@ -339,6 +347,7 @@ local function processor_func(key, env)
     return kNoop
   end
   if assoc_active(ctx) then
+    ctx:set_property("kinfx_assoc_rearm", "") -- front ends without the post-pick clear
     return handle_assoc(env, ctx, repr)
   end
   if (ctx:get_property("kinfx_assoc_code") or "") ~= "" then
