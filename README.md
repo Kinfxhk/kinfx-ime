@@ -178,7 +178,7 @@ KINFX 沒有匯出按鈕。日常打字用的是 Rime 方案（小狼毫、鼠�
 python3 scripts/export_quick_cin.py
 ```
 
-腳本讀取 `schemas/kinfx-quick/kinfx_quick.dict.yaml`，寫入 `exports/kinfx_quick.cin`。這個檔案不會提交進 git，跑完指令才會出現。
+腳本讀取 `schemas/kinfx-quick/kinfx_quick.dict.yaml`，寫入 `exports/kinfx_quick.cin`。這個檔案不會提交進 git，執行完指令才會出現。
 
 這是一張靜態碼表：開頭是 `%gen_inp`，按鍵名在 `%keyname`，字碼在 `%chardef`，次序跟字典一樣。表內只有字和碼。中英混打、Lua、聯想詞都不在這張表裡。英文名稱是 `KINFX-Quick`，跟 OpenVanilla 內建的簡易（Simplex）表分開。
 
