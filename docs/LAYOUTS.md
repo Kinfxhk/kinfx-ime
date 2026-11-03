@@ -27,7 +27,7 @@ Q手  W田  E水  R口  T廿  Y卜  U山  I戈  O人  P心
 | U | 山 | V | 女 | W | 田 | X | 難 |
 | Y | 卜 | Z | 重 |  |  |  |  |
 
-**速成取碼**：倉頡全碼嘅**首碼 + 尾碼**（最多兩鍵）。例：
+**速成取碼**：倉頡全碼的**首碼 + 尾碼**（最多兩鍵）。例：
 
 | 字 | 倉頡 | 速成 | 鍵 |
 | --- | --- | --- | --- |
@@ -39,20 +39,20 @@ Q手  W田  E水  R口  T廿  Y卜  U山  I戈  O人  P心
 
 本 repo `kinfx_quick` **預設即 `win_quick`**（與 MS Quick 字根一致）。
 
-候選窗同 Windows 官方速成對齊：**直列、每頁 9 個、選字鍵 1–9、空白翻頁、Enter 選焦點**（`menu/page_size: 9`，速成同粵拼一樣；Fcitx5／Squirrel／Weasel 跟 schema 頁數，直列由前端畫）。每頁次序跟 Windows 11 微軟速成實測（`vd` 第 8、9 個係綑綵）。常用熱門只喺第 1 頁按左嘅環頁。對照表：`docs/WIN_QUICK_RANK.md`。選字鍵同熱門頁：`docs/WIN_QUICK_SELECT.md`。
+候選窗與 Windows 官方速成對齊：**直列、每頁 9 個、選字鍵 1–9、空白翻頁、Enter 選焦點**（`menu/page_size: 9`，速成和粵拼一樣；Fcitx5／Squirrel／Weasel 跟 schema 頁數，直列由前端繪製）。每頁次序跟 Windows 11 微軟速成實測（`vd` 第 8、9 個是綑綵）。常用熱門只在第 1 頁按左的環頁。對照表：`docs/WIN_QUICK_RANK.md`。選字鍵和熱門頁：`docs/WIN_QUICK_SELECT.md`。
 
 ### 1.2 `classic_common`（常用／教材常見）
 
 與 `win_quick` **同一字根鍵位**（華語區教材、五色倉頡／速成字典、RIME cangjie5／quick 皆此圖）。  
-產品用兩個 **layout id** 方便設定 UI 同測試矩陣；目前 keymap **相同**，差異預留：
+產品用兩個 **layout id** 方便設定 UI 和測試矩陣；目前 keymap **相同**，差異預留：
 
 | layout id | 用途 | 現況 |
 | --- | --- | --- |
 | `win_quick` | 對齊 Windows 微軟速成／倉頡 | 預設；碼表已生成 |
 | `classic_common` | 「常用排列」文案／說明圖 | 同鍵位；可掛不同說明／練習 |
-| `mac_sucheng`（後期） | 對照 macOS「速成 - 繁體」 | 字根通常同；系統捷徑不同 |
+| `mac_sucheng`（後期） | 對照 macOS「速成 - 繁體」 | 字根通常相同；系統捷徑不同 |
 
-若日後發現某發行版「倚天倉頡」等變體鍵位，另開 `eten_cangjie` 表，**唔好暗改** `win_quick`。
+若日後發現某發行版「倚天倉頡」等變體鍵位，另開 `eten_cangjie` 表，**不要暗中改動** `win_quick`。
 
 ### 1.3 倉頡（P2）
 
@@ -73,7 +73,7 @@ Q手  W田  E水  R口  T廿  Y卜  U山  I戈  O人  P心
 
 粵拼、普通話拼音用標準字母鍵；無獨立「Windows 形碼排列」。混打行為見 ARCHITECTURE §3。
 
-## 4. 候選窗位置（與排列無關嘅硬 UX）
+## 4. 候選窗位置（與排列無關的硬 UX）
 
 詳見 `ARCHITECTURE.md` §4。摘要：
 
@@ -87,7 +87,7 @@ Q手  W田  E水  R口  T廿  Y卜  U山  I戈  O人  P心
 ```yaml
 # 概念配置（前端／custom patch）
 menu:
-  page_size: 9               # 產品預設；選字鍵 1–9。Flex 先至改
+  page_size: 9               # 產品預設；選字鍵 1–9。Flex 才改
 kinfx:
   layout: win_quick          # win_quick | classic_common | …
   candidate:

@@ -1,10 +1,10 @@
 # Windows 速成排序（全表）
 
-**產品預設**：每頁 **9** 個候選，選字鍵 **1–9**。速成（`kinfx_quick`）同粵拼（`kinfx_jyutping`）都寫 `menu/page_size: 9`。Weasel、Fcitx5、Squirrel 顯示 librime 交嚟嘅一頁。
+**產品預設**：每頁 **9** 個候選，選字鍵 **1–9**。速成（`kinfx_quick`）和粵拼（`kinfx_jyutping`）都寫 `menu/page_size: 9`。Weasel、Fcitx5、Squirrel 顯示 librime 交來的一頁。
 
 ## v0.4：每一頁都跟 Windows 11
 
-v0.3 只係把頭 9 個字釘死，第 2 頁之後按字頻排，所以同 Windows 唔一樣。v0.4 改為**全表跟 Windows 11 Pro 微軟速成**。
+v0.3 只是把頭 9 個字釘死，第 2 頁之後按字頻排，所以與 Windows 不一樣。v0.4 改為**全表跟 Windows 11 Pro 微軟速成**。
 
 | 項目 | 數字 |
 | --- | --- |
@@ -12,14 +12,14 @@ v0.3 只係把頭 9 個字釘死，第 2 頁之後按字頻排，所以同 Windo
 | 實測候選 | 24,073 個字 |
 | 兩碼逐格比對 | 658／658 一致（`tools/rimeh/fullorder.sh`） |
 
-來源：`schemas/kinfx-quick/ms_quick_order.tsv`。用 `tools/mscapture/ms_uiless.ps1` 喺 Windows 11 微軟速成（zh-TW）透過 TSF UILess 介面逐個碼讀出完整候選表。每個碼讀完按 Esc，冇上屏，所以微軟輸入法唔會因此學字。讀取時嘅設定係「固定候選字順序」關、Ext-A／B／HKSCS 關，即係 Windows 預設。
+來源：`schemas/kinfx-quick/ms_quick_order.tsv`。用 `tools/mscapture/ms_uiless.ps1` 在 Windows 11 微軟速成（zh-TW）透過 TSF UILess 介面逐個碼讀出完整候選表。每個碼讀完按 Esc，沒有上屏，所以微軟輸入法不會因此學字。讀取時的設定是「固定候選字順序」關、Ext-A／B／HKSCS 關，即是 Windows 預設。
 
-碼表 `kinfx_quick.dict.yaml` 用 `sort: original`，行序就係顯示次序：
+碼表 `kinfx_quick.dict.yaml` 用 `sort: original`，行序就是顯示次序：
 
-1. 每個碼先放 Windows 嘅完整清單，原樣保留，連 丂／丄 呢類罕用部件都留。
-2. 之後補 Windows 冇、但倉頡 5／rime-quick 補充表有嘅字（例如 㗎、𠻹、𨋢 等港字同 Ext-A／B），按 `essay.txt + 5× essay-cantonese.txt` 字頻排。Windows 唔顯示呢啲字，所以唔會郁到任何 Windows 格位。
+1. 每個碼先放 Windows 的完整清單，原樣保留，連 丂／丄 這類罕用部件都留下。
+2. 之後補 Windows 沒有、但倉頡 5／rime-quick 補充表有的字（例如 㗎、𠻹、𨋢 等港字和 Ext-A／B），按 `essay.txt + 5× essay-cantonese.txt` 字頻排。Windows 不顯示這些字，所以不會改動任何 Windows 格位。
 
-單碼喺 Windows 要按空白先見到，而且大部分字母按空白後列出嘅係詞，唔係單字，所以實測只有 `a h i k l n y` 7 個單碼。其餘 18 個單碼用 `win_quick_top9.tsv` 補返（每個字母一行）。呢份檔**只可以有實測冇嘅單碼**；如果有兩碼，或者同實測唔一致，`gen_quick_dict.py` 會退出。Windows 速成冇補全、冇造句，所以 v0.4 關咗 `enable_completion`／`enable_sentence`。打 `h` 只出「竹丿」，同 Windows 一樣。
+單碼在 Windows 要按空白才見得到，而且大部分字母按空白後列出的是詞，不是單字，所以實測只有 `a h i k l n y` 7 個單碼。其餘 18 個單碼用 `win_quick_top9.tsv` 補回（每個字母一行）。這份檔案**只可以有實測中沒有的單碼**；如果有兩碼，或者與實測不一致，`gen_quick_dict.py` 會退出。Windows 速成沒有補全、沒有造句，所以 v0.4 關閉了 `enable_completion`／`enable_sentence`。打 `h` 只出「竹丿」，與 Windows 一樣。
 
 ## 對照（Windows 11 實測 = kinfx）
 
@@ -31,15 +31,15 @@ v0.3 只係把頭 9 個字釘死，第 2 頁之後按字頻排，所以同 Windo
 | `me` | 汞歿泵玻夏破球豉瑕 | 碌酸憂豭璦霞覆瓊醱 |
 | `or` | 合何估佑伽伺佔佝含 | 知舍信侶俗侷倌倍倚 |
 
-v0.3.3 嘅 `win_quick_top9.tsv` 寫 `vd` 尾二係「網綜」，係由截圖認字得嚟，認錯咗（綑／網、綵／綜字形相似）。2026-10-16 再用 `ms_uiless.ps1` 讀一次，結果係 **綑綵**，70 個候選同 `ms_quick_order.tsv` 完全一樣；「網」「綜」唔喺 `vd` 入面。v0.4.1 已經刪走嗰份檔入面全部 641 行兩碼。
+v0.3.3 的 `win_quick_top9.tsv` 寫 `vd` 尾二是「網綜」，是由截圖認字得來，認錯了（綑／網、綵／綜字形相似）。2026-10-16 再用 `ms_uiless.ps1` 讀一次，結果是 **綑綵**，70 個候選與 `ms_quick_order.tsv` 完全一樣；「網」「綜」不在 `vd` 內。v0.4.1 已經刪除該檔案內全部 641 行兩碼。
 
 ## 權重
 
-字頻權重只用嚟揀每個字嘅主碼（詞語編碼用）。Windows 喺某個碼顯示、但倉頡冇呢個碼嘅字（例如 網@vd），權重係 0，所以詞語仍然用真主碼（網 = `vv`）。
+字頻權重只用來選每個字的主碼（詞語編碼用）。Windows 在某個碼顯示、但倉頡沒有這個碼的字（例如 網@vd），權重是 0，所以詞語仍然用真主碼（網 = `vv`）。
 
 ## 常用熱門頁
 
-正常頁唔受學字影響（`translator/enable_user_dict: false`）。第 1 頁按 **左** 會開「♥常用熱門」環頁，揀過嘅字（♥常）排先，唔夠就用正常候選補（♥熱）。
+正常頁不受學字影響（`translator/enable_user_dict: false`）。第 1 頁按 **左** 會開「♥常用熱門」環頁，選過的字（♥常）排在前面，不夠就用正常候選補（♥熱）。
 
 ## 重新生成
 
@@ -48,4 +48,4 @@ python3 tools/mscapture/merge_capture.py tools/mscapture/raw/*.tsv   # 重新合
 python3 scripts/gen_quick_dict.py --cangjie <cangjie5.dict.yaml> --essay <essay.txt> --essay-cantonese <essay-cantonese.txt>
 ```
 
-腳本會逐個碼檢查 Windows 次序；有一格唔對就退出。
+腳本會逐個碼檢查 Windows 次序；有一格不對就退出。
