@@ -4,7 +4,9 @@
 
 **最新版本：v0.5.12**（2026-10-26）· [發佈頁](https://github.com/Kinfxhk/kinfx-ime/releases/tag/v0.5.12)
 
-本 repo 是 Rime 方案檔，供小狼毫（Windows）、鼠鬚管（macOS）和 Fcitx5-Rime（Linux）使用。想獨立直裝，用 [KINFX Input v0.1.3](https://github.com/Kinfxhk/kinfx-input/releases/tag/v0.1.3)。
+> **本 repo 已進入維護模式**（停在 v0.5.12）。想用最新版本，請改用獨立直裝版 [KINFX Input](https://github.com/Kinfxhk/kinfx-input)——毋須另裝小狼毫／鼠鬚管／Fcitx，下載安裝包即用，設定用視窗。
+
+本 repo 是 Rime 方案檔，供小狼毫（Windows）、鼠鬚管（macOS）和 Fcitx5-Rime（Linux）使用。
 
 OpenVanilla 用的靜態碼表：`python3 scripts/export_quick_cin.py` 寫入 `exports/kinfx_quick.cin`（只有字和碼；中英混打、Lua、聯想不在表內，也不保證與內建簡易表完全一致）。步驟見下方常見問題。
 
@@ -32,13 +34,13 @@ OpenVanilla 用的靜態碼表：`python3 scripts/export_quick_cin.py` 寫入 `e
 
 ### 獨立直裝（[KINFX Input](https://github.com/Kinfxhk/kinfx-input)）
 
-| 平台 | 安裝包（[v0.1.3](https://github.com/Kinfxhk/kinfx-input/releases/tag/v0.1.3)） |
+| 平台 | 安裝包（[v0.1.11](https://github.com/Kinfxhk/kinfx-input/releases/tag/v0.1.11)） |
 | --- | --- |
-| macOS | [KINFX-Input-0.1.3-macOS.pkg](https://github.com/Kinfxhk/kinfx-input/releases/download/v0.1.3/KINFX-Input-0.1.3-macOS.pkg) |
-| Windows | [KINFX-Input-0.1.3-Windows-x64.exe](https://github.com/Kinfxhk/kinfx-input/releases/download/v0.1.3/KINFX-Input-0.1.3-Windows-x64.exe) |
-| Linux（amd64） | [kinfx-input_0.1.3_amd64.deb](https://github.com/Kinfxhk/kinfx-input/releases/download/v0.1.3/kinfx-input_0.1.3_amd64.deb) |
+| macOS | [KINFX-Input-0.1.11-macOS.pkg](https://github.com/Kinfxhk/kinfx-input/releases/download/v0.1.11/KINFX-Input-0.1.11-macOS.pkg) |
+| Windows | [KINFX-Input-0.1.11-Windows-x64.exe](https://github.com/Kinfxhk/kinfx-input/releases/download/v0.1.11/KINFX-Input-0.1.11-Windows-x64.exe) |
+| Linux（amd64） | [kinfx-input_0.1.11_amd64.deb](https://github.com/Kinfxhk/kinfx-input/releases/download/v0.1.11/kinfx-input_0.1.11_amd64.deb) |
 
-macOS 雙擊 `.pkg`。Windows 以系統管理員執行 `.exe`。Linux：`sudo apt install ./kinfx-input_0.1.3_amd64.deb`，然後 `ibus restart`。
+macOS 雙擊 `.pkg`。Windows 以系統管理員執行 `.exe`。Linux：`sudo apt install ./kinfx-input_0.1.11_amd64.deb`，然後 `ibus restart`。
 
 ### Windows 11
 
@@ -262,13 +264,13 @@ KINFX 免費、開源。如果對你有幫助，歡迎請我喝杯咖啡：
 
 ## English
 
-KINFX is a Hong Kong Traditional Chinese Sucheng (Quick) Rime schema for Weasel (Windows), Squirrel (macOS) and Fcitx5-Rime (Linux). For a standalone input method with installers, use [KINFX Input v0.1.3](https://github.com/Kinfxhk/kinfx-input/releases/tag/v0.1.3). A static OpenVanilla table is `python3 scripts/export_quick_cin.py` → `exports/kinfx_quick.cin` (character codes only; see the FAQ). It does not claim to match OpenVanilla's built-in Simplex table.
+KINFX is a Hong Kong Traditional Chinese Sucheng (Quick) Rime schema for Weasel (Windows), Squirrel (macOS) and Fcitx5-Rime (Linux). This repo is in maintenance mode; for the latest version with standalone installers (no Weasel/Squirrel/Fcitx host needed), use [KINFX Input](https://github.com/Kinfxhk/kinfx-input). A static OpenVanilla table is `python3 scripts/export_quick_cin.py` → `exports/kinfx_quick.cin` (character codes only; see the FAQ). It does not claim to match OpenVanilla's built-in Simplex table.
 
 - Candidate order matches Windows 11 Microsoft Quick on every page (658/658 two-letter codes); the third key tops out like Windows.
 - Type lowercase English without switching modes: Space commits a word and adds a space (`startup` → `startup `); a Left Shift tap commits short words (`of`). Brand names are capitalised (`adsense` → `AdSense`).
 - Hong Kong characters, common phrases (`ofc` → 人類) and association words after a pick.
 - Schema packages ([v0.5.12](https://github.com/Kinfxhk/kinfx-ime/releases/tag/v0.5.12)): [Windows zip](https://github.com/Kinfxhk/kinfx-ime/releases/download/v0.5.12/kinfx-ime-windows-share.zip), [macOS zip](https://github.com/Kinfxhk/kinfx-ime/releases/download/v0.5.12/kinfx-ime-macos.zip). Linux has no zip; clone the repo and run `scripts/install-linux.sh`, then `scripts/linux-free-left-shift.sh`. Weasel, Squirrel and Fcitx5 are separate host installs.
-- Standalone installers ([KINFX Input v0.1.3](https://github.com/Kinfxhk/kinfx-input/releases/tag/v0.1.3)): [macOS .pkg](https://github.com/Kinfxhk/kinfx-input/releases/download/v0.1.3/KINFX-Input-0.1.3-macOS.pkg), [Windows .exe](https://github.com/Kinfxhk/kinfx-input/releases/download/v0.1.3/KINFX-Input-0.1.3-Windows-x64.exe), [Linux .deb](https://github.com/Kinfxhk/kinfx-input/releases/download/v0.1.3/kinfx-input_0.1.3_amd64.deb).
+- Standalone installers ([KINFX Input v0.1.11](https://github.com/Kinfxhk/kinfx-input/releases/tag/v0.1.11)): [macOS .pkg](https://github.com/Kinfxhk/kinfx-input/releases/download/v0.1.11/KINFX-Input-0.1.11-macOS.pkg), [Windows .exe](https://github.com/Kinfxhk/kinfx-input/releases/download/v0.1.11/KINFX-Input-0.1.11-Windows-x64.exe), [Linux .deb](https://github.com/Kinfxhk/kinfx-input/releases/download/v0.1.11/kinfx-input_0.1.11_amd64.deb).
 - Platform notes: on macOS, Cmd+V while composing first commits the typed letters, so press Esc first. Linux needs the Left Shift script.
 - v0.5.12: the association list no longer reopens and stays on screen after you pick a character and then switch to another window.
 - v0.5.11: one-way static Sucheng `.cin` export (`scripts/export_quick_cin.py` → `exports/kinfx_quick.cin`; character table only) and README links to KINFX Input v0.1.3.
