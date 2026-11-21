@@ -683,12 +683,16 @@ static int assert_association(RimeApi* api, RimeSessionId sid) {
       if (take_commit(api, sid, part, sizeof part))
         strncat(got, part, sizeof got - strlen(got) - 1);
     }
-    /* A passed-through space is typed by the app, not committed. */
+    /* Space after a pick may either pass through to the app or be explicitly
+       committed as U+0020 (so full_shape never turns Space into U+3000). */
     int want_space = after[i].keys[strlen(after[i].keys) - 1] == ' ';
     char want[64];
     snprintf(want, sizeof want, "%s", after[i].want);
-    if (want_space) want[strlen(want) - 1] = 0;
     int good = strcmp(got, want) == 0;
+    if (want_space && !good) {
+      want[strlen(want) - 1] = 0;
+      good = strcmp(got, want) == 0;
+    }
     if (want_space) {
       RIME_STRUCT(RimeContext, cx);
       int composing = 0;

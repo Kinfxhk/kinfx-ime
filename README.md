@@ -4,7 +4,7 @@
 
 **最新版本：v0.5.12**（2026-10-26）· [發佈頁](https://github.com/Kinfxhk/kinfx-ime/releases/tag/v0.5.12)
 
-> **本 repo 已進入維護模式**（停在 v0.5.12）。想用最新版本，請改用獨立直裝版 [KINFX Input](https://github.com/Kinfxhk/kinfx-input)——毋須另裝小狼毫／鼠鬚管／Fcitx，下載安裝包即用，設定用視窗。
+> **雙軌同步維護**：本 repo 是 KINFX 輸入法的單一核心引擎與 Rime 方案包（供小狼毫／鼠鬚管／Fcitx5-Rime 使用，含粵拼與 `.cin` 匯出），與獨立直裝版 [KINFX Input](https://github.com/Kinfxhk/kinfx-input) 共用同一套引擎並持續同步更新。
 
 本 repo 是 Rime 方案檔，供小狼毫（Windows）、鼠鬚管（macOS）和 Fcitx5-Rime（Linux）使用。
 
@@ -225,6 +225,7 @@ macOS 與 Linux 新版本的其餘項目，以直接呼叫 Rime 引擎的方式�
 
 完整紀錄見 [Releases](https://github.com/Kinfxhk/kinfx-ime/releases)。
 
+- **v0.6.0**：恢復作為單一核心引擎持續維護，合流 `KINFX Input`（0.1.1–0.1.13）的引擎改進：`hello.vd1` 不再卡住、支援 `don't`/`it's` 縮寫、`Enter`/`?`/`!`/`:`/`;`/`)` 可上屏英文、移除 5 字母前綴空白誤觸、全形空白維持 `U+0020`、擴充英文短詞表、支援 `english/blur_short`、聯想詞按 Enter 關閉並正常換行，同時保留 v0.5.12 失焦保護。
 - **v0.5.12**：選字後切換到其他視窗，聯想詞選單不再自己重新彈出、停留在畫面上（之前要按 Esc 才消失）。
 - **v0.5.11**：單向匯出靜態速成 `.cin`（`python3 scripts/export_quick_cin.py` → `exports/kinfx_quick.cin`，只有字碼，不含中英混打、Lua、聯想，不保證與 OpenVanilla 內建簡易表完全一致）；README 加上 KINFX Input v0.1.3 直裝連結。
 - **v0.5.10**：字母中間的「.」和「-」保持半形，整個詞照字母出（llama.cpp、openai.com、bait-and-switch）；英文詞後只打「.」仍是「。」。
@@ -264,7 +265,7 @@ KINFX 免費、開源。如果對你有幫助，歡迎請我喝杯咖啡：
 
 ## English
 
-KINFX is a Hong Kong Traditional Chinese Sucheng (Quick) Rime schema for Weasel (Windows), Squirrel (macOS) and Fcitx5-Rime (Linux). This repo is in maintenance mode; for the latest version with standalone installers (no Weasel/Squirrel/Fcitx host needed), use [KINFX Input](https://github.com/Kinfxhk/kinfx-input). A static OpenVanilla table is `python3 scripts/export_quick_cin.py` → `exports/kinfx_quick.cin` (character codes only; see the FAQ). It does not claim to match OpenVanilla's built-in Simplex table.
+KINFX is a Hong Kong Traditional Chinese Sucheng (Quick) Rime schema for Weasel (Windows), Squirrel (macOS) and Fcitx5-Rime (Linux). This repo is the single source of truth for the KINFX engine, actively maintained alongside the standalone [KINFX Input](https://github.com/Kinfxhk/kinfx-input) installers (which sync directly from this repo). A static OpenVanilla table is `python3 scripts/export_quick_cin.py` → `exports/kinfx_quick.cin` (character codes only; see the FAQ). It does not claim to match OpenVanilla's built-in Simplex table.
 
 - Candidate order matches Windows 11 Microsoft Quick on every page (658/658 two-letter codes); the third key tops out like Windows.
 - Type lowercase English without switching modes: Space commits a word and adds a space (`startup` → `startup `); a Left Shift tap commits short words (`of`). Brand names are capitalised (`adsense` → `AdSense`).

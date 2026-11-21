@@ -6,7 +6,7 @@
 schema:
   schema_id: kinfx_quick
   name: KINFX 中英混打輸入法 · 速成
-  version: "0.5.12"
+  version: "0.6.0"
   author:
     - KINFX
     - 速成規則／碼表源流見 NOTICE（rime-quick / rime-cangjie）
@@ -33,6 +33,7 @@ switches:
     states: [ 中文, 西文 ]
     abbrev: [ 中, Ａ ]
   - name: full_shape
+    reset: 0
     states: [ 半角, 全角 ]
   - name: simplification
     states: [ 漢字, 汉字 ]
@@ -143,6 +144,8 @@ english:
   mode: smart
   # 冇打字撳左 Shift：noop＝乜都唔做（預設，避免誤觸入咗底線英文模式）｜ascii＝librime 臨時英文
   empty_shift: noop
+  # 短碼（1–2 個字母）離開焦點（撳第二個位、換視窗）：letters＝留住字母（預設）｜commit＝上屏首選字
+  blur_short: letters
   # 唔喺詞表嘅英文（公司名、識別字）：英文開頭夠 hold_min 個字母之後，再留多 hold_extra 個；
   # 7 個字母或以上（unknown_space_min）撳空白上屏，其餘撳左 Shift。英文詞嘅開頭（const、async）
   # 5 個字母起都可以撳空白，6 個字母除外（三對速成碼，空白係翻頁）。0＝關。
@@ -269,5 +272,6 @@ recognizer:
     # v0.5.9：單碼後面即刻大楷（iPhone、eSIM、xAI）成串留拉丁，唔再頂成 戈Phone。
     uppercase: "^[a-z][A-Z][-_+.'0-9A-Za-z]*$|[A-Z][-_+.'0-9A-Za-z]*$"
     # v0.5.10：英文詞中間嘅「-」後面再有字母（bait-and-switch），成個詞留拉丁。
-    url: "^(www[.]|https?:|ftp[.:]|mailto:|file:).*$|[a-z]+[.].+$|^[a-z]+-[A-Za-z0-9][-.A-Za-z0-9]*$"
+    # v0.6.0：縮寫 don't／it's 成個詞留拉丁（english_mix.lua 嘅 APOS_STEM 先會留住 '）。
+    url: "^(www[.]|https?:|ftp[.:]|mailto:|file:).*$|[a-z]+[.].+$|^[a-z]+-[A-Za-z0-9][-.A-Za-z0-9]*$|^[A-Za-z]+'[a-z]+$"
     reverse_lookup: "`[a-z]*'?$"
