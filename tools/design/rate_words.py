@@ -12,9 +12,12 @@ per 10k Chinese chars for every top-N English word of length 1-4.
 """
 import json, os, sys
 from collections import Counter, defaultdict
+from pathlib import Path
 from wordfreq import top_n_list
 
-R = 'C:/HermesHub/profiles/it-dog/projects/kinfx-ime/'
+_env_root = os.environ.get('KINFX_IME_ROOT')
+_root = Path(_env_root).expanduser().resolve() if _env_root else Path(__file__).resolve().parents[2]
+R = str(_root) + os.sep
 order = {}
 for l in open(R + 'schemas/kinfx-quick/ms_quick_order.tsv', encoding='utf-8'):
     l = l.rstrip('\r\n')
