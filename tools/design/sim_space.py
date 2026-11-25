@@ -9,9 +9,12 @@ while the held run is a complete English word (hybrid would commit English).
 """
 import json, os, random, sys
 from collections import Counter
+from pathlib import Path
 from wordfreq import top_n_list, zipf_frequency
 
-R = 'C:/HermesHub/profiles/it-dog/projects/kinfx-ime/'
+_env_root = os.environ.get('KINFX_IME_ROOT')
+_root = Path(_env_root).expanduser().resolve() if _env_root else Path(__file__).resolve().parents[2]
+R = str(_root) + os.sep
 order = {}
 for l in open(R + 'schemas/kinfx-quick/ms_quick_order.tsv', encoding='utf-8'):
     l = l.rstrip('\r\n')
